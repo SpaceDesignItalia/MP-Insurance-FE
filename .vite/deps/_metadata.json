@@ -1,8 +1,85 @@
 {
-  "hash": "7ddbc037",
+  "hash": "7c3e39b5",
   "configHash": "f0935764",
-  "lockfileHash": "e3b0c442",
-  "browserHash": "30f213e3",
-  "optimized": {},
-  "chunks": {}
+  "lockfileHash": "07a6a8ca",
+  "browserHash": "92bc9355",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "83f26bb4",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "abe27c9c",
+      "needsInterop": true
+    },
+    "@nextui-org/react": {
+      "src": "../../node_modules/@nextui-org/react/dist/index.mjs",
+      "file": "@nextui-org_react.js",
+      "fileHash": "83a8fffb",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "3308661c",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "1bd40450",
+      "needsInterop": false
+    },
+    "framer-motion": {
+      "src": "../../node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "0681fad6",
+      "needsInterop": false
+    },
+    "@mui/icons-material/VisibilityOutlined": {
+      "src": "../../node_modules/@mui/icons-material/VisibilityOutlined.js",
+      "file": "@mui_icons-material_VisibilityOutlined.js",
+      "fileHash": "a6dd0fe6",
+      "needsInterop": true
+    },
+    "@mui/icons-material/VisibilityOffOutlined": {
+      "src": "../../node_modules/@mui/icons-material/VisibilityOffOutlined.js",
+      "file": "@mui_icons-material_VisibilityOffOutlined.js",
+      "fileHash": "3cc751fc",
+      "needsInterop": true
+    },
+    "@mui/icons-material/HighlightOffOutlined": {
+      "src": "../../node_modules/@mui/icons-material/HighlightOffOutlined.js",
+      "file": "@mui_icons-material_HighlightOffOutlined.js",
+      "fileHash": "5bd0ffc2",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-ZIYUGMGG": {
+      "file": "chunk-ZIYUGMGG.js"
+    },
+    "chunk-QMQRGZMH": {
+      "file": "chunk-QMQRGZMH.js"
+    },
+    "chunk-YKW3QVBU": {
+      "file": "chunk-YKW3QVBU.js"
+    },
+    "chunk-UCXUDUY2": {
+      "file": "chunk-UCXUDUY2.js"
+    },
+    "chunk-EHDTJFCG": {
+      "file": "chunk-EHDTJFCG.js"
+    },
+    "chunk-65KY755N": {
+      "file": "chunk-65KY755N.js"
+    },
+    "chunk-V4OQ3NZ2": {
+      "file": "chunk-V4OQ3NZ2.js"
+    }
+  }
 }

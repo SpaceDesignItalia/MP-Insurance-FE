@@ -6,6 +6,7 @@ import { API_URL } from "./API/API";
 import Navbar from "./Components/Layout/Navbar";
 
 import Login from "./Pages/Login/Login";
+import Dashboard from "./Pages/Dashboard/Dashboard";
 
 const App: React.FC = () => {
   axios.defaults.baseURL = API_URL;
@@ -66,7 +67,9 @@ const App: React.FC = () => {
 const EmployeeProtectedRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route element={<Outlet />}></Route>
+      <Route element={<Outlet />}>
+        <Route path="/" element={<Dashboard />} />
+      </Route>
     </Routes>
   );
 };
