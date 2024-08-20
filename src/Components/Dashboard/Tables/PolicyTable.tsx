@@ -17,6 +17,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
+  useDisclosure,
 } from "@nextui-org/react";
 import ModeEditOutlineRoundedIcon from "@mui/icons-material/ModeEditOutlineRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -26,6 +27,8 @@ import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
+
+import AddPolicyModal from "../Other/AddPolicyModal";
 
 // Mappa dei colori per i vari stati della polizza
 const statusColorMap = {
@@ -101,6 +104,8 @@ export default function PolicyTable() {
     { name: "Stato Pagamento", uid: "paymentStatus" },
     { name: "Azioni", uid: "actions" },
   ];
+
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 5;
@@ -273,6 +278,7 @@ export default function PolicyTable() {
               radius="sm"
               endContent={<PostAddRoundedIcon />}
               fullWidth
+              onPress={onOpen} // Apre il modal al click
             >
               Crea nuova polizza
             </Button>
@@ -393,37 +399,40 @@ export default function PolicyTable() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-5">
-      <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-        Polizze
-      </h2>
+    <>
+      <AddPolicyModal isOpen={isOpen} onClose={onOpenChange} />
+      <div className="flex flex-col gap-5">
+        <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+          Polizze
+        </h2>
 
-      <Table
-        aria-label="All policies"
-        topContent={topContent}
-        bottomContent={bottomContent}
-        isStriped
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody items={items}>
-          {(item) => (
-            <TableRow key={item.id}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+        <Table
+          aria-label="All policies"
+          topContent={topContent}
+          bottomContent={bottomContent}
+          isStriped
+        >
+          <TableHeader columns={columns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "center" : "start"}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody items={items}>
+            {(item) => (
+              <TableRow key={item.id}>
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
