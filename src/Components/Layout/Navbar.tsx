@@ -67,7 +67,10 @@ export default function Navbar() {
       requiredCondition: true,
       current: isSubRoute({
         currentUrl,
-        parentRoute: { href: "/customers", subRoutes: [] },
+        parentRoute: {
+          href: "/customers",
+          subRoutes: ["/customers/add-customer"],
+        },
       }),
     },
   ];

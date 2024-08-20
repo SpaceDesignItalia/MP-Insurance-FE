@@ -25,7 +25,8 @@ export default function Login() {
   });
 
   const handleInputChange = (e: any) => {
-    setLoginData({ ...loginData, [e.name]: e.value });
+    const { name, value } = e;
+    setLoginData({ ...loginData, [name]: value });
   };
 
   const checkDataCompleted = () => {
