@@ -298,7 +298,7 @@ export default function PolicyTable() {
     );
   }, [page, pages]);
 
-  const renderCell = React.useCallback((policy, columnKey) => {
+  const renderCell = React.useCallback((policy, columnKey: any) => {
     const cellValue = policy[columnKey];
 
     switch (columnKey) {
