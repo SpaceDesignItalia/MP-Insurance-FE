@@ -1,4 +1,7 @@
+import CustomerTable from "../../Components/Customer/Tables/CustomerTable";
+
 export default function CustomerDashboard() {
+  document.title = "Clienti | MP Insurance";
   return (
     <div className="py-10">
       <header>
@@ -9,7 +12,9 @@ export default function CustomerDashboard() {
         </div>
       </header>
       <main>
-        <div className="mx-auto flex flex-col gap-5 max-w-7xl px-4 py-8 sm:px-6 lg:px-8"></div>
+        <div className="mx-auto flex flex-col gap-5 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <CustomerTable />
+        </div>
       </main>
     </div>
   );
