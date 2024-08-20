@@ -9,10 +9,15 @@ import {
   SelectItem,
   Autocomplete,
   AutocompleteItem,
+  DateInput,
+  DateValue,
 } from "@nextui-org/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_URL } from "../../../API/API";
+import { useDateFormatter } from "@react-aria/i18n";
+import { getLocalTimeZone } from "@internationalized/date";
+import { addYears } from "@progress/kendo-date-math";
 
 interface Client {
   clientId: number;
@@ -45,8 +50,8 @@ interface policy {
   clientId: number;
   vehicleId: number;
   companyId: number;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   duration: string;
   amount: number;
   insuranceTypeId: number[];
@@ -70,13 +75,24 @@ export default function AddPolicyModal({
   const [selectedInsuranceType, setSelectedInsuranceType] = useState<
     number[] | null
   >(null);
+  const [selectedStartDate, setSelectedStartDate] = useState<DateValue | null>(
+    null
+  );
+  const [selectedEndDate, setSelectedEndDate] = useState<DateValue | null>(
+    null
+  );
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+
+  let formatter = useDateFormatter({ dateStyle: "full" });
+  // formatter.format(value.toDate(getLocalTimeZone()))
 
   const [policy, setPolicy] = useState<policy>({
     clientId: 0,
     vehicleId: 0,
     companyId: 0,
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: "",
+    endDate: "",
     duration: "",
     amount: 0,
     insuranceTypeId: [],
@@ -102,7 +118,51 @@ export default function AddPolicyModal({
     }
   }, [selectedClient]);
 
-  console.log(selectedVehicle);
+  useEffect(() => {
+    axios.get(API_URL + "/Company/GET/GetAllCompanies").then((res) => {
+      setCompanies(res.data);
+    });
+  }, []);
+
+  useEffect(() => {
+    axios.get(API_URL + "/Company/GET/GetAllInsuranceTypes").then((res) => {
+      setInsuranceTypes(res.data);
+    });
+  }, []);
+
+  function handlePolicySubmit() {
+    if (
+      selectedClient &&
+      selectedVehicle &&
+      selectedCompany &&
+      selectedInsuranceType &&
+      selectedStartDate &&
+      selectedDuration &&
+      selectedAmount
+    ) {
+      setPolicy({
+        clientId: selectedClient,
+        vehicleId: selectedVehicle,
+        companyId: selectedCompany,
+        startDate: selectedStartDate.toDate(getLocalTimeZone()).toISOString(),
+        endDate: formatter.format(
+          addYears(
+            selectedStartDate.toDate(getLocalTimeZone()),
+            selectedDuration
+          )
+        ),
+        duration: selectedDuration.toString(),
+        amount: selectedAmount,
+        insuranceTypeId: [],
+      });
+      selectedInsuranceType.forEach((insuranceTypeId) => {
+        policy.insuranceTypeId.push(insuranceTypeId);
+      });
+      axios.post(API_URL + "/Policy/POST/AddPolicy", policy).then((res) => {
+        console.log(res.data);
+      });
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -132,19 +192,79 @@ export default function AddPolicyModal({
         >
           {(vehicle) => (
             <AutocompleteItem key={vehicle.vehicleId} value={vehicle.vehicleId}>
-              {vehicle.licensePlate} - {vehicle.brand + " " + vehicle.model}
+              {vehicle.licensePlate +
+                " - " +
+                vehicle.brand +
+                " " +
+                vehicle.model}
             </AutocompleteItem>
           )}
         </Autocomplete>
-        <Input placeholder="Tipo di polizza" />
-        <Input placeholder="Durata (es: 1 anno)" />
-        <Input placeholder="Prezzo (€)" />
-        <Input type="date" placeholder="Data di inizio" />
-        <Input type="date" placeholder="Data di fine" />
+        <Autocomplete
+          label="Compagnia"
+          defaultItems={companies}
+          selectedKey={selectedCompany}
+          onSelectionChange={(value: number | string | null) =>
+            setSelectedCompany(value as number | null)
+          }
+        >
+          {(company) => (
+            <AutocompleteItem key={company.companyId} value={company.companyId}>
+              {company.name}
+            </AutocompleteItem>
+          )}
+        </Autocomplete>
+        <Select
+          label="Garanzie Assicurative"
+          selectionMode="multiple"
+          selectedKeys={selectedInsuranceType ?? []}
+          className="max-w-xs"
+          onSelectionChange={(value: number[] | null) =>
+            setSelectedInsuranceType(value)
+          }
+        >
+          {insuranceTypes.map((insuranceType) => (
+            <SelectItem
+              key={insuranceType.insuranceTypeId}
+              value={insuranceType.insuranceTypeId}
+            >
+              {insuranceType.name}
+            </SelectItem>
+          ))}
+        </Select>
+        <DateInput
+          label="Data di inizio della polizza"
+          value={selectedStartDate}
+          onChange={setSelectedStartDate}
+        />
+        <Input
+          type="number"
+          label="Durata"
+          value={selectedDuration?.toString()}
+          onChange={(event) => setSelectedDuration(Number(event.target.value))}
+          endContent={
+            <div className="pointer-events-none flex items-center">
+              <span className="text-default-400 text-small">anni</span>
+            </div>
+          }
+        />
+        <Input
+          type="number"
+          label="Importo"
+          value={selectedAmount?.toString()}
+          onChange={(event) => setSelectedAmount(Number(event.target.value))}
+          endContent={
+            <div className="pointer-events-none flex items-center">
+              <span className="text-default-400 text-small">€</span>
+            </div>
+          }
+        />
       </ModalBody>
       <ModalFooter>
         <Button onPress={onClose}>Annulla</Button>
-        <Button color="primary">Salva</Button>
+        <Button color="primary" onClick={handlePolicySubmit}>
+          Salva
+        </Button>
       </ModalFooter>
     </Modal>
   );
