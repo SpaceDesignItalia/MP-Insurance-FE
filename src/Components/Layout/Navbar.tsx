@@ -57,7 +57,7 @@ export default function Navbar() {
       requiredCondition: true,
       current: isSubRoute({
         currentUrl,
-        parentRoute: { href: "/", subRoutes: [] },
+        parentRoute: { href: "/", subRoutes: ["/policy/add-policy"] },
       }),
     },
     {

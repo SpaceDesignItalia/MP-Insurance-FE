@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Table,
@@ -17,7 +17,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-  useDisclosure,
+  Link,
 } from "@nextui-org/react";
 import ModeEditOutlineRoundedIcon from "@mui/icons-material/ModeEditOutlineRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -27,77 +27,48 @@ import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
+import axios from "axios";
 
-import AddPolicyModal from "../Other/AddPolicyModal";
+interface Policy {
+  policyId: number;
+  fullName: string;
+  email: string;
+  typeId: string;
+  duration: number;
+  amount: string;
+  startDate: Date;
+  endDate: Date;
+  licensePlate: string;
+  status: string;
+  insuranceType: string;
+  paymentStatus: string;
+  types: string[];
+}
 
 // Mappa dei colori per i vari stati della polizza
-const statusColorMap = {
-  attiva: "success",
-  interrotta: "danger",
-  scadenza: "warning",
-  pagato: "success",
-  nonPagato: "warning",
-  rate: "primary",
+const statusColorMap: any = {
+  Attiva: "success",
+  Interrotta: "danger",
+  Scadenza: "warning",
+  Pagato: "success",
+  NonPagato: "warning",
+  Rate: "primary",
 };
-
-// Esempi di dati utente arricchiti
-const policies = [
-  {
-    id: 1,
-    name: "Tony Reichert",
-    status: "attiva",
-    vehicleType: "Auto",
-    insuranceType: "Kasko",
-    duration: "1 anno",
-    premium: "€500",
-    startDate: "2023-01-01",
-    endDate: "2024-01-01",
-    email: "tony.reichert@example.com",
-    paymentStatus: "pagato",
-  },
-  {
-    id: 2,
-    name: "Zoey Lang",
-    status: "scadenza",
-    vehicleType: "Moto",
-    insuranceType: "Responsabilità Civile",
-    duration: "6 mesi",
-    premium: "€300",
-    startDate: "2023-05-01",
-    endDate: "2023-11-01",
-    email: "zoey.lang@example.com",
-    paymentStatus: "nonPagato",
-  },
-  {
-    id: 3,
-    name: "Jane Fisher",
-    status: "interrotta",
-    vehicleType: "Auto",
-    insuranceType: "Kasko",
-    duration: "1 anno",
-    premium: "€550",
-    startDate: "2022-06-01",
-    endDate: "2023-06-01",
-    email: "jane.fisher@example.com",
-    paymentStatus: "rate",
-  },
-  // Aggiungi altri dati come necessario
-];
 
 const policyTypeFilter = [
   { value: "", label: "Tutti" },
   { value: "Kasko", label: "Kasko" },
   { value: "Responsabilità Civile", label: "Responsabilità Civile" },
-  { value: "Furto e Incendio", label: "Furto e Incendio" },
+  { value: "Furto/Incendio", label: "Furto e Incendio" },
 ];
 
 export default function PolicyTable() {
   const columns = [
-    { name: "Cliente", uid: "name" },
-    { name: "Tipo di veicolo", uid: "vehicleType" },
+    { name: "Cliente", uid: "fullName" },
+    { name: "Veicolo", uid: "typeId" },
     { name: "Tipo di polizza", uid: "insuranceType" },
     { name: "Durata", uid: "duration" },
-    { name: "Prezzo (€)", uid: "premium" },
+    { name: "Prezzo (€)", uid: "amount" },
     { name: "Data di inizio", uid: "startDate" },
     { name: "Data di fine", uid: "endDate" },
     { name: "Stato", uid: "status" },
@@ -105,27 +76,36 @@ export default function PolicyTable() {
     { name: "Azioni", uid: "actions" },
   ];
 
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useState(1);
   const rowsPerPage = 5;
 
-  const [vehicleTypeFilter, setVehicleTypeFilter] = React.useState("");
-  const [insuranceTypeFilter, setInsuranceTypeFilter] = React.useState("");
-  const [durationFilter, setDurationFilter] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState("");
-  const [paymentStatusFilter, setPaymentStatusFilter] = React.useState("");
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState("");
+  const [insuranceTypeFilter, setInsuranceTypeFilter] = useState("");
+  const [durationFilter, setDurationFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
+  const [policies, setPolicies] = useState<Policy[]>([]);
 
-  const filteredpolicies = React.useMemo(() => {
-    return policies.filter((user) => {
+  useEffect(() => {
+    axios
+      .get("/Policy/GET/GetAllPolicies", { withCredentials: true })
+      .then((res) => {
+        setPolicies(res.data);
+        console.log(res.data);
+      });
+  }, []);
+
+  const filteredPolicies = useMemo(() => {
+    return policies.filter((policy) => {
       return (
-        (vehicleTypeFilter === "" || user.vehicleType === vehicleTypeFilter) &&
+        (vehicleTypeFilter === "" || policy.typeId === vehicleTypeFilter) &&
         (insuranceTypeFilter === "" ||
-          user.insuranceType === insuranceTypeFilter) &&
-        (durationFilter === "" || user.duration === durationFilter) &&
-        (statusFilter === "" || user.status === statusFilter) &&
+          policy.insuranceType === insuranceTypeFilter) &&
+        (durationFilter === "" ||
+          policy.duration.toString() === durationFilter) &&
+        (statusFilter === "" || policy.status === statusFilter) &&
         (paymentStatusFilter === "" ||
-          user.paymentStatus === paymentStatusFilter)
+          policy.paymentStatus === paymentStatusFilter)
       );
     });
   }, [
@@ -134,15 +114,16 @@ export default function PolicyTable() {
     durationFilter,
     statusFilter,
     paymentStatusFilter,
+    policies,
   ]);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-    return filteredpolicies.slice(start, end);
-  }, [page, filteredpolicies]);
+    return filteredPolicies.slice(start, end);
+  }, [page, filteredPolicies]);
 
-  const pages = Math.ceil(filteredpolicies.length / rowsPerPage);
+  const pages = Math.ceil(filteredPolicies.length / rowsPerPage);
 
   const topContent = React.useMemo(() => {
     return (
@@ -179,10 +160,10 @@ export default function PolicyTable() {
                     <SelectItem key="1" value="">
                       Tutti
                     </SelectItem>
-                    <SelectItem key="2" value="Auto">
+                    <SelectItem key="2" value="2">
                       Auto
                     </SelectItem>
-                    <SelectItem key="3" value="Moto">
+                    <SelectItem key="3" value="3">
                       Moto
                     </SelectItem>
                   </Select>
@@ -207,10 +188,10 @@ export default function PolicyTable() {
                     <SelectItem key="1" value="">
                       Tutte
                     </SelectItem>
-                    <SelectItem key="2" value="6 mesi">
+                    <SelectItem key="2" value="6">
                       6 mesi
                     </SelectItem>
-                    <SelectItem key="3" value="1 anno">
+                    <SelectItem key="3" value="12">
                       1 anno
                     </SelectItem>
                   </Select>
@@ -274,11 +255,12 @@ export default function PolicyTable() {
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
             <Button
+              as={Link}
+              href="/policy/add-policy"
               color="primary"
               radius="sm"
               endContent={<PostAddRoundedIcon />}
               fullWidth
-              onPress={onOpen} // Apre il modal al click
             >
               Crea nuova polizza
             </Button>
@@ -297,21 +279,21 @@ export default function PolicyTable() {
           showShadow
           color="primary"
           page={page}
-          total={pages}
+          total={pages || 1}
           onChange={setPage}
         />
       </div>
     );
   }, [page, pages]);
 
-  const renderCell = React.useCallback((policy, columnKey: any) => {
+  const renderCell = React.useCallback((policy: any, columnKey: any) => {
     const cellValue = policy[columnKey];
 
     switch (columnKey) {
-      case "name":
+      case "fullName":
         return (
           <div className="flex flex-col">
-            <div className="font-medium">{cellValue}</div>
+            <div className="font-medium">{policy.fullName}</div>
             <div className="text-sm text-gray-500">{policy.email}</div>
           </div>
         );
@@ -337,31 +319,42 @@ export default function PolicyTable() {
             {cellValue}
           </Chip>
         );
-      case "vehicleType":
-        return (
-          <>
-            {policy.vehicleType === "Auto" ? (
-              <div className="flex flex-row gap-2 justify-center items-center">
-                <DirectionsCarRoundedIcon />
-                {cellValue}
-              </div>
-            ) : (
-              <div className="flex flex-row gap-2 justify-center items-center">
-                <TwoWheelerRoundedIcon />
-                {cellValue}
-              </div>
-            )}
-          </>
+      case "typeId":
+        return policy.typeId === "2" ? (
+          <div className="flex flex-col gap-2 justify-center items-center">
+            <div className="flex flex-row gap-2 justify-center items-center">
+              <DirectionsCarRoundedIcon />
+              Auto
+            </div>
+            <div className="text-gray-700">
+              <span className="font-semibold">Targa: </span>
+              {policy.licensePlate}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-row gap-2 justify-center items-center">
+            <TwoWheelerRoundedIcon />
+            Moto
+          </div>
         );
       case "startDate":
         return dayjs(cellValue).format("DD/MM/YYYY");
       case "endDate":
         return dayjs(cellValue).format("DD/MM/YYYY");
       case "insuranceType":
+        return (
+          <ul className="list-disc">
+            {policy.types.map((type: string) => {
+              return <li>{type}</li>;
+            })}
+          </ul>
+        );
       case "duration":
-      case "premium":
-      case "policyNumber":
-        return cellValue;
+        return (
+          <>{policy.duration == 12 ? "1 anno" : <p>{cellValue} mesi</p>}</>
+        );
+      case "amount":
+        return <p>€ {cellValue}</p>;
       case "actions":
         return (
           <div className="relative flex justify-center items-center gap-2">
@@ -399,40 +392,37 @@ export default function PolicyTable() {
   }, []);
 
   return (
-    <>
-      <AddPolicyModal isOpen={isOpen} onClose={onOpenChange} />
-      <div className="flex flex-col gap-5">
-        <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-          Polizze
-        </h2>
+    <div className="flex flex-col gap-5">
+      <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+        Polizze
+      </h2>
 
-        <Table
-          aria-label="All policies"
-          topContent={topContent}
-          bottomContent={bottomContent}
-          isStriped
-        >
-          <TableHeader columns={columns}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody items={items}>
-            {(item) => (
-              <TableRow key={item.id}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </>
+      <Table
+        aria-label="All policies"
+        topContent={topContent}
+        bottomContent={bottomContent}
+        isStriped
+      >
+        <TableHeader columns={columns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody items={items}>
+          {(item) => (
+            <TableRow key={item.policyId}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
