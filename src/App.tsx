@@ -10,6 +10,7 @@ import Dashboard from "./Pages/Dashboard/Dashboard";
 import CustomerDashboard from "./Pages/Customer/CustomerDashboard";
 import AddCustomerPage from "./Pages/Customer/AddCustomerPage";
 import ViewCustomerPage from "./Pages/Customer/ViewCustomerPage";
+import CalendarDashboard from "./Pages/Calendar/CalendarDashboard";
 import AddPolicyPage from "./Pages/Policy/AddPolicyPage";
 
 const App: React.FC = () => {
@@ -80,6 +81,7 @@ const EmployeeProtectedRoutes: React.FC = () => {
           element={<ViewCustomerPage />}
         />
         <Route path="/policy/add-policy" element={<AddPolicyPage />} />
+        <Route path="/calendar" element={<CalendarDashboard />} />
       </Route>
     </Routes>
   );

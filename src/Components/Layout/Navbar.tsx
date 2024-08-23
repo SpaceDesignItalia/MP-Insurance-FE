@@ -15,6 +15,7 @@ import {
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import Logo from "../../assets/MpLogo.png";
 import axios from "axios";
@@ -70,6 +71,19 @@ export default function Navbar() {
         parentRoute: {
           href: "/customers",
           subRoutes: ["/customers/add-customer"],
+        },
+      }),
+    },
+    {
+      name: "Calendario",
+      href: "/calendar",
+      icon: CalendarMonthRoundedIcon,
+      requiredCondition: true,
+      current: isSubRoute({
+        currentUrl,
+        parentRoute: {
+          href: "/calendar",
+          subRoutes: [],
         },
       }),
     },
