@@ -47,11 +47,11 @@ interface Policy {
 
 interface SearchFilter {
   searchTerms: string;
-  vehicleTypeId: number | null;
-  policyTypeId: number | null;
-  duration: number | null;
-  state: string | null;
-  paymentStatus: string | null;
+  vehicleTypeId: string;
+  policyTypeId: string;
+  duration: string;
+  state: string;
+  paymentStatus: string;
 }
 
 // Mappa dei colori per i vari stati della polizza
@@ -65,11 +65,11 @@ const statusColorMap: Record<string, string> = {
 };
 
 const policyTypeFilter = [
-  { value: "null", label: "Tutti" },
-  { value: "1", label: "RCA" },
-  { value: "2", label: "Furto/Incendio" },
-  { value: "3", label: "Infortuni" },
-  { value: "4", label: "Assistenza stradale" },
+  { value: "", label: "Tutti" },
+  { value: "RCA", label: "RCA" },
+  { value: "Furto/Incendio", label: "Furto/Incendio" },
+  { value: "Infortuni", label: "Infortuni" },
+  { value: "Assistenza stradale", label: "Assistenza stradale" },
 ];
 
 export default function PolicyTable() {
@@ -97,11 +97,6 @@ export default function PolicyTable() {
     state: "",
     paymentStatus: "",
   });
-  const [vehicleTypeFilter, setVehicleTypeFilter] = useState("");
-  const [insuranceTypeFilter, setInsuranceTypeFilter] = useState("");
-  const [durationFilter, setDurationFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [policies, setPolicies] = useState<Policy[]>([]);
 
   useEffect(() => {
@@ -119,51 +114,43 @@ export default function PolicyTable() {
     }));
   };
 
-  async function searchPolicy(searchFilter: SearchFilter) {
-    try {
-      const res = await axios.get("/Policy/GET/SearchPolicy", {
-        params: searchFilter, // Ensure the object is passed directly
-        withCredentials: true,
-      });
-
-      if (res.status === 200) {
-        console.log(res.data);
-        setPolicies(res.data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   const filteredPolicies = useMemo(() => {
     return policies
       .filter((policy) =>
-        vehicleTypeFilter ? policy.typeId === vehicleTypeFilter : true
-      )
-      .filter((policy) =>
-        insuranceTypeFilter !== "" && insuranceTypeFilter !== "null"
-          ? policy.insuranceType === insuranceTypeFilter
+        searchFilter.vehicleTypeId !== "" &&
+        searchFilter.vehicleTypeId !== "null"
+          ? policy.typeId === searchFilter.vehicleTypeId
           : true
       )
       .filter((policy) =>
-        durationFilter ? policy.duration.toString() === durationFilter : true
+        searchFilter.policyTypeId !== "" && searchFilter.policyTypeId !== "null"
+          ? policy.types.includes(searchFilter.policyTypeId)
+          : true
       )
       .filter((policy) =>
-        statusFilter ? policy.status === statusFilter : true
+        searchFilter.duration !== "" && searchFilter.duration !== "null"
+          ? policy.duration.toString() === searchFilter.duration
+          : true
       )
       .filter((policy) =>
-        paymentStatusFilter
-          ? policy.paymentStatus === paymentStatusFilter
+        searchFilter.state !== "" && searchFilter.state !== "null"
+          ? policy.status === searchFilter.state
+          : true
+      )
+      .filter((policy) =>
+        searchFilter.paymentStatus !== "" &&
+        searchFilter.paymentStatus !== "null"
+          ? policy.paymentStatus === searchFilter.paymentStatus
+          : true
+      )
+      .filter((policy) =>
+        searchFilter.searchTerms !== ""
+          ? policy.fullName
+              .toLowerCase()
+              .includes(searchFilter.searchTerms.toLowerCase())
           : true
       );
-  }, [
-    vehicleTypeFilter,
-    insuranceTypeFilter,
-    durationFilter,
-    statusFilter,
-    paymentStatusFilter,
-    policies,
-  ]);
+  }, [searchFilter, policies]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -202,28 +189,31 @@ export default function PolicyTable() {
               <PopoverContent className="w-[350px]">
                 <h2 className="font-semibold px-4 pt-3 w-full">Filtri:</h2>
                 <div className="p-4 flex flex-col gap-3 w-full">
+                  <p>Tipologia Veicolo: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
-                    placeholder="Tipologia Veicolo"
+                    selectedKeys={[searchFilter.vehicleTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("vehicleTypeId", e.target.value)
                     }
                   >
-                    <SelectItem key="1" value="">
+                    <SelectItem key="" value="">
                       Tutti
                     </SelectItem>
                     <SelectItem key="2" value="2">
                       Auto
                     </SelectItem>
-                    <SelectItem key="3" value="3">
+                    <SelectItem key="1" value="3">
                       Moto
                     </SelectItem>
                   </Select>
+                  <p>Tipo di polizza: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
                     placeholder="Tipo di polizza"
+                    selectedKeys={[searchFilter.policyTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("policyTypeId", e.target.value)
                     }
@@ -234,87 +224,72 @@ export default function PolicyTable() {
                       </SelectItem>
                     ))}
                   </Select>
+                  <p>Durata: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
-                    placeholder="Durata"
+                    selectedKeys={[searchFilter.duration]}
                     onChange={(e) =>
                       handleSearchFilterChange("duration", e.target.value)
                     }
                   >
-                    <SelectItem key="1" value="">
+                    <SelectItem key="" value="">
                       Tutte
                     </SelectItem>
-                    <SelectItem key="2" value="6">
+                    <SelectItem key="6" value="6">
                       6 mesi
                     </SelectItem>
-                    <SelectItem key="3" value="12">
+                    <SelectItem key="12" value="12">
                       1 anno
                     </SelectItem>
                   </Select>
+                  <p>Stato: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
-                    placeholder="Stato"
+                    selectedKeys={[searchFilter.state]}
                     onChange={(e) =>
                       handleSearchFilterChange("state", e.target.value)
                     }
                   >
-                    <SelectItem key="1" value="">
+                    <SelectItem key="" value="">
                       Tutti
                     </SelectItem>
-                    <SelectItem key="2" value="attiva">
+                    <SelectItem key="Attiva" value="attiva">
                       Attiva
                     </SelectItem>
-                    <SelectItem key="3" value="scadenza">
+                    <SelectItem key="Scadenza" value="scadenza">
                       Scadenza
                     </SelectItem>
-                    <SelectItem key="4" value="interrotta">
+                    <SelectItem key="Interrotta" value="interrotta">
                       Interrotta
                     </SelectItem>
                   </Select>
+                  <p>Stato Pagamento: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
-                    placeholder="Stato Pagamento"
+                    selectedKeys={[searchFilter.paymentStatus]}
                     onChange={(e) =>
                       handleSearchFilterChange("paymentStatus", e.target.value)
                     }
                   >
-                    <SelectItem key="1" value="">
+                    <SelectItem key="" value="">
                       Tutti
                     </SelectItem>
-                    <SelectItem key="2" value="pagato">
+                    <SelectItem key="Pagato" value="pagato">
                       Pagato
                     </SelectItem>
-                    <SelectItem key="3" value="nonPagato">
+                    <SelectItem key="Non Pagato" value="nonPagato">
                       Non Pagato
                     </SelectItem>
-                    <SelectItem key="4" value="rate">
+                    <SelectItem key="Pagamento a Rate" value="rate">
                       Pagamento a Rate
                     </SelectItem>
                   </Select>
                 </div>
               </PopoverContent>
             </Popover>
-            <Button
-              color="primary"
-              radius="sm"
-              startContent={<SearchRoundedIcon />}
-              className="hidden sm:flex"
-              onClick={() => searchPolicy(searchFilter)}
-            >
-              Cerca
-            </Button>
-            <Button
-              color="primary"
-              radius="sm"
-              className="flex sm:hidden"
-              isIconOnly
-              onClick={() => searchPolicy(searchFilter)}
-            >
-              <SearchRoundedIcon />
-            </Button>
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
             <Button
