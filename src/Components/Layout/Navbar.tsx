@@ -70,7 +70,10 @@ export default function Navbar() {
         currentUrl,
         parentRoute: {
           href: "/customers",
-          subRoutes: ["/customers/add-customer"],
+          subRoutes: [
+            "/customers/add-customer",
+            "/customers/view-customer-data",
+          ],
         },
       }),
     },

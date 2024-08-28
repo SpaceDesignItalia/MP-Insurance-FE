@@ -1,10 +1,7 @@
-import { useParams } from "react-router-dom";
 import ViewCustomerModel from "../../Components/Customer/Other/ViewCustomerModel";
 
 export default function ViewCustomerPage() {
   document.title = "Dettagli cliente | MP Insurance";
-  const { firstName, lastName } = useParams();
-  console.log(firstName, lastName);
   return (
     <div className="py-10">
       <header>
