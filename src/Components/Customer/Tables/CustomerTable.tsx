@@ -12,7 +12,6 @@ import {
   Input,
   Link,
 } from "@nextui-org/react";
-import ModeEditOutlineRoundedIcon from "@mui/icons-material/ModeEditOutlineRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -170,21 +169,15 @@ export default function CustomerTable() {
           return (
             <div className="relative flex justify-center items-center gap-2">
               <Tooltip content="Dettagli cliente" closeDelay={0} showArrow>
-                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                <Link
+                  as={"a"}
+                  href={"/customers/view-customer-data/" + customer.clientId}
+                  className="text-lg text-default-400 cursor-pointer active:opacity-50"
+                >
                   <RemoveRedEyeRoundedIcon />
-                </span>
+                </Link>
               </Tooltip>
-              <Tooltip
-                color="warning"
-                className="text-white"
-                content="Modifica cliente"
-                closeDelay={0}
-                showArrow
-              >
-                <span className="text-lg text-warning cursor-pointer active:opacity-50">
-                  <ModeEditOutlineRoundedIcon />
-                </span>
-              </Tooltip>
+
               <Tooltip
                 color="danger"
                 content="Rimuovi cliente"

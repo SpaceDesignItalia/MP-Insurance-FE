@@ -4,8 +4,11 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Link } from "@nextui-org/react";
+import { Button, Link, Skeleton } from "@nextui-org/react";
 import VehiecleCard from "./VehiecleCard";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import VehiclePolicyCard from "./VehiclePolicyCard";
 
 interface CustomerDataProps {
   clientId: number;
@@ -15,7 +18,61 @@ interface CustomerDataProps {
   phoneNumber: string;
 }
 
+interface VehicleDataProps {
+  vehicleId: number;
+  brand: string;
+  model: string;
+  licensePlate: string;
+  typeId: number;
+  clientId: number;
+  companyName: string;
+  statusId: number;
+  startDate: Date;
+  endDate: Date;
+  paymentStatusId: number;
+}
+
+interface PolicyDataProps {
+  policyId: number;
+  fullName: string;
+  email: string;
+  typeId: number;
+  duration: number;
+  amount: number;
+  startDate: Date;
+  endDate: Date;
+  brand: string;
+  model: string;
+  licensePlate: string;
+  status: string;
+  paymentStatus: string;
+  companyName: string;
+  companyLogo: string;
+  types: string[];
+}
+
+const POLICYDEFAULTVALUE: PolicyDataProps = {
+  policyId: 0,
+  fullName: "",
+  email: "",
+  startDate: new Date(),
+  endDate: new Date(),
+  brand: "",
+  model: "",
+  licensePlate: "",
+  duration: 0,
+  amount: 0,
+  typeId: 0,
+  paymentStatus: "",
+  companyName: "",
+  companyLogo: "",
+  status: "",
+  types: [],
+};
+
 export default function ViewCustomerModel() {
+  const { clientId } = useParams();
+
   const [customerData, setCustomerData] = useState<CustomerDataProps>({
     clientId: 0,
     firstName: "",
@@ -24,18 +81,86 @@ export default function ViewCustomerModel() {
     phoneNumber: "",
   });
 
+  const [showPolicy, setShowPolicy] = useState<boolean>(false);
+  const [policyData, setPolicyData] =
+    useState<PolicyDataProps>(POLICYDEFAULTVALUE);
+  const [loadedAllData, setLoadedAllData] = useState<boolean>(false);
+
+  const [vehicleData, setVehicleData] = useState<VehicleDataProps[]>([]);
+  useEffect(() => {
+    fetchCustomerData();
+  }, []);
+
+  async function fetchCustomerData() {
+    try {
+      const res = await axios.get("/Customer/GET/GetCustomerById", {
+        params: { clientId: clientId },
+        withCredentials: true,
+      });
+
+      if (res.status == 200) {
+        setCustomerData(res.data);
+
+        const res2 = await axios.get("/Vehicle/GET/GetClientVehicles", {
+          params: { clientId: clientId },
+          withCredentials: true,
+        });
+
+        if (res2.status == 200) {
+          setVehicleData(res2.data);
+          setLoadedAllData(true);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function fetchPolicyByVehicleId(vehicleId: number) {
+    try {
+      const res = await axios.get("/Policy/GET/GetPolicyByVehicleId", {
+        params: { vehicleId: vehicleId },
+        withCredentials: true,
+      });
+
+      if (res.status == 200) {
+        setPolicyData(res.data);
+        setShowPolicy(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   // Stato per tracciare il veicolo selezionato
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
     null
   );
 
   const handleVehicleSelect = (vehicleId: number) => {
+    // Trova il veicolo selezionato tra i dati
+    const selectedVehicle = vehicleData.find(
+      (vehicle) => vehicle.vehicleId === vehicleId
+    );
+
+    // Controlla se companyName, startDate o endDate sono null
+    if (
+      selectedVehicle?.companyName === null ||
+      selectedVehicle?.startDate === null ||
+      selectedVehicle?.endDate === null
+    ) {
+      return; // Se uno di questi è null, non selezionare la card
+    }
+
     // Se il veicolo cliccato è già selezionato, deseleziona
     if (selectedVehicleId === vehicleId) {
       setSelectedVehicleId(null);
+      setShowPolicy(false);
+      setPolicyData(POLICYDEFAULTVALUE);
     } else {
       // Altrimenti seleziona il veicolo cliccato
       setSelectedVehicleId(vehicleId);
+      fetchPolicyByVehicleId(vehicleId);
     }
   };
 
@@ -44,79 +169,116 @@ export default function ViewCustomerModel() {
       <header className="relative isolate border-b-2">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
-            <div className="flex items-center gap-x-6">
-              <h1>
-                <div className="flex flex-row gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
-                  <InsertEmoticonOutlinedIcon />
-                  Andrea Braia
-                </div>
-                <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                  <EmailOutlinedIcon />
-                  andrix.braia@gmail.com
-                </div>
-                <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                  <PhoneAndroidOutlinedIcon />
-                  3669826344
-                </div>
+            <div className="flex w-full items-center gap-x-6">
+              <h1 className="w-full flex flex-col gap-2">
+                <Skeleton isLoaded={loadedAllData} className="w-1/3 rounded-lg">
+                  <div className="flex flex-row gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
+                    <InsertEmoticonOutlinedIcon />
+                    {customerData.firstName + " " + customerData.lastName}
+                  </div>
+                </Skeleton>
+
+                <Skeleton isLoaded={loadedAllData} className="w-1/4 rounded-lg">
+                  <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
+                    <EmailOutlinedIcon />
+                    {customerData.email}
+                  </div>
+                </Skeleton>
+
+                <Skeleton isLoaded={loadedAllData} className="w-1/5 rounded-lg">
+                  <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
+                    <PhoneAndroidOutlinedIcon />
+                    {customerData.phoneNumber}
+                  </div>
+                </Skeleton>
               </h1>
             </div>
             <div className="flex items-center gap-x-4 sm:gap-x-6">
-              <Button
-                as={Link}
-                href="#"
-                color="warning"
-                radius="sm"
-                className="text-white"
-                startContent={<EditRoundedIcon />}
-              >
-                Modifica
-              </Button>
+              <Skeleton isLoaded={loadedAllData} className="w-full rounded-lg">
+                <Button
+                  as={Link}
+                  href="#"
+                  color="warning"
+                  radius="sm"
+                  className="text-white"
+                  startContent={<EditRoundedIcon />}
+                >
+                  Modifica
+                </Button>
+              </Skeleton>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-3 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex flex-row justify-between items-center">
           <h1 className="text-xl font-semibold">Veicoli intestati</h1>
-          <Button color="primary" radius="sm" startContent={<AddRoundedIcon />}>
-            Aggiungi veicolo
-          </Button>
+
+          <Skeleton isLoaded={loadedAllData} className="rounded-lg">
+            <Button
+              color="primary"
+              radius="sm"
+              startContent={<AddRoundedIcon />}
+            >
+              Aggiungi veicolo
+            </Button>
+          </Skeleton>
         </div>
         <div className="mt-4 mx-auto grid max-w-2xl  grid-cols-1 sm:grid-cols-2 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          {/* Invoice summary */}
-          <VehiecleCard
-            VehiecleCardProps={{
-              vehicleId: 1,
-              licensePlate: "AA000AA",
-              brand: "Audi",
-              model: "A3",
-              typeId: 2,
+          {vehicleData.length !== 0 ? (
+            <>
+              {vehicleData.map((vehicle: VehicleDataProps) => {
+                return (
+                  <VehiecleCard
+                    key={Number(vehicle.vehicleId)}
+                    VehiecleCardProps={{
+                      vehicleId: Number(vehicle.vehicleId),
+                      licensePlate: vehicle.licensePlate,
+                      brand: vehicle.brand,
+                      model: vehicle.model,
+                      typeId: Number(vehicle.typeId),
+                      companyName: vehicle.companyName,
+                      statusId: Number(vehicle.statusId),
+                      startDate: vehicle.startDate,
+                      endDate: vehicle.endDate,
+                      paymentStatusId: Number(vehicle.paymentStatusId),
+                    }}
+                    isSelected={selectedVehicleId == vehicle.vehicleId}
+                    onSelect={handleVehicleSelect}
+                  />
+                );
+              })}
+            </>
+          ) : (
+            <>
+              <Skeleton className="h-40 w-96 rounded-lg" />
+              <Skeleton className="h-40 w-96 rounded-lg" />
+              <Skeleton className="h-40 w-96 rounded-lg" />
+            </>
+          )}
+        </div>
+        <div className="mt-3">
+          <VehiclePolicyCard
+            PolicyData={{
+              policyId: Number(policyData.policyId),
+              fullName: policyData.fullName,
+              email: policyData.email,
+              typeId: Number(policyData.typeId),
+              duration: Number(policyData.duration),
+              amount: Number(policyData.amount),
+              startDate: policyData.startDate,
+              endDate: policyData.endDate,
+              brand: policyData.brand,
+              model: policyData.model,
+              licensePlate: policyData.licensePlate,
+              status: policyData.status,
+              paymentStatus: policyData.paymentStatus,
+              companyName: policyData.companyName,
+              companyLogo: policyData.companyLogo,
+              types: policyData.types,
             }}
-            isSelected={selectedVehicleId === 1}
-            onSelect={handleVehicleSelect}
-          />
-          <VehiecleCard
-            VehiecleCardProps={{
-              vehicleId: 2,
-              licensePlate: "BB000BB",
-              brand: "CFMOTO",
-              model: "450SR S",
-              typeId: 1,
-            }}
-            isSelected={selectedVehicleId === 2}
-            onSelect={handleVehicleSelect}
-          />
-          <VehiecleCard
-            VehiecleCardProps={{
-              vehicleId: 3,
-              licensePlate: "CC000CC",
-              brand: "Honda",
-              model: "Civic",
-              typeId: 2,
-            }}
-            isSelected={selectedVehicleId === 3}
-            onSelect={handleVehicleSelect}
+            isVisible={showPolicy}
           />
         </div>
       </div>

@@ -77,7 +77,7 @@ const EmployeeProtectedRoutes: React.FC = () => {
         <Route path="/customers" element={<CustomerDashboard />} />
         <Route path="/customers/add-customer" element={<AddCustomerPage />} />
         <Route
-          path="/customers/view-customer-data/:id/:fullname"
+          path="/customers/view-customer-data/:clientId"
           element={<ViewCustomerPage />}
         />
         <Route path="/policy/add-policy" element={<AddPolicyPage />} />
