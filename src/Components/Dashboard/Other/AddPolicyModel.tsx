@@ -83,6 +83,8 @@ export default function AddPolicyModel() {
     description: "",
   });
 
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
   const dateFormatter = (date: DateValue | string | null): string => {
     if (date instanceof Object && "toDate" in date) {
       return dayjs(date.toDate(getLocalTimeZone())).format("YYYY-MM-DD");
@@ -123,7 +125,7 @@ export default function AddPolicyModel() {
   useEffect(() => {
     if (selectedData.clientId) {
       axios
-        .get("/Vehicle/GET/GetClientVehicles", {
+        .get("/Vehicle/GET/GetClientVehiclesUninsured", {
           params: {
             clientId: selectedData.clientId,
           },
@@ -137,6 +139,7 @@ export default function AddPolicyModel() {
 
   async function handleCreateNewPolicy() {
     try {
+      setIsSaving(true);
       const formattedStartDate = dateFormatter(selectedData.startDate || null);
       const { duration } = selectedData;
 
@@ -184,6 +187,7 @@ export default function AddPolicyModel() {
         description:
           "<p>C'è stato un problema nella creazione della polizza, riprova più tardi!</p>",
       });
+      setIsSaving(false);
     }
   }
 
@@ -257,6 +261,9 @@ export default function AddPolicyModel() {
                   onSelectionChange={(value) =>
                     handleChange("vehicleId", value as number)
                   }
+                  listboxProps={{
+                    emptyContent: "Nessun veicolo trovato",
+                  }}
                 >
                   {(vehicle) => (
                     <AutocompleteItem
@@ -436,7 +443,13 @@ export default function AddPolicyModel() {
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Button type="submit" color="primary" onClick={handleCreateNewPolicy}>
+        <Button
+          radius="sm"
+          type="submit"
+          color="primary"
+          onClick={handleCreateNewPolicy}
+          isLoading={isSaving}
+        >
           Salva
         </Button>
       </div>

@@ -11,8 +11,8 @@ interface VehiecleCardProps {
   typeId: number;
   companyName: string;
   statusId: number;
-  startDate: Date;
-  endDate: Date;
+  startDate: Date | null;
+  endDate: Date | null;
   paymentStatusId: number;
 }
 
@@ -62,12 +62,26 @@ export default function VehiecleCard({
     }
   }
 
+  function checkIsUninsured() {
+    return (
+      !VehiecleCardProps.companyName &&
+      !VehiecleCardProps.startDate &&
+      !VehiecleCardProps.endDate
+    );
+  }
+
+  const isDisabled = checkIsUninsured();
+
   return (
     <div
-      className={`max-w-sm rounded-lg overflow-hidden bg-white hover:shadow-xl transition-shadow duration-300 cursor-pointer transform ${
+      className={`max-w-sm rounded-lg overflow-hidden bg-white transition-shadow duration-300 transform ${
         isSelected ? "shadow-xl border-primary border-3" : "border"
+      } ${
+        isDisabled
+          ? "opacity-50 cursor-not-allowed"
+          : "hover:shadow-xl cursor-pointer"
       }`}
-      onClick={() => onSelect(VehiecleCardProps.vehicleId)}
+      onClick={() => !isDisabled && onSelect(VehiecleCardProps.vehicleId)}
     >
       <div className="flex justify-between p-6 bg-primary-900 text-white">
         <div>
@@ -92,34 +106,42 @@ export default function VehiecleCard({
           <strong>Tipo:</strong>{" "}
           {VehiecleCardProps.typeId === 1 ? "Moto" : "Auto"}
         </p>
-        <p className="text-gray-700">
-          <strong> Compagnia assicurativa:</strong>{" "}
-          {VehiecleCardProps.companyName}
-        </p>
-        <p className="text-gray-700">
-          <strong>Data copertura:</strong>{" "}
-          {dayjs(VehiecleCardProps.startDate).format("DD/MM/YYYY")} -{" "}
-          {dayjs(VehiecleCardProps.endDate).format("DD/MM/YYYY")}
-        </p>
-        <div className="flex flex-row gap-2">
-          <Chip
-            className="capitalize"
-            color={statusColorMap[checkPaymentStatus()] || "default"} // Usa "default" o altro colore di fallback
-            variant="dot"
-            radius="sm"
-          >
-            {checkPaymentStatus()}
-          </Chip>
+        {!isDisabled ? (
+          <>
+            <p className="text-gray-700">
+              <strong> Compagnia assicurativa:</strong>{" "}
+              {VehiecleCardProps.companyName}
+            </p>
+            <p className="text-gray-700">
+              <strong>Data copertura:</strong>{" "}
+              {dayjs(VehiecleCardProps.startDate).format("DD/MM/YYYY")} -{" "}
+              {dayjs(VehiecleCardProps.endDate).format("DD/MM/YYYY")}
+            </p>
+            <div className="flex flex-row gap-2">
+              <Chip
+                className="capitalize"
+                color={statusColorMap[checkPaymentStatus()] || "default"}
+                variant="dot"
+                radius="sm"
+              >
+                {checkPaymentStatus()}
+              </Chip>
 
-          <Chip
-            className="capitalize"
-            color={statusColorMap[checkPolicyStatus()] || "default"} // Usa "default" o altro colore di fallback
-            variant="dot"
-            radius="sm"
-          >
-            {checkPolicyStatus()}
-          </Chip>
-        </div>
+              <Chip
+                className="capitalize"
+                color={statusColorMap[checkPolicyStatus()] || "default"}
+                variant="dot"
+                radius="sm"
+              >
+                {checkPolicyStatus()}
+              </Chip>
+            </div>
+          </>
+        ) : (
+          <p className="text-gray-700">
+            <strong> Veicolo non assicurato</strong>
+          </p>
+        )}
       </div>
     </div>
   );

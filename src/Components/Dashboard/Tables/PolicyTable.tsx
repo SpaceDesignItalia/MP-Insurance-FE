@@ -343,18 +343,18 @@ export default function PolicyTable() {
             size="sm"
             variant="flat"
           >
-            {cellValue}
+            {policy.status}
           </Chip>
         );
       case "paymentStatus":
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[cellValue as string]}
+            color={statusColorMap[policy.paymentStatus]}
             size="sm"
             variant="flat"
           >
-            {cellValue}
+            {policy.paymentStatus}
           </Chip>
         );
       case "typeId":
@@ -376,9 +376,9 @@ export default function PolicyTable() {
           </div>
         );
       case "startDate":
-        return dayjs(cellValue).format("DD/MM/YYYY");
+        return dayjs(policy.startDate).format("DD/MM/YYYY");
       case "endDate":
-        return dayjs(cellValue).format("DD/MM/YYYY");
+        return dayjs(policy.endDate).format("DD/MM/YYYY");
       case "insuranceType":
         return (
           <ul className="list-disc">
@@ -389,27 +389,18 @@ export default function PolicyTable() {
         );
       case "duration":
         return (
-          <>{policy.duration === 12 ? "1 anno" : <p>{cellValue} mesi</p>}</>
+          <>
+            {policy.duration === 12 ? "1 anno" : <p>{policy.duration} mesi</p>}
+          </>
         );
       case "amount":
-        return <p>€ {cellValue}</p>;
+        return <p>€ {policy.amount}</p>;
       case "actions":
         return (
           <div className="relative flex justify-center items-center gap-2">
             <Tooltip content="Dettagli polizza" closeDelay={0} showArrow>
               <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
                 <RemoveRedEyeRoundedIcon />
-              </span>
-            </Tooltip>
-            <Tooltip
-              color="warning"
-              className="text-white"
-              content="Modifica polizza"
-              closeDelay={0}
-              showArrow
-            >
-              <span className="text-lg text-warning cursor-pointer active:opacity-50">
-                <ModeEditOutlineRoundedIcon />
               </span>
             </Tooltip>
             <Tooltip
