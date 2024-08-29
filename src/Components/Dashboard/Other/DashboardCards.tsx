@@ -2,34 +2,92 @@ import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
 import AccessAlarmRoundedIcon from "@mui/icons-material/AccessAlarmRounded";
 import Groups2RoundedIcon from "@mui/icons-material/Groups2Rounded";
 import CommuteRoundedIcon from "@mui/icons-material/CommuteRounded";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_URL } from "../../../API/API";
 
 export default function DashboardCards() {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       id: 1,
       name: "Polizze attive",
-      stat: "250",
+      stat: "",
       icon: ArticleRoundedIcon,
     },
     {
       id: 2,
       name: "Polizze in scadenza (-10g)",
-      stat: "50",
+      stat: "",
       icon: AccessAlarmRoundedIcon,
     },
     {
       id: 3,
       name: "Clienti registrati",
-      stat: "70",
+      stat: "",
       icon: Groups2RoundedIcon,
     },
     {
       id: 4,
       name: "Veicoli registrati",
-      stat: "300",
+      stat: "",
       icon: CommuteRoundedIcon,
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    axios
+      .get("/Policy/GET/GetActivePolicies", { withCredentials: true })
+      .then((res) => {
+        setStats((prev) => {
+          return prev.map((item) => {
+            if (item.id === 1) {
+              return { ...item, stat: res.data.length };
+            }
+            return item;
+          });
+        });
+      });
+
+    axios
+      .get("/Policy/GET/GetExpiringPolicies", { withCredentials: true })
+      .then((res) => {
+        setStats((prev) => {
+          return prev.map((item) => {
+            if (item.id === 2) {
+              return { ...item, stat: res.data.length };
+            }
+            return item;
+          });
+        });
+      });
+
+    axios
+      .get("/Customer/GET/GetAllCustomers", { withCredentials: true })
+      .then((res) => {
+        setStats((prev) => {
+          return prev.map((item) => {
+            if (item.id === 3) {
+              return { ...item, stat: res.data.length };
+            }
+            return item;
+          });
+        });
+      });
+
+    axios
+      .get("/Vehicle/GET/GetAllVehicles", { withCredentials: true })
+      .then((res) => {
+        setStats((prev) => {
+          return prev.map((item) => {
+            if (item.id === 4) {
+              return { ...item, stat: res.data.length };
+            }
+            return item;
+          });
+        });
+      });
+  }, []);
+
   return (
     <div>
       <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
