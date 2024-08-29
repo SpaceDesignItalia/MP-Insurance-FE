@@ -174,11 +174,22 @@ export default function ViewCustomerModel() {
 
   const clearEditingData = () => {
     setIsEditingData(false);
+    fetchCustomerData();
   };
 
   const handleEditCustomerData = (e: any) => {
     const { name, value } = e;
-    setEditingData({ ...editingData, [name]: value });
+    if (name === "phoneNumber") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      if (numericValue.length <= 10) {
+        setEditingData({ ...editingData, [name]: numericValue });
+      }
+    } else if (name === "email") {
+      const emailValue = value.replace(/\s+/g, "");
+      setEditingData({ ...editingData, [name]: emailValue });
+    } else {
+      setEditingData({ ...editingData, [name]: value });
+    }
   };
 
   const checkEditedData = () => {
