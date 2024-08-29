@@ -1,6 +1,7 @@
-import { User } from "@nextui-org/react";
+import { Button, User } from "@nextui-org/react";
 import dayjs from "dayjs";
 import { API_URL_IMG } from "../../../API/API";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 
 interface PolicyDataProps {
   policyId: number;
@@ -34,11 +35,21 @@ export default function VehiclePolicyCard({
     <>
       {isVisible && (
         <div className="flex flex-col gap-4">
-          <h1 className="text-xl font-semibold">
-            Polizza del veicolo: {PolicyData.brand + " " + PolicyData.model}
-          </h1>
+          <div className="flex flex-col gap-10 sm:flex-row justify-between items-center">
+            <h1 className="text-xl font-semibold">
+              Polizza del veicolo: {PolicyData.brand + " " + PolicyData.model}
+            </h1>
+            <Button
+              color="danger"
+              radius="sm"
+              startContent={<DeleteRoundedIcon />}
+              className="w-full sm:w-1/6"
+            >
+              Elimina polizza
+            </Button>
+          </div>
 
-          <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 sm:rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
+          <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
             <h2 className="text-base font-semibold leading-6 text-gray-900">
               Polizza assicurativa
             </h2>

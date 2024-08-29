@@ -4,7 +4,9 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Link, Skeleton } from "@nextui-org/react";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import { Button, Input, Link, Skeleton } from "@nextui-org/react";
 import VehiecleCard from "./VehiecleCard";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -70,20 +72,25 @@ const POLICYDEFAULTVALUE: PolicyDataProps = {
   types: [],
 };
 
+const CUSTOMERDEFAULTVALUE: CustomerDataProps = {
+  clientId: 0,
+  firstName: "",
+  lastName: "",
+  email: "",
+  phoneNumber: "",
+};
+
 export default function ViewCustomerModel() {
   const { clientId } = useParams();
 
-  const [customerData, setCustomerData] = useState<CustomerDataProps>({
-    clientId: 0,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phoneNumber: "",
-  });
-
+  const [isEditingData, setIsEditingData] = useState<boolean>(false);
+  const [customerData, setCustomerData] =
+    useState<CustomerDataProps>(CUSTOMERDEFAULTVALUE);
   const [showPolicy, setShowPolicy] = useState<boolean>(false);
   const [policyData, setPolicyData] =
     useState<PolicyDataProps>(POLICYDEFAULTVALUE);
+  const [editingData, setEditingData] =
+    useState<CustomerDataProps>(CUSTOMERDEFAULTVALUE);
   const [loadedAllData, setLoadedAllData] = useState<boolean>(false);
 
   const [vehicleData, setVehicleData] = useState<VehicleDataProps[]>([]);
@@ -100,6 +107,7 @@ export default function ViewCustomerModel() {
 
       if (res.status == 200) {
         setCustomerData(res.data);
+        setEditingData(res.data);
 
         const res2 = await axios.get("/Vehicle/GET/GetClientVehicles", {
           params: { clientId: clientId },
@@ -164,50 +172,174 @@ export default function ViewCustomerModel() {
     }
   };
 
+  const clearEditingData = () => {
+    setIsEditingData(false);
+  };
+
+  const handleEditCustomerData = (e: any) => {
+    const { name, value } = e;
+    setEditingData({ ...editingData, [name]: value });
+  };
+
+  const checkEditedData = () => {
+    return (
+      editingData.firstName !== customerData.firstName ||
+      editingData.lastName !== customerData.lastName ||
+      editingData.email !== customerData.email ||
+      editingData.phoneNumber !== customerData.phoneNumber
+    );
+  };
+
+  async function updateCustomerData() {
+    try {
+      const res = await axios.put(
+        "/Customer/UPDATE/UpdateCustomerData",
+        {
+          customerData: editingData,
+        },
+        { withCredentials: true }
+      );
+
+      if (res.status == 200) {
+        fetchCustomerData();
+        setIsEditingData(false);
+        setSelectedVehicleId(null);
+        setShowPolicy(false);
+        setPolicyData(POLICYDEFAULTVALUE);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <main>
       <header className="relative isolate border-b-2">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
-            <div className="flex w-full items-center gap-x-6">
-              <h1 className="w-full flex flex-col gap-2">
-                <Skeleton isLoaded={loadedAllData} className="w-1/3 rounded-lg">
-                  <div className="flex flex-row gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
-                    <InsertEmoticonOutlinedIcon />
-                    {customerData.firstName + " " + customerData.lastName}
+          {isEditingData ? (
+            <div className="mx-auto flex flex-col sm:flex-row max-w-2xl sm:items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none gap-5">
+              <div className="flex w-full items-center gap-x-6">
+                <h1 className="w-full sm:w-1/2 flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
+                    <Input
+                      label="Nome"
+                      name="firstName"
+                      variant="bordered"
+                      radius="sm"
+                      size="sm"
+                      value={editingData.firstName}
+                      onChange={(e) => handleEditCustomerData(e.target)}
+                    />
+                    <Input
+                      label="Cognome"
+                      name="lastName"
+                      variant="bordered"
+                      radius="sm"
+                      size="sm"
+                      value={editingData.lastName}
+                      onChange={(e) => handleEditCustomerData(e.target)}
+                    />
                   </div>
-                </Skeleton>
 
-                <Skeleton isLoaded={loadedAllData} className="w-1/4 rounded-lg">
-                  <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                    <EmailOutlinedIcon />
-                    {customerData.email}
+                  <div className="grid grid-cols-1 gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
+                    <Input
+                      label="Email"
+                      name="email"
+                      variant="bordered"
+                      radius="sm"
+                      size="sm"
+                      value={editingData.email}
+                      onChange={(e) => handleEditCustomerData(e.target)}
+                    />
                   </div>
-                </Skeleton>
 
-                <Skeleton isLoaded={loadedAllData} className="w-1/5 rounded-lg">
-                  <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                    <PhoneAndroidOutlinedIcon />
-                    {customerData.phoneNumber}
+                  <div className="grid grid-cols-1 gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
+                    <Input
+                      label="Telefono"
+                      name="phoneNumber"
+                      variant="bordered"
+                      radius="sm"
+                      size="sm"
+                      value={editingData.phoneNumber}
+                      onChange={(e) => handleEditCustomerData(e.target)}
+                    />
                   </div>
-                </Skeleton>
-              </h1>
-            </div>
-            <div className="flex items-center gap-x-4 sm:gap-x-6">
-              <Skeleton isLoaded={loadedAllData} className="w-full rounded-lg">
+                </h1>
+              </div>
+              <div className="flex flex-row sm:flex-col gap-3 items-center justify-center sm:items-end gap-x-4 sm:gap-x-6">
                 <Button
-                  as={Link}
-                  href="#"
+                  color="danger"
+                  radius="sm"
+                  className="text-white"
+                  startContent={<CloseRoundedIcon />}
+                  onClick={clearEditingData}
+                >
+                  Annulla
+                </Button>
+                <Button
                   color="warning"
                   radius="sm"
                   className="text-white"
-                  startContent={<EditRoundedIcon />}
+                  startContent={<SaveRoundedIcon />}
+                  isDisabled={!checkEditedData()}
+                  onClick={updateCustomerData}
                 >
-                  Modifica
+                  Salva modifiche
                 </Button>
-              </Skeleton>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="mx-auto flex max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
+              <div className="flex w-full items-center gap-x-6">
+                <h1 className="w-full flex flex-col gap-2">
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="w-full sm:w-1/3 rounded-lg"
+                  >
+                    <div className="flex flex-row gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
+                      <InsertEmoticonOutlinedIcon />
+                      {customerData.firstName + " " + customerData.lastName}
+                    </div>
+                  </Skeleton>
+
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="w-full sm:w-1/4 rounded-lg"
+                  >
+                    <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
+                      <EmailOutlinedIcon />
+                      {customerData.email}
+                    </div>
+                  </Skeleton>
+
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="w-full sm:w-1/5 rounded-lg"
+                  >
+                    <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
+                      <PhoneAndroidOutlinedIcon />
+                      {customerData.phoneNumber}
+                    </div>
+                  </Skeleton>
+                </h1>
+              </div>
+              <div className="flex items-center gap-x-4 sm:gap-x-6">
+                <Skeleton
+                  isLoaded={loadedAllData}
+                  className="w-full rounded-lg"
+                >
+                  <Button
+                    color="warning"
+                    radius="sm"
+                    className="text-white"
+                    startContent={<EditRoundedIcon />}
+                    onClick={() => setIsEditingData(!isEditingData)}
+                  >
+                    Modifica
+                  </Button>
+                </Skeleton>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -217,9 +349,13 @@ export default function ViewCustomerModel() {
 
           <Skeleton isLoaded={loadedAllData} className="rounded-lg">
             <Button
+              as={Link}
               color="primary"
               radius="sm"
               startContent={<AddRoundedIcon />}
+              href={
+                "/customers/view-customer-data/" + clientId + "/add-vehicle"
+              }
             >
               Aggiungi veicolo
             </Button>
@@ -258,7 +394,7 @@ export default function ViewCustomerModel() {
             </>
           )}
         </div>
-        <div className="mt-3">
+        <div className="mt-3 px-4">
           <VehiclePolicyCard
             PolicyData={{
               policyId: Number(policyData.policyId),
