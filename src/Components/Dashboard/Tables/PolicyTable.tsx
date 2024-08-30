@@ -91,11 +91,11 @@ export default function PolicyTable() {
 
   const [searchFilter, setSearchFilter] = useState<SearchFilter>({
     searchTerms: "",
-    vehicleTypeId: "",
-    policyTypeId: "",
-    duration: "",
-    state: "",
-    paymentStatus: "",
+    vehicleTypeId: "0",
+    policyTypeId: "0",
+    duration: "0",
+    state: "0",
+    paymentStatus: "0",
   });
   const [policies, setPolicies] = useState<Policy[]>([]);
 
