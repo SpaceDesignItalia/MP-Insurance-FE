@@ -28,6 +28,7 @@ import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
 import axios from "axios";
+import ViewPolicyModal from "../Other/ViewPolicyModal";
 
 interface Policy {
   policyId: number;
@@ -52,6 +53,11 @@ interface SearchFilter {
   duration: string;
   state: string;
   paymentStatus: string;
+}
+
+interface ModalData {
+  open: boolean;
+  Policy: Policy;
 }
 
 // Mappa dei colori per i vari stati della polizza
@@ -115,6 +121,10 @@ export default function PolicyTable() {
   };
 
   const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([]);
+  const [modalData, setModalData] = useState<ModalData>({
+    open: false,
+    Policy: {} as Policy,
+  });
 
   useEffect(() => {
     axios
@@ -299,7 +309,7 @@ export default function PolicyTable() {
     );
   }, [page, pages]);
 
-  const renderCell = (policy: Policy, columnKey: string) => {
+  const renderCell = (policy: Policy, columnKey: string): React.ReactNode => {
     const cellValue = policy[columnKey as keyof Policy];
 
     switch (columnKey) {
@@ -373,21 +383,33 @@ export default function PolicyTable() {
       case "actions":
         return (
           <div className="relative flex justify-center items-center gap-2">
-            <Tooltip content="Dettagli polizza" closeDelay={0} showArrow>
-              <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                <RemoveRedEyeRoundedIcon />
-              </span>
-            </Tooltip>
-            <Tooltip
-              color="danger"
-              content="Rimuovi polizza"
-              closeDelay={0}
-              showArrow
+            <div
+              onClick={() =>
+                setModalData({
+                  ...modalData,
+                  open: true,
+                  Policy: policy,
+                })
+              }
             >
-              <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                <DeleteRoundedIcon />
-              </span>
-            </Tooltip>
+              <Tooltip content="Dettagli polizza" closeDelay={0} showArrow>
+                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                  <RemoveRedEyeRoundedIcon />
+                </span>
+              </Tooltip>
+            </div>
+            <div>
+              <Tooltip
+                color="danger"
+                content="Rimuovi polizza"
+                closeDelay={0}
+                showArrow
+              >
+                <span className="text-lg text-danger cursor-pointer active:opacity-50">
+                  <DeleteRoundedIcon />
+                </span>
+              </Tooltip>
+            </div>
           </div>
         );
       default:
@@ -397,6 +419,11 @@ export default function PolicyTable() {
 
   return (
     <div className="flex flex-col gap-5">
+      <ViewPolicyModal
+        isOpen={modalData.open}
+        isClosed={() => setModalData({ ...modalData, open: false })}
+        PolicyData={modalData.Policy}
+      />
       <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
         Polizze
       </h2>
