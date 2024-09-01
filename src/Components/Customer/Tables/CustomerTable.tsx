@@ -17,6 +17,7 @@ import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
 import axios from "axios";
+import DeleteCustomerModal from "../Other/DeleteCustomerModal";
 
 interface CustomerProps {
   clientId: number;
@@ -24,6 +25,11 @@ interface CustomerProps {
   lastName: string;
   email: string;
   phoneNumber: string;
+}
+
+interface DeleteModalData {
+  open: boolean;
+  customer: CustomerProps;
 }
 
 const columns = [
@@ -38,6 +44,10 @@ export default function CustomerTable() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const rowsPerPage = 10;
   const [page, setPage] = useState(1);
+  const [deleteModalData, setDeleteModalData] = useState<DeleteModalData>({
+    open: false,
+    customer: {} as CustomerProps,
+  });
 
   useEffect(() => {
     fetchCustomers();
@@ -177,17 +187,26 @@ export default function CustomerTable() {
                   <RemoveRedEyeRoundedIcon />
                 </Link>
               </Tooltip>
-
-              <Tooltip
-                color="danger"
-                content="Rimuovi cliente"
-                closeDelay={0}
-                showArrow
+              <div
+                onClick={() =>
+                  setDeleteModalData({
+                    ...deleteModalData,
+                    open: true,
+                    customer: customer,
+                  })
+                }
               >
-                <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                  <DeleteRoundedIcon />
-                </span>
-              </Tooltip>
+                <Tooltip
+                  color="danger"
+                  content="Rimuovi cliente"
+                  closeDelay={0}
+                  showArrow
+                >
+                  <span className="text-lg text-danger cursor-pointer active:opacity-50">
+                    <DeleteRoundedIcon />
+                  </span>
+                </Tooltip>
+              </div>
             </div>
           );
         default:
@@ -199,6 +218,11 @@ export default function CustomerTable() {
 
   return (
     <div className="flex flex-col gap-5">
+      <DeleteCustomerModal
+        isOpen={deleteModalData.open}
+        isClosed={() => setDeleteModalData({ ...deleteModalData, open: false })}
+        CustomerData={deleteModalData.customer}
+      />
       <Table
         aria-label="All policies"
         topContent={topContent}
