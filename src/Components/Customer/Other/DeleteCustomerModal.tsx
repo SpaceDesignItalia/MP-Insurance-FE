@@ -8,37 +8,29 @@ import {
 } from "@nextui-org/react";
 import axios from "axios";
 
-interface Policy {
-  policyId: number;
-  fullName: string;
+interface CustomerProps {
+  clientId: number;
+  firstName: string;
+  lastName: string;
   email: string;
-  typeId: string;
-  duration: number;
-  amount: string;
-  startDate: Date;
-  endDate: Date;
-  licensePlate: string;
-  status: string;
-  insuranceType: string;
-  paymentStatus: string;
-  types: string[];
+  phoneNumber: string;
 }
 
-interface DeletePolicyModalProps {
+interface DeleteCustomerModalProps {
   isOpen: boolean;
   isClosed: () => void;
-  PolicyData: Policy;
+  CustomerData: CustomerProps;
 }
 
-export default function DeletePolicyModal({
+export default function DeleteCustomerModal({
   isOpen,
   isClosed,
-  PolicyData,
-}: DeletePolicyModalProps) {
-  function handleDeletePolicy() {
+  CustomerData,
+}: DeleteCustomerModalProps) {
+  function handleDeleteCustomer() {
     axios
-      .delete("/policy/DELETE/DeletePolicy", {
-        params: { policyId: PolicyData.policyId },
+      .delete("/customer/DELETE/DeleteCustomer", {
+        params: { clientId: CustomerData.clientId },
         withCredentials: true,
       })
       .then(() => {
@@ -59,15 +51,16 @@ export default function DeletePolicyModal({
         {(isClosed) => (
           <>
             <ModalHeader>
-              Si conferma di eliminare la polizza di {PolicyData.fullName}
+              Si conferma di eliminare il cliente: {CustomerData.firstName}{" "}
+              {CustomerData.lastName}
             </ModalHeader>
             <ModalBody>
               <div className="mt-6 border-t border-gray-100">
                 <p className="text-sm font-medium leading-6 text-gray-900">
                   <span className="text-red-400 font-bold">Attenzione:</span> Si
-                  desidera confermare che l'operazione di eliminazione di una
-                  polizza è definitiva e non può essere annullata. Una volta
-                  confermata l'eliminazione, tutti i dati associati alla polizza
+                  desidera confermare che l'operazione di eliminazione di un
+                  cliente è definitiva e non può essere annullata. Una volta
+                  confermata l'eliminazione, tutti i dati associati al cliente
                   verranno rimossi in modo permanente e non sarà possibile
                   recuperarli. Si prega di procedere con cautela e assicurarsi
                   di aver considerato tutte le implicazioni di questa azione.
@@ -81,7 +74,7 @@ export default function DeletePolicyModal({
                 <Button
                   color="danger"
                   variant="light"
-                  onClick={handleDeletePolicy}
+                  onClick={handleDeleteCustomer}
                   radius="sm"
                 >
                   Conferma

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Table,
@@ -19,7 +19,6 @@ import {
   PopoverContent,
   Link,
 } from "@nextui-org/react";
-import ModeEditOutlineRoundedIcon from "@mui/icons-material/ModeEditOutlineRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -61,6 +60,16 @@ interface ViewModalData {
   Policy: Policy;
 }
 
+interface DeleteModalData {
+  open: boolean;
+  Policy: Policy;
+}
+
+interface PolicyTypeFilter {
+  insuranceTypeId: string;
+  name: string;
+}
+
 // Mappa dei colori per i vari stati della polizza
 const statusColorMap: Record<string, string> = {
   Attiva: "success",
@@ -70,14 +79,6 @@ const statusColorMap: Record<string, string> = {
   NonPagato: "warning",
   Rate: "primary",
 };
-
-const policyTypeFilter = [
-  { value: "0", label: "Tutti" },
-  { value: "1", label: "RCA" },
-  { value: "2", label: "Furto/Incendio" },
-  { value: "3", label: "Infortuni" },
-  { value: "4", label: "Assistenza stradale" },
-];
 
 export default function PolicyTable() {
   const columns = [
@@ -95,6 +96,23 @@ export default function PolicyTable() {
 
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
+
+  let [policyTypeFilter, setPolicyTypeFilter] = useState<PolicyTypeFilter[]>(
+    []
+  );
+
+  useEffect(() => {
+    axios
+      .get("/Company/GET/GetAllInsuranceTypes", { withCredentials: true })
+      .then((res) => {
+        const updatedPolicyTypeFilter = [
+          ...policyTypeFilter,
+          { insuranceTypeId: "0", name: "Tutti" },
+          ...res.data,
+        ];
+        setPolicyTypeFilter(updatedPolicyTypeFilter);
+      });
+  }, []);
 
   const [searchFilter, setSearchFilter] = useState<SearchFilter>({
     searchTerms: "",
@@ -127,7 +145,7 @@ export default function PolicyTable() {
     open: false,
     Policy: {} as Policy,
   });
-  const [DeleteModalData, setDeleteModalData] = useState<ViewModalData>({
+  const [DeleteModalData, setDeleteModalData] = useState<DeleteModalData>({
     open: false,
     Policy: {} as Policy,
   });
@@ -150,7 +168,6 @@ export default function PolicyTable() {
   }, [page, filteredPolicies]);
 
   const pages = Math.ceil(filteredPolicies.length / rowsPerPage);
-  console.log("filteredPolicies", filteredPolicies.length);
   const topContent = useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
@@ -209,8 +226,11 @@ export default function PolicyTable() {
                     }
                   >
                     {policyTypeFilter.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                      <SelectItem
+                        key={option.insuranceTypeId}
+                        value={option.insuranceTypeId}
+                      >
+                        {option.name}
                       </SelectItem>
                     ))}
                   </Select>
@@ -301,7 +321,7 @@ export default function PolicyTable() {
         </div>
       </div>
     );
-  }, [searchFilter, filteredPolicies.length]);
+  }, [searchFilter, filteredPolicies.length, policyTypeFilter]);
 
   const bottomContent = useMemo(() => {
     return (
@@ -334,7 +354,16 @@ export default function PolicyTable() {
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[policy.status]}
+            color={
+              statusColorMap[policy.status] as
+                | "success"
+                | "danger"
+                | "warning"
+                | "primary"
+                | "default"
+                | "secondary"
+                | undefined
+            }
             size="sm"
             variant="flat"
           >
@@ -345,7 +374,16 @@ export default function PolicyTable() {
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[policy.paymentStatus]}
+            color={
+              statusColorMap[policy.paymentStatus] as
+                | "default"
+                | "success"
+                | "danger"
+                | "warning"
+                | "primary"
+                | "secondary"
+                | undefined
+            }
             size="sm"
             variant="flat"
           >
@@ -371,9 +409,9 @@ export default function PolicyTable() {
           </div>
         );
       case "startDate":
-        return dayjs(policy.startDate).format("DD/MM/YYYY");
+        return <>{dayjs(policy.startDate).format("DD/MM/YYYY")}</>;
       case "endDate":
-        return dayjs(policy.endDate).format("DD/MM/YYYY");
+        return <>{dayjs(policy.endDate).format("DD/MM/YYYY")}</>;
       case "insuranceType":
         return (
           <ul className="list-disc">
@@ -431,7 +469,7 @@ export default function PolicyTable() {
           </div>
         );
       default:
-        return cellValue;
+        return cellValue as ReactNode;
     }
   };
 
@@ -471,7 +509,7 @@ export default function PolicyTable() {
           {(item) => (
             <TableRow key={item.policyId}>
               {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+                <TableCell>{renderCell(item, String(columnKey))}</TableCell>
               )}
             </TableRow>
           )}
