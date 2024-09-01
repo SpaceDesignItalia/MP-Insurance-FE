@@ -28,6 +28,8 @@ import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
 import axios from "axios";
+import ViewPolicyModal from "../Other/ViewPolicyModal";
+import DeletePolicyModal from "../Other/DeletePolicyModal";
 
 interface Policy {
   policyId: number;
@@ -52,6 +54,11 @@ interface SearchFilter {
   duration: string;
   state: string;
   paymentStatus: string;
+}
+
+interface ViewModalData {
+  open: boolean;
+  Policy: Policy;
 }
 
 // Mappa dei colori per i vari stati della polizza
@@ -104,6 +111,7 @@ export default function PolicyTable() {
       .get("/Policy/GET/GetAllPolicies", { withCredentials: true })
       .then((res) => {
         setPolicies(res.data);
+        setFilteredPolicies(res.data);
       });
   }, []);
 
@@ -115,6 +123,14 @@ export default function PolicyTable() {
   };
 
   const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([]);
+  const [ViewModalData, setViewModalData] = useState<ViewModalData>({
+    open: false,
+    Policy: {} as Policy,
+  });
+  const [DeleteModalData, setDeleteModalData] = useState<ViewModalData>({
+    open: false,
+    Policy: {} as Policy,
+  });
 
   useEffect(() => {
     axios
@@ -134,7 +150,7 @@ export default function PolicyTable() {
   }, [page, filteredPolicies]);
 
   const pages = Math.ceil(filteredPolicies.length / rowsPerPage);
-
+  console.log("filteredPolicies", filteredPolicies.length);
   const topContent = useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
@@ -164,10 +180,10 @@ export default function PolicyTable() {
               <PopoverContent className="w-[350px]">
                 <h2 className="font-semibold px-4 pt-3 w-full">Filtri:</h2>
                 <div className="p-4 flex flex-col gap-3 w-full">
-                  <p>Tipologia Veicolo: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Tipologia Veicolo"
                     selectedKeys={[searchFilter.vehicleTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("vehicleTypeId", e.target.value)
@@ -183,11 +199,10 @@ export default function PolicyTable() {
                       Moto
                     </SelectItem>
                   </Select>
-                  <p>Tipo di polizza: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
-                    placeholder="Tipo di polizza"
+                    label="Tipo Polizza"
                     selectedKeys={[searchFilter.policyTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("policyTypeId", e.target.value)
@@ -199,10 +214,10 @@ export default function PolicyTable() {
                       </SelectItem>
                     ))}
                   </Select>
-                  <p>Durata: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Durata"
                     selectedKeys={[searchFilter.duration]}
                     onChange={(e) =>
                       handleSearchFilterChange("duration", e.target.value)
@@ -218,10 +233,10 @@ export default function PolicyTable() {
                       1 anno
                     </SelectItem>
                   </Select>
-                  <p>Stato: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Stato"
                     selectedKeys={[searchFilter.state]}
                     onChange={(e) =>
                       handleSearchFilterChange("state", e.target.value)
@@ -240,10 +255,10 @@ export default function PolicyTable() {
                       Interrotta
                     </SelectItem>
                   </Select>
-                  <p>Stato Pagamento: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Stato Pagamento"
                     selectedKeys={[searchFilter.paymentStatus]}
                     onChange={(e) =>
                       handleSearchFilterChange("paymentStatus", e.target.value)
@@ -262,6 +277,11 @@ export default function PolicyTable() {
                       Pagamento a Rate
                     </SelectItem>
                   </Select>
+                  <p className="text-xs text-gray-500 text-center">
+                    I filtri verranno applicati automaticamente.
+                    <br />
+                    Polizze trovate: {filteredPolicies.length}
+                  </p>
                 </div>
               </PopoverContent>
             </Popover>
@@ -281,7 +301,7 @@ export default function PolicyTable() {
         </div>
       </div>
     );
-  }, [searchFilter]);
+  }, [searchFilter, filteredPolicies.length]);
 
   const bottomContent = useMemo(() => {
     return (
@@ -299,7 +319,7 @@ export default function PolicyTable() {
     );
   }, [page, pages]);
 
-  const renderCell = (policy: Policy, columnKey: string) => {
+  const renderCell = (policy: Policy, columnKey: string): React.ReactNode => {
     const cellValue = policy[columnKey as keyof Policy];
 
     switch (columnKey) {
@@ -373,21 +393,41 @@ export default function PolicyTable() {
       case "actions":
         return (
           <div className="relative flex justify-center items-center gap-2">
-            <Tooltip content="Dettagli polizza" closeDelay={0} showArrow>
-              <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                <RemoveRedEyeRoundedIcon />
-              </span>
-            </Tooltip>
-            <Tooltip
-              color="danger"
-              content="Rimuovi polizza"
-              closeDelay={0}
-              showArrow
+            <div
+              onClick={() =>
+                setViewModalData({
+                  ...ViewModalData,
+                  open: true,
+                  Policy: policy,
+                })
+              }
             >
-              <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                <DeleteRoundedIcon />
-              </span>
-            </Tooltip>
+              <Tooltip content="Dettagli polizza" closeDelay={0} showArrow>
+                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                  <RemoveRedEyeRoundedIcon />
+                </span>
+              </Tooltip>
+            </div>
+            <div
+              onClick={() =>
+                setDeleteModalData({
+                  ...DeleteModalData,
+                  open: true,
+                  Policy: policy,
+                })
+              }
+            >
+              <Tooltip
+                color="danger"
+                content="Rimuovi polizza"
+                closeDelay={0}
+                showArrow
+              >
+                <span className="text-lg text-danger cursor-pointer active:opacity-50">
+                  <DeleteRoundedIcon />
+                </span>
+              </Tooltip>
+            </div>
           </div>
         );
       default:
@@ -397,6 +437,16 @@ export default function PolicyTable() {
 
   return (
     <div className="flex flex-col gap-5">
+      <ViewPolicyModal
+        isOpen={ViewModalData.open}
+        isClosed={() => setViewModalData({ ...ViewModalData, open: false })}
+        PolicyData={ViewModalData.Policy}
+      />
+      <DeletePolicyModal
+        isOpen={DeleteModalData.open}
+        isClosed={() => setDeleteModalData({ ...DeleteModalData, open: false })}
+        PolicyData={DeleteModalData.Policy}
+      />
       <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
         Polizze
       </h2>
