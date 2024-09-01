@@ -29,6 +29,7 @@ import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
 import axios from "axios";
 import ViewPolicyModal from "../Other/ViewPolicyModal";
+import DeletePolicyModal from "../Other/DeletePolicyModal";
 
 interface Policy {
   policyId: number;
@@ -55,7 +56,7 @@ interface SearchFilter {
   paymentStatus: string;
 }
 
-interface ModalData {
+interface ViewModalData {
   open: boolean;
   Policy: Policy;
 }
@@ -121,7 +122,11 @@ export default function PolicyTable() {
   };
 
   const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([]);
-  const [modalData, setModalData] = useState<ModalData>({
+  const [ViewModalData, setViewModalData] = useState<ViewModalData>({
+    open: false,
+    Policy: {} as Policy,
+  });
+  const [DeleteModalData, setDeleteModalData] = useState<ViewModalData>({
     open: false,
     Policy: {} as Policy,
   });
@@ -385,8 +390,8 @@ export default function PolicyTable() {
           <div className="relative flex justify-center items-center gap-2">
             <div
               onClick={() =>
-                setModalData({
-                  ...modalData,
+                setViewModalData({
+                  ...ViewModalData,
                   open: true,
                   Policy: policy,
                 })
@@ -398,7 +403,15 @@ export default function PolicyTable() {
                 </span>
               </Tooltip>
             </div>
-            <div>
+            <div
+              onClick={() =>
+                setDeleteModalData({
+                  ...DeleteModalData,
+                  open: true,
+                  Policy: policy,
+                })
+              }
+            >
               <Tooltip
                 color="danger"
                 content="Rimuovi polizza"
@@ -420,9 +433,14 @@ export default function PolicyTable() {
   return (
     <div className="flex flex-col gap-5">
       <ViewPolicyModal
-        isOpen={modalData.open}
-        isClosed={() => setModalData({ ...modalData, open: false })}
-        PolicyData={modalData.Policy}
+        isOpen={ViewModalData.open}
+        isClosed={() => setViewModalData({ ...ViewModalData, open: false })}
+        PolicyData={ViewModalData.Policy}
+      />
+      <DeletePolicyModal
+        isOpen={DeleteModalData.open}
+        isClosed={() => setDeleteModalData({ ...DeleteModalData, open: false })}
+        PolicyData={DeleteModalData.Policy}
       />
       <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
         Polizze
