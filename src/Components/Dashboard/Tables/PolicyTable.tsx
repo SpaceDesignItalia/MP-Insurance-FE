@@ -111,6 +111,7 @@ export default function PolicyTable() {
       .get("/Policy/GET/GetAllPolicies", { withCredentials: true })
       .then((res) => {
         setPolicies(res.data);
+        setFilteredPolicies(res.data);
       });
   }, []);
 
@@ -149,7 +150,7 @@ export default function PolicyTable() {
   }, [page, filteredPolicies]);
 
   const pages = Math.ceil(filteredPolicies.length / rowsPerPage);
-
+  console.log("filteredPolicies", filteredPolicies.length);
   const topContent = useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
@@ -179,10 +180,10 @@ export default function PolicyTable() {
               <PopoverContent className="w-[350px]">
                 <h2 className="font-semibold px-4 pt-3 w-full">Filtri:</h2>
                 <div className="p-4 flex flex-col gap-3 w-full">
-                  <p>Tipologia Veicolo: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Tipologia Veicolo"
                     selectedKeys={[searchFilter.vehicleTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("vehicleTypeId", e.target.value)
@@ -198,11 +199,10 @@ export default function PolicyTable() {
                       Moto
                     </SelectItem>
                   </Select>
-                  <p>Tipo di polizza: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
-                    placeholder="Tipo di polizza"
+                    label="Tipo Polizza"
                     selectedKeys={[searchFilter.policyTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("policyTypeId", e.target.value)
@@ -214,10 +214,10 @@ export default function PolicyTable() {
                       </SelectItem>
                     ))}
                   </Select>
-                  <p>Durata: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Durata"
                     selectedKeys={[searchFilter.duration]}
                     onChange={(e) =>
                       handleSearchFilterChange("duration", e.target.value)
@@ -233,10 +233,10 @@ export default function PolicyTable() {
                       1 anno
                     </SelectItem>
                   </Select>
-                  <p>Stato: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Stato"
                     selectedKeys={[searchFilter.state]}
                     onChange={(e) =>
                       handleSearchFilterChange("state", e.target.value)
@@ -255,10 +255,10 @@ export default function PolicyTable() {
                       Interrotta
                     </SelectItem>
                   </Select>
-                  <p>Stato Pagamento: </p>
                   <Select
                     variant="bordered"
                     radius="sm"
+                    label="Stato Pagamento"
                     selectedKeys={[searchFilter.paymentStatus]}
                     onChange={(e) =>
                       handleSearchFilterChange("paymentStatus", e.target.value)
@@ -277,6 +277,11 @@ export default function PolicyTable() {
                       Pagamento a Rate
                     </SelectItem>
                   </Select>
+                  <p className="text-xs text-gray-500 text-center">
+                    I filtri verranno applicati automaticamente.
+                    <br />
+                    Polizze trovate: {filteredPolicies.length}
+                  </p>
                 </div>
               </PopoverContent>
             </Popover>
@@ -296,7 +301,7 @@ export default function PolicyTable() {
         </div>
       </div>
     );
-  }, [searchFilter]);
+  }, [searchFilter, filteredPolicies.length]);
 
   const bottomContent = useMemo(() => {
     return (
