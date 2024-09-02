@@ -4,7 +4,6 @@ import Groups2RoundedIcon from "@mui/icons-material/Groups2Rounded";
 import CommuteRoundedIcon from "@mui/icons-material/CommuteRounded";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../../API/API";
 
 export default function DashboardCards() {
   const [stats, setStats] = useState([
@@ -77,6 +76,7 @@ export default function DashboardCards() {
     axios
       .get("/Vehicle/GET/GetAllVehicles", { withCredentials: true })
       .then((res) => {
+        console.log(res.data);
         setStats((prev) => {
           return prev.map((item) => {
             if (item.id === 4) {

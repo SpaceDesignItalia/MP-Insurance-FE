@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Table,
@@ -19,7 +19,6 @@ import {
   PopoverContent,
   Link,
 } from "@nextui-org/react";
-import ModeEditOutlineRoundedIcon from "@mui/icons-material/ModeEditOutlineRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -36,8 +35,8 @@ interface Policy {
   typeId: string;
   duration: number;
   amount: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   licensePlate: string;
   status: string;
   insuranceType: string;
@@ -55,7 +54,10 @@ interface SearchFilter {
 }
 
 // Mappa dei colori per i vari stati della polizza
-const statusColorMap: Record<string, string> = {
+const statusColorMap: Record<
+  string,
+  "success" | "danger" | "warning" | "primary" | "default" | "secondary"
+> = {
   Attiva: "success",
   Interrotta: "danger",
   Scadenza: "warning",
@@ -168,6 +170,7 @@ export default function PolicyTable() {
                   <Select
                     variant="bordered"
                     radius="sm"
+                    placeholder="Tipologia Veicolo"
                     selectedKeys={[searchFilter.vehicleTypeId]}
                     onChange={(e) =>
                       handleSearchFilterChange("vehicleTypeId", e.target.value)
@@ -203,6 +206,7 @@ export default function PolicyTable() {
                   <Select
                     variant="bordered"
                     radius="sm"
+                    placeholder="Durata"
                     selectedKeys={[searchFilter.duration]}
                     onChange={(e) =>
                       handleSearchFilterChange("duration", e.target.value)
@@ -222,6 +226,7 @@ export default function PolicyTable() {
                   <Select
                     variant="bordered"
                     radius="sm"
+                    placeholder="Stato"
                     selectedKeys={[searchFilter.state]}
                     onChange={(e) =>
                       handleSearchFilterChange("state", e.target.value)
@@ -244,6 +249,7 @@ export default function PolicyTable() {
                   <Select
                     variant="bordered"
                     radius="sm"
+                    placeholder="Stato Pagamento"
                     selectedKeys={[searchFilter.paymentStatus]}
                     onChange={(e) =>
                       handleSearchFilterChange("paymentStatus", e.target.value)
@@ -299,7 +305,7 @@ export default function PolicyTable() {
     );
   }, [page, pages]);
 
-  const renderCell = (policy: Policy, columnKey: string) => {
+  const renderCell = (policy: Policy, columnKey: any) => {
     const cellValue = policy[columnKey as keyof Policy];
 
     switch (columnKey) {
@@ -314,7 +320,7 @@ export default function PolicyTable() {
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[policy.status]}
+            color={statusColorMap[policy.status] || "default"}
             size="sm"
             variant="flat"
           >
@@ -325,7 +331,7 @@ export default function PolicyTable() {
         return (
           <Chip
             className="capitalize"
-            color={statusColorMap[policy.paymentStatus]}
+            color={statusColorMap[policy.paymentStatus] || "default"}
             size="sm"
             variant="flat"
           >

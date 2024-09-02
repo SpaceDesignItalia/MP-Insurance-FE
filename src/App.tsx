@@ -13,6 +13,7 @@ import ViewCustomerPage from "./Pages/Customer/ViewCustomerPage";
 import CalendarDashboard from "./Pages/Calendar/CalendarDashboard";
 import AddPolicyPage from "./Pages/Policy/AddPolicyPage";
 import AddVehiclePage from "./Pages/Customer/AddVehiclePage";
+import EditCustomerVehicles from "./Pages/Customer/EditCustomerVehicles";
 
 const App: React.FC = () => {
   axios.defaults.baseURL = API_URL;
@@ -84,6 +85,10 @@ const EmployeeProtectedRoutes: React.FC = () => {
         <Route
           path="/customers/view-customer-data/:clientId/add-vehicle"
           element={<AddVehiclePage />}
+        />
+        <Route
+          path="/customers/view-customer-data/:clientId/edit-vehicles"
+          element={<EditCustomerVehicles />}
         />
         <Route path="/policy/add-policy" element={<AddPolicyPage />} />
         <Route path="/calendar" element={<CalendarDashboard />} />

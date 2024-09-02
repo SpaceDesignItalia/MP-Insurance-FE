@@ -3,7 +3,6 @@ import InsertEmoticonOutlinedIcon from "@mui/icons-material/InsertEmoticonOutlin
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import { Button, Input, Link, Skeleton } from "@nextui-org/react";
@@ -299,7 +298,7 @@ export default function ViewCustomerModel() {
               </div>
             </div>
           ) : (
-            <div className="mx-auto flex max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
+            <div className="mx-auto flex flex-col sm:flex-row gap-5 max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
               <div className="flex w-full items-center gap-x-6">
                 <h1 className="w-full flex flex-col gap-2">
                   <Skeleton
@@ -345,7 +344,7 @@ export default function ViewCustomerModel() {
                     startContent={<EditRoundedIcon />}
                     onClick={() => setIsEditingData(!isEditingData)}
                   >
-                    Modifica
+                    Modifica dati
                   </Button>
                 </Skeleton>
               </div>
@@ -357,20 +356,22 @@ export default function ViewCustomerModel() {
       <div className="flex flex-col gap-3 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex flex-row justify-between items-center">
           <h1 className="text-xl font-semibold">Veicoli intestati</h1>
-
-          <Skeleton isLoaded={loadedAllData} className="rounded-lg">
-            <Button
-              as={Link}
-              color="primary"
-              radius="sm"
-              startContent={<AddRoundedIcon />}
-              href={
-                "/customers/view-customer-data/" + clientId + "/add-vehicle"
-              }
-            >
-              Aggiungi veicolo
-            </Button>
-          </Skeleton>
+          <div className="flex flex-row gap-5">
+            <Skeleton isLoaded={loadedAllData} className="rounded-lg">
+              <Button
+                as={Link}
+                color="warning"
+                className="text-white"
+                radius="sm"
+                startContent={<EditRoundedIcon />}
+                href={
+                  "/customers/view-customer-data/" + clientId + "/edit-vehicles"
+                }
+              >
+                Modifica veicoli
+              </Button>
+            </Skeleton>
+          </div>
         </div>
         <div className="mt-4 mx-auto grid max-w-2xl  grid-cols-1 sm:grid-cols-2 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           {vehicleData.length !== 0 ? (
@@ -391,6 +392,7 @@ export default function ViewCustomerModel() {
                       endDate: vehicle.endDate,
                       paymentStatusId: Number(vehicle.paymentStatusId),
                     }}
+                    variant="policy"
                     isSelected={selectedVehicleId == vehicle.vehicleId}
                     onSelect={handleVehicleSelect}
                   />
