@@ -17,12 +17,14 @@ interface VehicleInfoCardProps {
   VehicleData: VehicleDataProps;
   isVisible: boolean;
   handleDeleteVehicle: (vehicleId: number) => void;
+  handleUpdateVehicleData: (vehicleData: VehicleDataProps) => void;
 }
 
 export default function VehicleInfoCard({
   VehicleData,
   isVisible,
   handleDeleteVehicle,
+  handleUpdateVehicleData,
 }: VehicleInfoCardProps) {
   const [editedData, setEditedData] = useState<VehicleDataProps>(VehicleData);
   const [isEditingData, setIsEditingData] = useState<boolean>(false);
@@ -53,6 +55,7 @@ export default function VehicleInfoCard({
       editedData.licensePlate !== VehicleData.licensePlate
     );
   };
+
   return (
     <>
       {isVisible && (
@@ -75,7 +78,7 @@ export default function VehicleInfoCard({
               Dati veicolo
             </h2>
 
-            <dl className="mt-6 grid grid-cols-1 text-sm leading-6 sm:grid-cols-2">
+            <dl className="mt-6 grid grid-cols-1 text-sm leading-6 lg:grid-cols-2">
               <div>
                 <div className=" sm:border-gray-900/5">
                   {isEditingData ? (
@@ -123,42 +126,44 @@ export default function VehicleInfoCard({
                   )}
                 </div>
               </div>
-              <div className="sm:pr-4 flex justify-end items-center mt-5">
-                {isEditingData ? (
-                  <div className="flex flex-col gap-3 w-full sm:w-1/3">
-                    <Button
-                      color="danger"
-                      radius="sm"
-                      startContent={<CloseRoundedIcon />}
-                      className="text-white"
-                      onClick={() => setIsEditingData(!isEditingData)}
-                    >
-                      Annulla
-                    </Button>
-                    <Button
-                      color="success"
-                      radius="sm"
-                      startContent={<SaveRoundedIcon />}
-                      className="text-white"
-                      onClick={() => setIsEditingData(!isEditingData)}
-                      isDisabled={!checkEditedData()}
-                    >
-                      Salva modifiche
-                    </Button>
-                  </div>
-                ) : (
+            </dl>
+            <div className="sm:pr-4 flex justify-end items-center mt-5">
+              {isEditingData ? (
+                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-1/3">
                   <Button
-                    color="warning"
+                    color="danger"
                     radius="sm"
-                    startContent={<EditRoundedIcon />}
+                    startContent={<CloseRoundedIcon />}
                     className="text-white"
                     onClick={() => setIsEditingData(!isEditingData)}
+                    fullWidth
                   >
-                    Modifica veicolo
+                    Annulla
                   </Button>
-                )}
-              </div>
-            </dl>
+                  <Button
+                    color="success"
+                    radius="sm"
+                    startContent={<SaveRoundedIcon />}
+                    className="text-white"
+                    onClick={() => handleUpdateVehicleData(editedData)}
+                    isDisabled={!checkEditedData()}
+                    fullWidth
+                  >
+                    Salva modifiche
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  color="warning"
+                  radius="sm"
+                  startContent={<EditRoundedIcon />}
+                  className="text-white"
+                  onClick={() => setIsEditingData(!isEditingData)}
+                >
+                  Modifica veicolo
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}

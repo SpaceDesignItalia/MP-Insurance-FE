@@ -129,6 +129,25 @@ export default function EditCustomerVehiclesModel() {
     }
   };
 
+  async function handleUpdateVehicleData(editedData: SelectedVehicleDataProps) {
+    try {
+      const res = await axios.put(
+        "/Vehicle/UPDATE/UpdateVehicleData",
+        { vehicleData: editedData },
+        { withCredentials: true }
+      );
+
+      if (res.status == 200) {
+        fetchCustomerVehicles();
+        setSelectedVehicleId(null);
+        setSelectedVehicle(SELECTEDVEHICLEDEFAULT);
+        setIsVisible(false);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <main>
       <div className="flex flex-col gap-3 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -195,6 +214,7 @@ export default function EditCustomerVehiclesModel() {
             }}
             isVisible={isVisible}
             handleDeleteVehicle={handleDeleteVehicle}
+            handleUpdateVehicleData={handleUpdateVehicleData}
           />
         </div>
       </div>
