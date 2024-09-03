@@ -154,7 +154,7 @@ export default function VehiecleCard({
       {variant == "edit" && (
         <>
           <div
-            className={`max-w-sm rounded-lg overflow-hidden bg-white transition-shadow duration-300 transform ${
+            className={`sm:max-w-sm rounded-lg overflow-hidden bg-white transition-shadow duration-300 transform cursor-pointer ${
               isSelected ? "shadow-xl border-primary border-3" : "border"
             }`}
             onClick={() => onSelect(VehiecleCardProps.vehicleId)}

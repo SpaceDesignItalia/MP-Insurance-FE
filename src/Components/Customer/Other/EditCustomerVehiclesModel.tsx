@@ -4,6 +4,7 @@ import { Button, Link, Skeleton } from "@nextui-org/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import VehiecleCard from "./VehiecleCard";
+import VehicleInfoCard from "./VehicleInfoCard";
 
 interface VehicleDataProps {
   vehicleId: number;
@@ -19,16 +20,36 @@ interface VehicleDataProps {
   paymentStatusId: number;
 }
 
+interface SelectedVehicleDataProps {
+  vehicleId: number;
+  brand: string;
+  model: string;
+  licensePlate: string;
+  typeId: number;
+}
+
+const SELECTEDVEHICLEDEFAULT = {
+  vehicleId: 0,
+  brand: "",
+  model: "",
+  licensePlate: "",
+  typeId: 0,
+};
+
 export default function EditCustomerVehiclesModel() {
   const { clientId } = useParams();
   const [loadedAllData, setLoadedAllData] = useState<boolean>(false);
 
   const [vehicleData, setVehicleData] = useState<VehicleDataProps[]>([]);
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<SelectedVehicleDataProps>(SELECTEDVEHICLEDEFAULT);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+
   useEffect(() => {
-    fetchCustomerData();
+    fetchCustomerVehicles();
   }, []);
 
-  async function fetchCustomerData() {
+  async function fetchCustomerVehicles() {
     try {
       const res = await axios.get("/Vehicle/GET/GetClientVehicles", {
         params: { clientId: clientId },
@@ -38,6 +59,38 @@ export default function EditCustomerVehiclesModel() {
       if (res.status == 200) {
         setVehicleData(res.data);
         setLoadedAllData(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function getVehicleData(selectedVehicleId: number) {
+    try {
+      const res = await axios.get("/Vehicle/GET/GetVehicleById", {
+        params: { vehicleId: selectedVehicleId },
+        withCredentials: true,
+      });
+      if (res.status == 200) {
+        setSelectedVehicle(res.data);
+        setIsVisible(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function handleDeleteVehicle(selectedVehicleId: number) {
+    try {
+      const res = await axios.delete("/Vehicle/DELETE/DeleteVehicle", {
+        params: { selectedVehicleId: selectedVehicleId },
+        withCredentials: true,
+      });
+
+      if (res.status === 200) {
+        setLoadedAllData(false);
+        setIsVisible(false);
+        fetchCustomerVehicles();
       }
     } catch (error) {
       console.error(error);
@@ -66,10 +119,13 @@ export default function EditCustomerVehiclesModel() {
 
     // Se il veicolo cliccato è già selezionato, deseleziona
     if (selectedVehicleId === vehicleId) {
+      setIsVisible(false);
       setSelectedVehicleId(null);
+      setSelectedVehicle(SELECTEDVEHICLEDEFAULT);
     } else {
       // Altrimenti seleziona il veicolo cliccato
       setSelectedVehicleId(vehicleId);
+      getVehicleData(vehicleId);
     }
   };
 
@@ -94,7 +150,7 @@ export default function EditCustomerVehiclesModel() {
             </Skeleton>
           </div>
         </div>
-        <div className="mt-4 mx-auto grid max-w-2xl  grid-cols-1 sm:grid-cols-2 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+        <div className="mt-4 sm:mx-auto grid max-w-2xl  grid-cols-1 sm:grid-cols-2 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 justify-center">
           {vehicleData.length !== 0 ? (
             <>
               {vehicleData.map((vehicle: VehicleDataProps) => {
@@ -128,7 +184,19 @@ export default function EditCustomerVehiclesModel() {
             </>
           )}
         </div>
-        <div className="mt-3 px-4"></div>
+        <div className="mt-3 px-4">
+          <VehicleInfoCard
+            VehicleData={{
+              vehicleId: Number(selectedVehicle.vehicleId),
+              brand: selectedVehicle.brand,
+              model: selectedVehicle.model,
+              licensePlate: selectedVehicle.licensePlate,
+              typeId: Number(selectedVehicle.typeId),
+            }}
+            isVisible={isVisible}
+            handleDeleteVehicle={handleDeleteVehicle}
+          />
+        </div>
       </div>
     </main>
   );
