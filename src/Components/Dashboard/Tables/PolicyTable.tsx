@@ -37,8 +37,8 @@ interface Policy {
   typeId: string;
   duration: number;
   amount: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   licensePlate: string;
   status: string;
   insuranceType: string;
@@ -71,7 +71,10 @@ interface PolicyTypeFilter {
 }
 
 // Mappa dei colori per i vari stati della polizza
-const statusColorMap: Record<string, string> = {
+const statusColorMap: Record<
+  string,
+  "success" | "danger" | "warning" | "primary" | "default" | "secondary"
+> = {
   Attiva: "success",
   Interrotta: "danger",
   Scadenza: "warning",

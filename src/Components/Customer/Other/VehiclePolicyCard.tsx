@@ -39,14 +39,6 @@ export default function VehiclePolicyCard({
             <h1 className="text-xl font-semibold">
               Polizza del veicolo: {PolicyData.brand + " " + PolicyData.model}
             </h1>
-            <Button
-              color="danger"
-              radius="sm"
-              startContent={<DeleteRoundedIcon />}
-              className="w-full sm:w-1/6"
-            >
-              Elimina polizza
-            </Button>
           </div>
 
           <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
@@ -153,6 +145,14 @@ export default function VehiclePolicyCard({
               </tfoot>
             </table>
           </div>
+          <Button
+            color="danger"
+            radius="sm"
+            startContent={<DeleteRoundedIcon />}
+            className="w-full sm:w-1/6"
+          >
+            Elimina polizza
+          </Button>
         </div>
       )}
     </>
