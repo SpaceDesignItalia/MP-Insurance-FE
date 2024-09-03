@@ -1,24 +1,20 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import {
+  Avatar,
   Dropdown,
-  DropdownTrigger,
   DropdownItem,
   DropdownMenu,
-  Avatar,
+  DropdownTrigger,
 } from "@nextui-org/react";
-import {
-  Bars3Icon,
-  XMarkIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/outline";
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import Logo from "../../assets/MpLogo.png";
 import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import Logo from "../../assets/MpLogo.png";
 
 interface NavigationItem {
   name: string;
@@ -143,7 +139,11 @@ export default function Navbar() {
             <Dropdown placement="bottom-start" radius="sm">
               <DropdownTrigger>
                 <div className="-m-1.5 flex items-center p-1.5 cursor-pointer">
-                  <Avatar className="h-8 w-8 rounded-full bg-gray-100" alt="" />
+                  <Avatar
+                    className="h-8 w-8 rounded-full bg-gray-100"
+                    alt=""
+                    src={Logo}
+                  />
                   <span className="hidden lg:flex lg:items-center">
                     <ChevronDownIcon
                       className="ml-2 h-5 w-5 text-gray-400"
@@ -153,15 +153,6 @@ export default function Navbar() {
                 </div>
               </DropdownTrigger>
               <DropdownMenu aria-label="User Actions" variant="flat">
-                <DropdownItem key="settings" href="/settings">
-                  <div className="flex flex-row gap-2">
-                    <Cog6ToothIcon
-                      className="h-6 w-6 shrink-0 text-gray-400 group-hover:text-primary"
-                      aria-hidden="true"
-                    />
-                    Impostazioni
-                  </div>
-                </DropdownItem>
                 <DropdownItem key="logout" color="danger" onClick={logout}>
                   <div className="flex flex-row gap-2 ">
                     <LogoutRoundedIcon className="h-6 w-6 shrink-0 text-gray-400 group-hover:text-danger" />
@@ -218,12 +209,6 @@ export default function Navbar() {
             </div>
             <div className="border-t border-gray-200 pb-3 pt-4">
               <div className="mt-3 space-y-1">
-                <a
-                  href="#"
-                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                >
-                  Impostazioni
-                </a>
                 <a
                   href="#"
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"

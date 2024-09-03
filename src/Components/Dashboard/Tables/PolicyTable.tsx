@@ -76,8 +76,8 @@ const statusColorMap: Record<
   "success" | "danger" | "warning" | "primary" | "default" | "secondary"
 > = {
   Attiva: "success",
-  Interrotta: "danger",
-  Scadenza: "warning",
+  Terminata: "danger",
+  "In Scadenza": "warning",
   Pagato: "success",
   NonPagato: "warning",
   Rate: "primary",

@@ -5,6 +5,7 @@ import {
   ModalBody,
   ModalFooter,
   Button,
+  Chip,
 } from "@nextui-org/react";
 
 interface Policy {
@@ -72,14 +73,11 @@ export default function ViewPolicyModal({
                     <dt className="text-sm font-medium leading-6 text-gray-900">
                       Tipo di Polizza
                     </dt>
-                    <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0 flex flex-row flex-wrap items-center gap-3">
                       {PolicyData.types.map((type) => (
-                        <span
-                          key={type}
-                          className="inline-block px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-full"
-                        >
+                        <Chip color="primary" key={type}>
                           {type}
-                        </span>
+                        </Chip>
                       ))}
                     </dd>
                   </div>
