@@ -2,6 +2,8 @@ import { Button, User } from "@nextui-org/react";
 import dayjs from "dayjs";
 import { API_URL_IMG } from "../../../API/API";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import DeletePolicyModal from "../../Dashboard/Other/DeletePolicyModal";
+import { useState } from "react";
 
 interface PolicyDataProps {
   policyId: number;
@@ -27,12 +29,27 @@ interface VehiclePolicyCardProps {
   isVisible: boolean;
 }
 
+interface DeleteModalData {
+  open: boolean;
+  Policy: PolicyDataProps;
+}
+
 export default function VehiclePolicyCard({
   PolicyData,
   isVisible,
 }: VehiclePolicyCardProps) {
+  const [deleteModalData, setDeleteModalData] = useState<DeleteModalData>({
+    open: false,
+    Policy: {} as PolicyDataProps,
+  });
+
   return (
     <>
+      <DeletePolicyModal
+        isOpen={deleteModalData.open}
+        isClosed={() => setDeleteModalData({ ...deleteModalData, open: false })}
+        PolicyData={deleteModalData.Policy}
+      />
       {isVisible && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-10 sm:flex-row justify-between items-center">
@@ -150,6 +167,13 @@ export default function VehiclePolicyCard({
             radius="sm"
             startContent={<DeleteRoundedIcon />}
             className="w-full sm:w-1/6"
+            onClick={() =>
+              setDeleteModalData({
+                ...deleteModalData,
+                open: true,
+                Policy: PolicyData,
+              })
+            }
           >
             Elimina polizza
           </Button>

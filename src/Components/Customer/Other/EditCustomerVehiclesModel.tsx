@@ -80,23 +80,6 @@ export default function EditCustomerVehiclesModel() {
     }
   }
 
-  async function handleDeleteVehicle(selectedVehicleId: number) {
-    try {
-      const res = await axios.delete("/Vehicle/DELETE/DeleteVehicle", {
-        params: { selectedVehicleId: selectedVehicleId },
-        withCredentials: true,
-      });
-
-      if (res.status === 200) {
-        setLoadedAllData(false);
-        setIsVisible(false);
-        fetchCustomerVehicles();
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   // Stato per tracciare il veicolo selezionato
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
     null
@@ -213,7 +196,6 @@ export default function EditCustomerVehiclesModel() {
               typeId: Number(selectedVehicle.typeId),
             }}
             isVisible={isVisible}
-            handleDeleteVehicle={handleDeleteVehicle}
             handleUpdateVehicleData={handleUpdateVehicleData}
           />
         </div>

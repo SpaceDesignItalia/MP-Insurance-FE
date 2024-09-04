@@ -4,6 +4,7 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import DeleteVehicleModal from "./DeleteVehicleModal";
 
 interface VehicleDataProps {
   vehicleId: number;
@@ -16,18 +17,25 @@ interface VehicleDataProps {
 interface VehicleInfoCardProps {
   VehicleData: VehicleDataProps;
   isVisible: boolean;
-  handleDeleteVehicle: (vehicleId: number) => void;
   handleUpdateVehicleData: (vehicleData: VehicleDataProps) => void;
+}
+
+interface DeleteModalData {
+  open: boolean;
+  Vehicle: VehicleDataProps;
 }
 
 export default function VehicleInfoCard({
   VehicleData,
   isVisible,
-  handleDeleteVehicle,
   handleUpdateVehicleData,
 }: VehicleInfoCardProps) {
   const [editedData, setEditedData] = useState<VehicleDataProps>(VehicleData);
   const [isEditingData, setIsEditingData] = useState<boolean>(false);
+  const [DeleteModalData, setDeleteModalData] = useState<DeleteModalData>({
+    open: false,
+    Vehicle: {} as VehicleDataProps,
+  });
 
   useEffect(() => {
     setEditedData(VehicleData);
@@ -58,6 +66,11 @@ export default function VehicleInfoCard({
 
   return (
     <>
+      <DeleteVehicleModal
+        isOpen={DeleteModalData.open}
+        isClosed={() => setDeleteModalData({ ...DeleteModalData, open: false })}
+        VehicleData={DeleteModalData.Vehicle}
+      />
       {isVisible && (
         <div className="flex flex-col-reverse sm:flex-col gap-4">
           <div className="flex flex-col gap-10 sm:flex-row justify-end items-center">
@@ -67,7 +80,13 @@ export default function VehicleInfoCard({
               radius="sm"
               startContent={<DeleteRoundedIcon />}
               className="w-full sm:w-1/6"
-              onClick={() => handleDeleteVehicle(VehicleData.vehicleId)}
+              onClick={() =>
+                setDeleteModalData({
+                  ...DeleteModalData,
+                  open: true,
+                  Vehicle: VehicleData,
+                })
+              }
             >
               Elimina veicolo
             </Button>
