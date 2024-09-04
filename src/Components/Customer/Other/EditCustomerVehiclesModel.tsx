@@ -57,8 +57,12 @@ export default function EditCustomerVehiclesModel() {
       });
 
       if (res.status == 200) {
-        setVehicleData(res.data);
-        setLoadedAllData(true);
+        if (res.data.length > 0) {
+          setVehicleData(res.data);
+          setLoadedAllData(true);
+        } else {
+          window.location.href = "/";
+        }
       }
     } catch (error) {
       console.error(error);
@@ -186,6 +190,7 @@ export default function EditCustomerVehiclesModel() {
             </>
           )}
         </div>
+
         <div className="mt-3 px-4">
           <VehicleInfoCard
             VehicleData={{

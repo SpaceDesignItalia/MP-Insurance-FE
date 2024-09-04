@@ -5,6 +5,8 @@ import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import CommuteRoundedIcon from "@mui/icons-material/CommuteRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Button, Input, Link, Skeleton } from "@nextui-org/react";
 import VehiecleCard from "./VehiecleCard";
 import { useParams } from "react-router-dom";
@@ -358,18 +360,22 @@ export default function ViewCustomerModel() {
           <h1 className="text-xl font-semibold">Veicoli intestati</h1>
           <div className="flex flex-row gap-5">
             <Skeleton isLoaded={loadedAllData} className="rounded-lg">
-              <Button
-                as={Link}
-                color="warning"
-                className="text-white"
-                radius="sm"
-                startContent={<EditRoundedIcon />}
-                href={
-                  "/customers/view-customer-data/" + clientId + "/edit-vehicles"
-                }
-              >
-                Modifica veicoli
-              </Button>
+              {vehicleData.length !== 0 && (
+                <Button
+                  as={Link}
+                  color="warning"
+                  className="text-white"
+                  radius="sm"
+                  startContent={<EditRoundedIcon />}
+                  href={
+                    "/customers/view-customer-data/" +
+                    clientId +
+                    "/edit-vehicles"
+                  }
+                >
+                  Modifica veicoli
+                </Button>
+              )}
             </Skeleton>
           </div>
         </div>
@@ -401,12 +407,49 @@ export default function ViewCustomerModel() {
             </>
           ) : (
             <>
-              <Skeleton className="h-40 w-96 rounded-lg" />
-              <Skeleton className="h-40 w-96 rounded-lg" />
-              <Skeleton className="h-40 w-96 rounded-lg" />
+              <Skeleton
+                isLoaded={loadedAllData}
+                className="h-40 w-96 rounded-lg"
+              />
+              <Skeleton
+                isLoaded={loadedAllData}
+                className="h-40 w-96 rounded-lg"
+              />
+              <Skeleton
+                isLoaded={loadedAllData}
+                className="h-40 w-96 rounded-lg"
+              />
             </>
           )}
         </div>
+        {vehicleData.length == 0 && (
+          <div className="flex flex-col items-center p-4 ">
+            <CommuteRoundedIcon sx={{ fontSize: 70 }} />
+            <h3 className="mt-4 text-lg font-semibold text-gray-900 text-center">
+              Nessun veicolo intestato a:{" "}
+              {customerData.firstName + " " + customerData.lastName}
+            </h3>
+            <p className="mt-2 text-sm text-gray-500 text-center">
+              Aggiungi un veicolo per continuare
+            </p>
+            <div className="mt-6 w-full flex justify-center">
+              <Button
+                as={Link}
+                href={
+                  "/customers/view-customer-data/" +
+                  customerData.clientId +
+                  "/add-vehicle"
+                }
+                color="primary"
+                radius="sm"
+                type="button"
+                startContent={<AddRoundedIcon />}
+              >
+                Aggiungi nuovo veicolo
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="mt-3 px-4">
           <VehiclePolicyCard
             PolicyData={{

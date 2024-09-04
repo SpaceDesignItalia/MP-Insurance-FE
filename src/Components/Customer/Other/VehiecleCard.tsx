@@ -28,7 +28,7 @@ const statusColorMap: Record<string, any> = {
   "In scadenza": "warning",
   Scaduta: "danger",
   Pagato: "success",
-  "Non Pagato": "warning",
+  "Non Pagato": "danger",
   Rate: "primary",
 };
 

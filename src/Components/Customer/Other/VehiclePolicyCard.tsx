@@ -1,9 +1,10 @@
-import { Button, User } from "@nextui-org/react";
+import { Button, Select, SelectItem, User } from "@nextui-org/react";
 import dayjs from "dayjs";
 import { API_URL_IMG } from "../../../API/API";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import DeletePolicyModal from "../../Dashboard/Other/DeletePolicyModal";
 import { useState } from "react";
+import axios from "axios";
 
 interface PolicyDataProps {
   policyId: number;
@@ -43,12 +44,42 @@ export default function VehiclePolicyCard({
     Policy: {} as PolicyDataProps,
   });
 
+  const PaymentStatus = [
+    { value: 1, label: "Pagato" },
+    { value: 2, label: "Non Pagato" },
+    { value: 3, label: "Rate" },
+  ];
+
+  async function handlePaymentStatusChange(e: any) {
+    const selectedStatus = PaymentStatus.find(
+      (status) => status.label === e
+    )?.value;
+    try {
+      const res = await axios.put(
+        "/Policy/UPDATE/ChangePolicyPaymentStatus",
+        {
+          policyId: PolicyData.policyId,
+          paymentStatusId: selectedStatus,
+        },
+        { withCredentials: true }
+      );
+
+      if (res.status == 200) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <>
       <DeletePolicyModal
         isOpen={deleteModalData.open}
         isClosed={() => setDeleteModalData({ ...deleteModalData, open: false })}
-        PolicyData={deleteModalData.Policy}
+        PolicyData={{
+          policyId: Number(deleteModalData.Policy.policyId),
+          fullName: deleteModalData.Policy.fullName,
+        }}
       />
       {isVisible && (
         <div className="flex flex-col gap-4">
@@ -56,24 +87,54 @@ export default function VehiclePolicyCard({
             <h1 className="text-xl font-semibold">
               Polizza del veicolo: {PolicyData.brand + " " + PolicyData.model}
             </h1>
+            <Button
+              color="danger"
+              radius="sm"
+              startContent={<DeleteRoundedIcon />}
+              className="w-full sm:w-1/6"
+              onClick={() =>
+                setDeleteModalData({
+                  ...deleteModalData,
+                  open: true,
+                  Policy: PolicyData,
+                })
+              }
+            >
+              Elimina polizza
+            </Button>
           </div>
 
           <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
             <h2 className="text-base font-semibold leading-6 text-gray-900">
               Polizza assicurativa
             </h2>
-
-            <User
-              name={PolicyData.companyName}
-              avatarProps={{
-                size: "lg",
-                isBordered: true,
-                src:
-                  PolicyData.companyLogo &&
-                  API_URL_IMG + "/CompanyLogo/" + PolicyData.companyLogo,
-              }}
-              className="mt-3"
-            />
+            <div className="flex flex-row justify-between">
+              <User
+                name={PolicyData.companyName}
+                avatarProps={{
+                  size: "lg",
+                  isBordered: true,
+                  src:
+                    PolicyData.companyLogo &&
+                    API_URL_IMG + "/CompanyLogo/" + PolicyData.companyLogo,
+                }}
+                className="mt-3"
+              />
+              <Select
+                label="Stato del pagamento"
+                labelPlacement="outside"
+                variant="bordered"
+                radius="sm"
+                placeholder="Seleziona uno stato"
+                selectedKeys={[PolicyData.paymentStatus]}
+                className="max-w-xs"
+                onChange={(e) => handlePaymentStatusChange(e.target.value)}
+              >
+                {PaymentStatus.map((status) => (
+                  <SelectItem key={status.label}>{status.label}</SelectItem>
+                ))}
+              </Select>
+            </div>
             <dl className="mt-6 grid grid-cols-1 text-sm leading-6 sm:grid-cols-2">
               <div className="sm:pr-4">
                 <dt className="inline text-gray-500">Attivata il</dt>{" "}
@@ -162,21 +223,6 @@ export default function VehiclePolicyCard({
               </tfoot>
             </table>
           </div>
-          <Button
-            color="danger"
-            radius="sm"
-            startContent={<DeleteRoundedIcon />}
-            className="w-full sm:w-1/6"
-            onClick={() =>
-              setDeleteModalData({
-                ...deleteModalData,
-                open: true,
-                Policy: PolicyData,
-              })
-            }
-          >
-            Elimina polizza
-          </Button>
         </div>
       )}
     </>

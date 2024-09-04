@@ -79,7 +79,7 @@ const statusColorMap: Record<
   Terminata: "danger",
   "In Scadenza": "warning",
   Pagato: "success",
-  NonPagato: "warning",
+  "Non Pagato": "danger",
   Rate: "primary",
 };
 

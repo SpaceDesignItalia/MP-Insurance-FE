@@ -11,17 +11,6 @@ import axios from "axios";
 interface Policy {
   policyId: number;
   fullName: string;
-  email: string;
-  typeId: string;
-  duration: number;
-  amount: string;
-  startDate: Date;
-  endDate: Date;
-  licensePlate: string;
-  status: string;
-  insuranceType: string;
-  paymentStatus: string;
-  types: string[];
 }
 
 interface DeletePolicyModalProps {
