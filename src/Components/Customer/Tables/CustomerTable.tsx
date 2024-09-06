@@ -82,6 +82,7 @@ export default function CustomerTable() {
   const handleSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
+    searchCustomer(query);
     if (query === "") {
       fetchCustomers(); // Reset customers if search query is cleared
     }
@@ -108,24 +109,6 @@ export default function CustomerTable() {
               onChange={handleSearchQuery}
               startContent={<SearchRoundedIcon />}
             />
-            <Button
-              color="primary"
-              radius="sm"
-              startContent={<SearchRoundedIcon />}
-              className="hidden sm:flex"
-              onClick={() => searchCustomer(searchQuery)}
-            >
-              Cerca
-            </Button>
-            <Button
-              color="primary"
-              radius="sm"
-              className="flex sm:hidden"
-              onClick={() => searchCustomer(searchQuery)}
-              isIconOnly
-            >
-              <SearchRoundedIcon />
-            </Button>
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
             <Button
