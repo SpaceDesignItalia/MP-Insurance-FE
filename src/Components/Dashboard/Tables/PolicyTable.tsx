@@ -44,6 +44,7 @@ interface Policy {
   insuranceType: string;
   paymentStatus: string;
   types: string[];
+  note: string;
 }
 
 interface SearchFilter {

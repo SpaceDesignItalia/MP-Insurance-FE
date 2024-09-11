@@ -52,6 +52,7 @@ interface PolicyDataProps {
   companyName: string;
   companyLogo: string;
   types: string[];
+  note: string;
 }
 
 const POLICYDEFAULTVALUE: PolicyDataProps = {
@@ -71,6 +72,7 @@ const POLICYDEFAULTVALUE: PolicyDataProps = {
   companyLogo: "",
   status: "",
   types: [],
+  note: "",
 };
 
 const CUSTOMERDEFAULTVALUE: CustomerDataProps = {
@@ -469,6 +471,7 @@ export default function ViewCustomerModel() {
               companyName: policyData.companyName,
               companyLogo: policyData.companyLogo,
               types: policyData.types,
+              note: policyData.note,
             }}
             isVisible={showPolicy}
           />

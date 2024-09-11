@@ -7,6 +7,7 @@ import {
   Button,
   Chip,
 } from "@nextui-org/react";
+import ReactQuill from "react-quill";
 
 interface Policy {
   policyId: number;
@@ -15,13 +16,14 @@ interface Policy {
   typeId: string;
   duration: number;
   amount: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   licensePlate: string;
   status: string;
   insuranceType: string;
   paymentStatus: string;
   types: string[];
+  note: string;
 }
 
 interface ViewPolicyModalProps {
@@ -137,6 +139,20 @@ export default function ViewPolicyModal({
                     <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
                       {new Date(PolicyData.endDate).toLocaleDateString("it-IT")}
                     </dd>
+                    {PolicyData.note && (
+                      <>
+                        <dt className="text-sm font-medium leading-6 text-gray-900">
+                          Note
+                        </dt>
+                        <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+                          <ReactQuill
+                            value={PolicyData.note}
+                            readOnly={true}
+                            theme={"bubble"}
+                          />
+                        </dd>
+                      </>
+                    )}
                   </div>
                 </dl>
               </div>

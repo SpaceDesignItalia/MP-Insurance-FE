@@ -15,6 +15,8 @@ import { API_URL_IMG } from "../../../API/API";
 import { getLocalTimeZone } from "@internationalized/date";
 import dayjs from "dayjs";
 import AlertCard from "../../Layout/AlertCard";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 interface Customer {
   clientId: number;
@@ -75,6 +77,8 @@ export default function AddPolicyModel() {
     duration: null,
     amount: null,
   });
+  const [note, setNote] = useState("");
+  console.log(note);
 
   const [alertCardProps, setAlertCardProps] = useState<AlertCardProps>({
     isOpen: false,
@@ -154,6 +158,7 @@ export default function AddPolicyModel() {
         ...selectedData,
         startDate: formattedStartDate,
         endDate: endDate,
+        note: note,
       };
 
       console.log(policyData);
@@ -436,6 +441,19 @@ export default function AddPolicyModel() {
                     </div>
                   }
                 />
+              </div>
+            </div>
+
+            {/* Sezione per Note */}
+            <div className="col-span-full">
+              <label
+                htmlFor="note"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Note
+              </label>
+              <div className="mt-2 flex items-center gap-x-3">
+                <ReactQuill theme="snow" value={note} onChange={setNote} />
               </div>
             </div>
           </div>
