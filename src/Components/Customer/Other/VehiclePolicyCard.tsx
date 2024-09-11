@@ -3,8 +3,10 @@ import dayjs from "dayjs";
 import { API_URL_IMG } from "../../../API/API";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import DeletePolicyModal from "../../Dashboard/Other/DeletePolicyModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 interface PolicyDataProps {
   policyId: number;
@@ -23,6 +25,7 @@ interface PolicyDataProps {
   companyName: string;
   companyLogo: string;
   types: string[];
+  note: string;
 }
 
 interface VehiclePolicyCardProps {
@@ -50,6 +53,12 @@ export default function VehiclePolicyCard({
     { value: 3, label: "Rate" },
   ];
 
+  const [note, setNote] = useState<string>();
+
+  useEffect(() => {
+    setNote(PolicyData.note);
+  }, [PolicyData.note]);
+
   async function handlePaymentStatusChange(e: any) {
     const selectedStatus = PaymentStatus.find(
       (status) => status.label === e
@@ -71,6 +80,26 @@ export default function VehiclePolicyCard({
       console.error(error);
     }
   }
+
+  async function handleUpdateNote() {
+    try {
+      const res = await axios.put(
+        "/Policy/UPDATE/UpdateNote",
+        {
+          policyId: PolicyData.policyId,
+          note: note,
+        },
+        { withCredentials: true }
+      );
+
+      if (res.status == 200) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <>
       <DeletePolicyModal
@@ -200,6 +229,12 @@ export default function VehiclePolicyCard({
                     </td>
                   </tr>
                 ))}
+                <div className="flex flex-row gap-3 items-center">
+                  <ReactQuill theme="snow" value={note} onChange={setNote} />
+                  <Button color="primary" onClick={handleUpdateNote}>
+                    Aggiorna nota
+                  </Button>
+                </div>
               </tbody>
               <tfoot>
                 <tr>
