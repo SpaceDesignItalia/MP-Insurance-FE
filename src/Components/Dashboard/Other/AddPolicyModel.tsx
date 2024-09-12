@@ -78,7 +78,6 @@ export default function AddPolicyModel() {
     amount: null,
   });
   const [note, setNote] = useState("");
-  console.log(note);
 
   const [alertCardProps, setAlertCardProps] = useState<AlertCardProps>({
     isOpen: false,
@@ -150,7 +149,7 @@ export default function AddPolicyModel() {
       let endDate = null;
       if (formattedStartDate && duration) {
         endDate = dayjs(formattedStartDate)
-          .add(duration, "month")
+          .add(12, "month")
           .format("YYYY-MM-DD");
       }
 
@@ -160,8 +159,6 @@ export default function AddPolicyModel() {
         endDate: endDate,
         note: note,
       };
-
-      console.log(policyData);
 
       const res = await axios.post(
         "/Policy/POST/AddPolicy",
