@@ -26,9 +26,11 @@ import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import axios from "axios";
 import ViewPolicyModal from "../Other/ViewPolicyModal";
 import DeletePolicyModal from "../Other/DeletePolicyModal";
+import RenewSixPolicyModal from "../Other/RenewSixPolicyModal";
 
 interface Policy {
   policyId: number;
@@ -66,6 +68,11 @@ interface DeleteModalData {
   Policy: Policy;
 }
 
+interface RenewSixModalData {
+  open: boolean;
+  Policy: Policy;
+}
+
 interface PolicyTypeFilter {
   insuranceTypeId: string;
   name: string;
@@ -79,6 +86,8 @@ const statusColorMap: Record<
   Attiva: "success",
   Terminata: "danger",
   "In Scadenza": "warning",
+  "In Scadenza 6 mesi": "warning",
+  "Terminata 6 mesi": "danger",
   Pagato: "success",
   "Non Pagato": "danger",
   Rate: "primary",
@@ -153,6 +162,12 @@ export default function PolicyTable() {
     open: false,
     Policy: {} as Policy,
   });
+  const [RenewSixModalData, setRenewSixModalData] = useState<RenewSixModalData>(
+    {
+      open: false,
+      Policy: {} as Policy,
+    }
+  );
 
   useEffect(() => {
     axios
@@ -435,6 +450,28 @@ export default function PolicyTable() {
       case "actions":
         return (
           <div className="relative flex justify-center items-center gap-2">
+            {policy.status === "Terminata 6 mesi" && (
+              <div
+                onClick={() =>
+                  setRenewSixModalData({
+                    ...RenewSixModalData,
+                    open: true,
+                    Policy: policy,
+                  })
+                }
+              >
+                <Tooltip
+                  color="warning"
+                  content="Rinnova semestre"
+                  closeDelay={0}
+                  showArrow
+                >
+                  <span className="text-lg text-warning cursor-pointer active:opacity-50">
+                    <RefreshRoundedIcon />
+                  </span>
+                </Tooltip>
+              </div>
+            )}
             <div
               onClick={() =>
                 setViewModalData({
@@ -488,6 +525,13 @@ export default function PolicyTable() {
         isOpen={DeleteModalData.open}
         isClosed={() => setDeleteModalData({ ...DeleteModalData, open: false })}
         PolicyData={DeleteModalData.Policy}
+      />
+      <RenewSixPolicyModal
+        isOpen={RenewSixModalData.open}
+        isClosed={() =>
+          setRenewSixModalData({ ...RenewSixModalData, open: false })
+        }
+        PolicyData={RenewSixModalData.Policy}
       />
       <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
         Polizze

@@ -229,9 +229,13 @@ export default function VehiclePolicyCard({
                     </td>
                   </tr>
                 ))}
-                <div className="flex flex-row gap-3 items-center">
+                <div className="flex flex-row gap-3 items-center mt-16">
                   <ReactQuill theme="snow" value={note} onChange={setNote} />
-                  <Button color="primary" onClick={handleUpdateNote}>
+                  <Button
+                    color="primary"
+                    onClick={handleUpdateNote}
+                    isDisabled={PolicyData.note === note}
+                  >
                     Aggiorna nota
                   </Button>
                 </div>
