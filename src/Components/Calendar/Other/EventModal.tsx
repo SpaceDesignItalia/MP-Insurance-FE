@@ -6,6 +6,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@nextui-org/react";
+import ReactQuill from "react-quill";
 
 interface Policy {
   policyId: number;
@@ -21,6 +22,7 @@ interface Policy {
   insuranceType: string;
   paymentStatus: string;
   types: string[];
+  note: string;
 }
 
 interface EventModalProps {
@@ -135,6 +137,20 @@ export default function EventModal({
                 <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
                   {new Date(event.endDate).toLocaleDateString("it-IT")}
                 </dd>
+                {event.note && (
+                  <>
+                    <dt className="text-sm font-medium leading-6 text-gray-900">
+                      Note
+                    </dt>
+                    <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+                      <ReactQuill
+                        value={event.note}
+                        readOnly={true}
+                        theme={"bubble"}
+                      />
+                    </dd>
+                  </>
+                )}
               </div>
             </dl>
           </div>

@@ -101,11 +101,10 @@ export default function PolicyTable() {
     { name: "Cliente", uid: "fullName" },
     { name: "Veicolo", uid: "typeId" },
     { name: "Tipo di polizza", uid: "insuranceType" },
-    { name: "Durata", uid: "duration" },
+    { name: "Frazionamento", uid: "duration" },
     { name: "Prezzo (€)", uid: "amount" },
     { name: "Data di inizio", uid: "startDate" },
-    { name: "Data di fine", uid: "endDate" },
-    { name: "Stato", uid: "status" },
+    { name: "Stato Polizza", uid: "status" },
     { name: "Stato Pagamento", uid: "paymentStatus" },
     { name: "Azioni", uid: "actions" },
   ];

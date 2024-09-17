@@ -193,6 +193,8 @@ export default function AddPolicyModel() {
     }
   }
 
+  console.log(selectedData.duration?.toString());
+
   return (
     <>
       <AlertCard AlertCardProps={alertCardProps} />
@@ -387,27 +389,32 @@ export default function AddPolicyModel() {
                 htmlFor="duration"
                 className="block text-sm font-medium leading-6 text-gray-900"
               >
-                Durata (mesi)
+                Frazionamento (mesi)
               </label>
               <div className="mt-2 flex items-center gap-x-3">
-                <Input
-                  placeholder="Es. 12"
-                  type="number"
+                <Select
+                  placeholder="Seleziona il frazionamento"
                   variant="bordered"
                   radius="sm"
-                  value={selectedData.duration?.toString() || ""}
-                  onChange={(event) =>
+                  selectedKeys={
+                    selectedData.duration?.toString()
+                      ? [selectedData.duration.toString()]
+                      : []
+                  }
+                  onSelectionChange={(value) =>
                     handleChange(
                       "duration",
-                      Math.min(Math.max(Number(event.target.value), 1), 12)
+                      Math.min(Math.max(Number([...value].map(Number)), 1), 12)
                     )
                   }
-                  endContent={
-                    <div className="pointer-events-none flex items-center">
-                      <span className="text-default-400 text-small">mesi</span>
-                    </div>
-                  }
-                />
+                >
+                  <SelectItem key={"6"} value={"6"}>
+                    6 mesi
+                  </SelectItem>
+                  <SelectItem key={"12"} value={"6"}>
+                    12 mesi
+                  </SelectItem>
+                </Select>
               </div>
             </div>
 
