@@ -27,10 +27,12 @@ import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import SimCardDownloadRoundedIcon from "@mui/icons-material/SimCardDownloadRounded";
 import axios from "axios";
 import ViewPolicyModal from "../Other/ViewPolicyModal";
 import DeletePolicyModal from "../Other/DeletePolicyModal";
 import RenewSixPolicyModal from "../Other/RenewSixPolicyModal";
+import { saveAs } from "file-saver";
 
 interface Policy {
   policyId: number;
@@ -146,6 +148,36 @@ export default function PolicyTable() {
         setFilteredPolicies(res.data);
       });
   }, []);
+
+  async function downloadExcel() {
+    try {
+      // Scarica il file per le polizze di 12 mesi
+      const res12 = await axios.get("FileGenerator/GET/GetMonthPolicyExcel", {
+        params: { type: "12" },
+        responseType: "blob", // Assicurati che il server restituisca un Blob
+        withCredentials: true,
+      });
+
+      // Verifica che la risposta sia corretta e salva il file
+      if (res12.status === 200) {
+        saveAs(res12.data, "Polizze_12_Mesi.xlsx");
+      }
+
+      // Scarica il file per le polizze di 6 mesi
+      const res6 = await axios.get("FileGenerator/GET/GetMonthPolicyExcel", {
+        params: { type: "6" },
+        responseType: "blob", // Assicurati che il server restituisca un Blob
+        withCredentials: true,
+      });
+
+      // Verifica che la risposta sia corretta e salva il file
+      if (res6.status === 200) {
+        saveAs(res6.data, "Polizze_6_Mesi.xlsx");
+      }
+    } catch (error) {
+      console.error("Errore durante il download dei file:", error);
+    }
+  }
 
   const handleSearchFilterChange = (key: keyof SearchFilter, value: any) => {
     setSearchFilter((prev) => ({
@@ -345,7 +377,7 @@ export default function PolicyTable() {
 
   const bottomContent = useMemo(() => {
     return (
-      <div className="py-2 px-2 flex justify-center items-center w-full">
+      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
         <Pagination
           isCompact
           showControls
@@ -355,6 +387,16 @@ export default function PolicyTable() {
           total={pages || 1}
           onChange={setPage}
         />
+        <div className="flex flex-row justify-start w-full">
+          <Button
+            color="primary"
+            radius="sm"
+            startContent={<SimCardDownloadRoundedIcon />}
+            onClick={downloadExcel}
+          >
+            Scarica excel del mensile
+          </Button>
+        </div>
       </div>
     );
   }, [page, pages]);
