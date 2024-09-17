@@ -6,6 +6,9 @@ import DeletePolicyModal from "../../Dashboard/Other/DeletePolicyModal";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ReactQuill from "react-quill";
+import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import "react-quill/dist/quill.snow.css";
 
 interface PolicyDataProps {
@@ -26,6 +29,7 @@ interface PolicyDataProps {
   companyLogo: string;
   types: string[];
   note: string;
+  startSuspensionDate: Date | null;
 }
 
 interface VehiclePolicyCardProps {
@@ -100,6 +104,41 @@ export default function VehiclePolicyCard({
     }
   }
 
+  async function suspendPolicy() {
+    try {
+      const res = await axios.post(
+        "/Policy/POST/SuspendPolicy",
+        {
+          policyId: PolicyData.policyId,
+        },
+        { withCredentials: true }
+      );
+
+      if (res.status === 200) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async function reactivatePolicy() {
+    try {
+      const res = await axios.post(
+        "/Policy/POST/ReactivatePolicy",
+        {
+          policyId: PolicyData.policyId,
+        },
+        { withCredentials: true }
+      );
+
+      if (res.status === 200) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <>
       <DeletePolicyModal
@@ -134,6 +173,32 @@ export default function VehiclePolicyCard({
           </div>
 
           <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
+            {PolicyData.status == "Sospesa" &&
+              PolicyData.startSuspensionDate !== null && (
+                <div className="rounded-md bg-yellow-50 p-4 mb-5">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <ReportProblemRoundedIcon className="h-5 w-5 text-yellow-400" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        Avviso Importante
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>
+                          La polizza è stata sospesa a partire dal{" "}
+                          <strong>
+                            {dayjs(PolicyData.startSuspensionDate).format(
+                              "DD/MM/YYYY"
+                            )}
+                          </strong>
+                          .
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             <h2 className="text-base font-semibold leading-6 text-gray-900">
               Polizza assicurativa
             </h2>
@@ -204,7 +269,32 @@ export default function VehiclePolicyCard({
                   Targa: {PolicyData.licensePlate}
                 </dd>
               </div>
+
+              <div className="mt-8 sm:mt-6 sm:border-t sm:border-b sm:border-gray-900/5 sm:pl-4 sm:pt-6 col-span-2">
+                <dt className="font-semibold text-gray-900">Note:</dt>
+                <dd className="mt-2 text-gray-500">
+                  <div className="w-full flex flex-col gap-3">
+                    <ReactQuill
+                      theme="snow"
+                      value={note}
+                      onChange={setNote}
+                      className="w-full"
+                    />
+                    <div className="flex flex-row justify-end mb-5">
+                      <Button
+                        color="primary"
+                        radius="sm"
+                        onClick={handleUpdateNote}
+                        isDisabled={PolicyData.note === note}
+                      >
+                        Aggiorna nota
+                      </Button>
+                    </div>
+                  </div>
+                </dd>
+              </div>
             </dl>
+
             <table className="mt-16 w-full whitespace-nowrap text-left text-sm leading-6">
               <colgroup>
                 <col className="w-full" />
@@ -229,16 +319,6 @@ export default function VehiclePolicyCard({
                     </td>
                   </tr>
                 ))}
-                <div className="flex flex-row gap-3 items-center mt-16">
-                  <ReactQuill theme="snow" value={note} onChange={setNote} />
-                  <Button
-                    color="primary"
-                    onClick={handleUpdateNote}
-                    isDisabled={PolicyData.note === note}
-                  >
-                    Aggiorna nota
-                  </Button>
-                </div>
               </tbody>
               <tfoot>
                 <tr>
@@ -261,6 +341,32 @@ export default function VehiclePolicyCard({
                 </tr>
               </tfoot>
             </table>
+
+            {PolicyData.status !== "Terminata" && (
+              <div>
+                {PolicyData.status == "Sospesa" ? (
+                  <Button
+                    color="success"
+                    radius="sm"
+                    className="text-white"
+                    startContent={<PlayArrowRoundedIcon />}
+                    onClick={reactivatePolicy}
+                  >
+                    Attiva polizza
+                  </Button>
+                ) : (
+                  <Button
+                    color="warning"
+                    radius="sm"
+                    className="text-white"
+                    startContent={<PauseRoundedIcon />}
+                    onClick={suspendPolicy}
+                  >
+                    Sospendi polizza
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

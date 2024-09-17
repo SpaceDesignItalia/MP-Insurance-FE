@@ -26,7 +26,11 @@ interface VehiecleCardComponentProps {
 const statusColorMap: Record<string, any> = {
   Attiva: "success",
   "In scadenza": "warning",
-  Scaduta: "danger",
+  "In Scadenza": "warning",
+  "In Scadenza 6 mesi": "warning",
+  "Terminata 6 mesi": "danger",
+  Sospesa: "warning",
+  Terminata: "danger",
   Pagato: "success",
   "Non Pagato": "danger",
   Rate: "primary",
@@ -56,9 +60,15 @@ export default function VehiecleCard({
       case 1:
         return "Attiva";
       case 2:
-        return "In scadenza";
+        return "In Scadenza";
       case 3:
-        return "Scaduta";
+        return "Terminata";
+      case 4:
+        return "In Scadenza 6 mesi";
+      case 5:
+        return "Terminata 6 mesi";
+      case 6:
+        return "Sospesa";
       default:
         return "Sconosciuto"; // Caso predefinito per evitare undefined
     }

@@ -88,6 +88,7 @@ const statusColorMap: Record<
   "In Scadenza": "warning",
   "In Scadenza 6 mesi": "warning",
   "Terminata 6 mesi": "danger",
+  Sospesa: "warning",
   Pagato: "success",
   "Non Pagato": "danger",
   Rate: "primary",
@@ -462,6 +463,7 @@ export default function PolicyTable() {
               >
                 <Tooltip
                   color="warning"
+                  className="text-white"
                   content="Rinnova semestre"
                   closeDelay={0}
                   showArrow

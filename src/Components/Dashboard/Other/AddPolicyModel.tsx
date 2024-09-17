@@ -449,8 +449,13 @@ export default function AddPolicyModel() {
               >
                 Note
               </label>
-              <div className="mt-2 flex items-center gap-x-3">
-                <ReactQuill theme="snow" value={note} onChange={setNote} />
+              <div className="mt-2 flex items-center gap-x-3 ">
+                <ReactQuill
+                  theme="snow"
+                  value={note}
+                  onChange={setNote}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
