@@ -53,6 +53,7 @@ interface PolicyDataProps {
   companyLogo: string;
   types: string[];
   note: string;
+  startSuspensionDate: Date | null;
 }
 
 const POLICYDEFAULTVALUE: PolicyDataProps = {
@@ -73,6 +74,7 @@ const POLICYDEFAULTVALUE: PolicyDataProps = {
   status: "",
   types: [],
   note: "",
+  startSuspensionDate: new Date() || null,
 };
 
 const CUSTOMERDEFAULTVALUE: CustomerDataProps = {
@@ -472,6 +474,7 @@ export default function ViewCustomerModel() {
               companyLogo: policyData.companyLogo,
               types: policyData.types,
               note: policyData.note,
+              startSuspensionDate: policyData.startSuspensionDate,
             }}
             isVisible={showPolicy}
           />
