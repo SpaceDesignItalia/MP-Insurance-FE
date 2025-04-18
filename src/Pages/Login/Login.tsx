@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Checkbox, Input } from "@nextui-org/react";
+import { Button, Checkbox, Input } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import logo from "../../assets/MpLogo.png";

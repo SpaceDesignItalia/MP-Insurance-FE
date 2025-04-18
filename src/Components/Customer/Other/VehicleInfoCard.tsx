@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
-import { Button, Input } from "@nextui-org/react";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import {
+  Button,
+  Input,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
+  Divider,
+  Chip,
+} from "@heroui/react";
+import { Icon } from "@iconify/react";
 import DeleteVehicleModal from "./DeleteVehicleModal";
 
 interface VehicleDataProps {
@@ -64,6 +70,8 @@ export default function VehicleInfoCard({
     );
   };
 
+  if (!isVisible) return null;
+
   return (
     <>
       <DeleteVehicleModal
@@ -71,121 +79,174 @@ export default function VehicleInfoCard({
         isClosed={() => setDeleteModalData({ ...DeleteModalData, open: false })}
         VehicleData={DeleteModalData.Vehicle}
       />
-      {isVisible && (
-        <div className="flex flex-col-reverse sm:flex-col gap-4">
-          <div className="flex flex-col gap-10 sm:flex-row justify-end items-center">
+
+      <Card shadow="sm" className="w-full overflow-visible" isHoverable>
+        <CardHeader className="flex justify-between items-center px-6 pt-6">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold">Dati veicolo</h1>
+              <Chip
+                size="sm"
+                color={VehicleData.typeId === 2 ? "primary" : "secondary"}
+                variant="flat"
+              >
+                {VehicleData.typeId === 2 ? "Auto" : "Moto"}
+              </Chip>
+            </div>
+            <p className="text-sm text-gray-500">
+              ID Veicolo: {VehicleData.vehicleId}
+            </p>
+          </div>
+          <div className="flex gap-2">
             <Button
-              variant="bordered"
               color="danger"
-              radius="sm"
-              startContent={<DeleteRoundedIcon />}
-              className="w-full sm:w-1/6"
-              onClick={() =>
+              radius="full"
+              variant="flat"
+              isIconOnly
+              onPress={() =>
                 setDeleteModalData({
                   ...DeleteModalData,
                   open: true,
                   Vehicle: VehicleData,
                 })
               }
+              aria-label="Elimina veicolo"
             >
-              Elimina veicolo
+              <Icon icon="solar:trash-bin-trash-linear" width={20} />
             </Button>
           </div>
+        </CardHeader>
 
-          <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
-            <h2 className="text-base font-semibold leading-6 text-gray-900">
-              Dati veicolo
-            </h2>
+        <Divider className="my-2" />
 
-            <dl className="mt-6 grid grid-cols-1 text-sm leading-6 lg:grid-cols-2">
-              <div>
-                <div className=" sm:border-gray-900/5">
-                  {isEditingData ? (
-                    <dd className="flex flex-col gap-2  text-gray-500">
-                      <Input
-                        label="Marca"
-                        labelPlacement="outside"
-                        name="brand"
-                        value={editedData.brand}
-                        placeholder="Marca"
-                        variant="bordered"
-                        radius="sm"
-                        onChange={handleVehicleInputChange}
-                      />
-                      <Input
-                        label="Modello"
-                        labelPlacement="outside"
-                        name="model"
-                        value={editedData.model}
-                        placeholder="Modello"
-                        variant="bordered"
-                        radius="sm"
-                        onChange={handleVehicleInputChange}
-                      />
-                      <Input
-                        label="Targa"
-                        labelPlacement="outside"
-                        name="licensePlate"
-                        value={editedData.licensePlate}
-                        placeholder="Targa"
-                        variant="bordered"
-                        radius="sm"
-                        onChange={handleVehicleInputChange}
-                      />
-                    </dd>
-                  ) : (
-                    <dd className="mt-2 text-gray-500">
-                      <span className="font-medium text-gray-900">
-                        {VehicleData.typeId === 2 ? "Auto" : "Moto"}:{" "}
-                        {VehicleData.brand + " " + VehicleData.model}
-                      </span>
-                      <br />
-                      Targa: {VehicleData.licensePlate}
-                    </dd>
-                  )}
+        <CardBody className="px-6 py-4">
+          {isEditingData ? (
+            <div className="flex flex-col gap-6">
+              <div className="space-y-4">
+                <Input
+                  label="Marca"
+                  labelPlacement="outside"
+                  name="brand"
+                  value={editedData.brand}
+                  placeholder="Marca"
+                  variant="bordered"
+                  radius="sm"
+                  startContent={
+                    <Icon
+                      icon="solar:car-bold"
+                      width={18}
+                      className="text-default-400"
+                    />
+                  }
+                  onChange={handleVehicleInputChange}
+                />
+                <Input
+                  label="Modello"
+                  labelPlacement="outside"
+                  name="model"
+                  value={editedData.model}
+                  placeholder="Modello"
+                  variant="bordered"
+                  radius="sm"
+                  startContent={
+                    <Icon
+                      icon="solar:settings-linear"
+                      width={18}
+                      className="text-default-400"
+                    />
+                  }
+                  onChange={handleVehicleInputChange}
+                />
+                <Input
+                  label="Targa"
+                  labelPlacement="outside"
+                  name="licensePlate"
+                  value={editedData.licensePlate}
+                  placeholder="Targa"
+                  variant="bordered"
+                  radius="sm"
+                  startContent={
+                    <Icon
+                      icon="solar:ticket-linear"
+                      width={18}
+                      className="text-default-400"
+                    />
+                  }
+                  onChange={handleVehicleInputChange}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg bg-default-50 p-4">
+              <div className="flex items-start gap-2 mb-3">
+                <Icon
+                  icon="solar:car-bold"
+                  width={24}
+                  className="text-primary mt-1"
+                />
+                <div>
+                  <p className="text-medium font-semibold">
+                    {VehicleData.typeId === 2 ? "Auto" : "Moto"}:{" "}
+                    {VehicleData.brand} {VehicleData.model}
+                  </p>
+                  <p className="text-sm text-gray-500">Marca e modello</p>
                 </div>
               </div>
-            </dl>
-            <div className="sm:pr-4 flex justify-end items-center mt-5">
-              {isEditingData ? (
-                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-1/3">
-                  <Button
-                    color="danger"
-                    radius="sm"
-                    startContent={<CloseRoundedIcon />}
-                    className="text-white"
-                    onClick={() => setIsEditingData(!isEditingData)}
-                    fullWidth
-                  >
-                    Annulla
-                  </Button>
-                  <Button
-                    color="success"
-                    radius="sm"
-                    startContent={<SaveRoundedIcon />}
-                    className="text-white"
-                    onClick={() => handleUpdateVehicleData(editedData)}
-                    isDisabled={!checkEditedData()}
-                    fullWidth
-                  >
-                    Salva modifiche
-                  </Button>
+              <div className="flex items-start gap-2">
+                <Icon
+                  icon="solar:ticket-linear"
+                  width={24}
+                  className="text-primary mt-1"
+                />
+                <div>
+                  <p className="text-medium font-semibold">
+                    {VehicleData.licensePlate}
+                  </p>
+                  <p className="text-sm text-gray-500">Targa</p>
                 </div>
-              ) : (
-                <Button
-                  color="warning"
-                  radius="sm"
-                  startContent={<EditRoundedIcon />}
-                  className="text-white"
-                  onClick={() => setIsEditingData(!isEditingData)}
-                >
-                  Modifica veicolo
-                </Button>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </CardBody>
+
+        <Divider />
+
+        <CardFooter className="flex justify-end items-center py-4">
+          {isEditingData ? (
+            <div className="flex flex-row gap-3">
+              <Button
+                color="danger"
+                radius="full"
+                variant="flat"
+                startContent={<Icon icon="mingcute:close-fill" width={18} />}
+                onPress={() => setIsEditingData(false)}
+              >
+                Annulla
+              </Button>
+              <Button
+                color="success"
+                radius="full"
+                variant="solid"
+                startContent={<Icon icon="mingcute:save-2-line" width={18} />}
+                onPress={() => handleUpdateVehicleData(editedData)}
+                isDisabled={!checkEditedData()}
+              >
+                Salva modifiche
+              </Button>
+            </div>
+          ) : (
+            <Button
+              color="warning"
+              radius="full"
+              variant="solid"
+              startContent={<Icon icon="solar:pen-linear" width={18} />}
+              onPress={() => setIsEditingData(true)}
+            >
+              Modifica veicolo
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </>
   );
 }

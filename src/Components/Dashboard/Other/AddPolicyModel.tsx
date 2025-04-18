@@ -8,7 +8,7 @@ import {
   DatePicker,
   User,
   DateValue,
-} from "@nextui-org/react";
+} from "@heroui/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_URL_IMG } from "../../../API/API";

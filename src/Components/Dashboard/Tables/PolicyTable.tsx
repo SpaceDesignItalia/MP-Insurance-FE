@@ -1,38 +1,38 @@
-import React, { ReactNode, useEffect, useMemo, useState } from "react";
-import dayjs from "dayjs";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Chip,
-  Tooltip,
-  Pagination,
+  Badge,
   Button,
+  Card,
+  CardBody,
+  Chip,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Pagination,
   Select,
   SelectItem,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Link,
-} from "@nextui-org/react";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
-import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import SimCardDownloadRoundedIcon from "@mui/icons-material/SimCardDownloadRounded";
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+  useDisclosure,
+} from "@heroui/react";
+import { Icon } from "@iconify/react";
 import axios from "axios";
-import ViewPolicyModal from "../Other/ViewPolicyModal";
+import dayjs from "dayjs";
+import { saveAs } from "file-saver";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import DeletePolicyModal from "../Other/DeletePolicyModal";
 import RenewSixPolicyModal from "../Other/RenewSixPolicyModal";
-import { saveAs } from "file-saver";
+import ViewPolicyModal from "../Other/ViewPolicyModal";
 
 interface Policy {
   policyId: number;
@@ -98,19 +98,23 @@ const statusColorMap: Record<
 
 export default function PolicyTable() {
   const columns = [
-    { name: "Cliente", uid: "fullName" },
-    { name: "Veicolo", uid: "typeId" },
-    { name: "Tipo di polizza", uid: "insuranceType" },
-    { name: "Frazionamento", uid: "duration" },
-    { name: "Prezzo (€)", uid: "amount" },
-    { name: "Data di inizio", uid: "startDate" },
-    { name: "Stato Polizza", uid: "status" },
-    { name: "Stato Pagamento", uid: "paymentStatus" },
-    { name: "Azioni", uid: "actions" },
+    { name: "CLIENTE", uid: "fullName" },
+    { name: "VEICOLO", uid: "vehicle" },
+    { name: "DURATA", uid: "duration" },
+    { name: "PREZZO", uid: "amount" },
+    { name: "DATA", uid: "dates" },
+    { name: "STATO", uid: "statuses" },
+    { name: "AZIONI", uid: "actions" },
   ];
 
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loading, setLoading] = useState(true);
+  const {
+    isOpen: isFilterOpen,
+    onOpen: onFilterOpen,
+    onClose: onFilterClose,
+  } = useDisclosure();
 
   let [policyTypeFilter, setPolicyTypeFilter] = useState<PolicyTypeFilter[]>(
     []
@@ -121,7 +125,6 @@ export default function PolicyTable() {
       .get("/Company/GET/GetAllInsuranceTypes", { withCredentials: true })
       .then((res) => {
         const updatedPolicyTypeFilter = [
-          ...policyTypeFilter,
           { insuranceTypeId: "0", name: "Tutti" },
           ...res.data,
         ];
@@ -137,27 +140,34 @@ export default function PolicyTable() {
     state: "0",
     paymentStatus: "0",
   });
-  const [policies, setPolicies] = useState<Policy[]>([]);
 
   useEffect(() => {
-    axios
-      .get("/Policy/GET/GetAllPolicies", { withCredentials: true })
-      .then((res) => {
-        setPolicies(res.data);
-        setFilteredPolicies(res.data);
-      });
+    fetchPolicies();
   }, []);
+
+  const fetchPolicies = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("/Policy/GET/GetAllPolicies", {
+        withCredentials: true,
+      });
+      setFilteredPolicies(res.data);
+    } catch (error) {
+      console.error("Error fetching policies:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   async function downloadExcel() {
     try {
       // Scarica il file per le polizze di 12 mesi
       const res12 = await axios.get("FileGenerator/GET/GetMonthPolicyExcel", {
         params: { type: "12" },
-        responseType: "blob", // Assicurati che il server restituisca un Blob
+        responseType: "blob",
         withCredentials: true,
       });
 
-      // Verifica che la risposta sia corretta e salva il file
       if (res12.status === 200) {
         saveAs(res12.data, "Polizze_12_Mesi.xlsx");
       }
@@ -165,11 +175,10 @@ export default function PolicyTable() {
       // Scarica il file per le polizze di 6 mesi
       const res6 = await axios.get("FileGenerator/GET/GetMonthPolicyExcel", {
         params: { type: "6" },
-        responseType: "blob", // Assicurati che il server restituisca un Blob
+        responseType: "blob",
         withCredentials: true,
       });
 
-      // Verifica che la risposta sia corretta e salva il file
       if (res6.status === 200) {
         saveAs(res6.data, "Polizze_6_Mesi.xlsx");
       }
@@ -183,6 +192,30 @@ export default function PolicyTable() {
       ...prev,
       [key]: value,
     }));
+  };
+
+  const handleSearchQueryChange = (value: string) => {
+    setSearchFilter((prev) => ({
+      ...prev,
+      searchTerms: value,
+    }));
+
+    if (value === "") {
+      fetchPolicies();
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchFilter({
+      searchTerms: "",
+      vehicleTypeId: "0",
+      policyTypeId: "0",
+      duration: "0",
+      state: "0",
+      paymentStatus: "0",
+    });
+    fetchPolicies();
+    onFilterClose();
   };
 
   const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([]);
@@ -202,410 +235,499 @@ export default function PolicyTable() {
   );
 
   useEffect(() => {
-    axios
-      .get("/Policy/GET/SearchPolicy", {
-        params: searchFilter,
-        withCredentials: true,
-      })
-      .then((res) => {
+    const fetchFilteredPolicies = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get("/Policy/GET/SearchPolicy", {
+          params: searchFilter,
+          withCredentials: true,
+        });
         setFilteredPolicies(res.data);
-      });
-  }, [searchFilter, policies]);
+      } catch (error) {
+        console.error("Error searching policies:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFilteredPolicies();
+  }, [searchFilter]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     return filteredPolicies.slice(start, end);
-  }, [page, filteredPolicies]);
+  }, [page, filteredPolicies, rowsPerPage]);
 
   const pages = Math.ceil(filteredPolicies.length / rowsPerPage);
+
+  const countActiveFilters = () => {
+    let count = 0;
+    if (searchFilter.vehicleTypeId !== "0") count++;
+    if (searchFilter.policyTypeId !== "0") count++;
+    if (searchFilter.duration !== "0") count++;
+    if (searchFilter.state !== "0") count++;
+    if (searchFilter.paymentStatus !== "0") count++;
+    return count;
+  };
+
+  const activeFiltersCount = countActiveFilters();
+
   const topContent = useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row justify-between gap-3 items-end">
-          <div className="flex flex-row gap-5 w-full">
-            <Input
-              isClearable
-              variant="bordered"
-              radius="sm"
-              className="w-full sm:w-1/3"
-              placeholder="Cerca polizza per cliente o targa..."
-              startContent={<SearchRoundedIcon />}
-              onChange={(e) =>
-                handleSearchFilterChange("searchTerms", e.target.value)
-              }
-            />
-            <Popover placement="bottom">
-              <PopoverTrigger>
-                <Button
-                  color="primary"
-                  radius="sm"
-                  startContent={<FilterListRoundedIcon />}
-                >
-                  Filtri
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[350px]">
-                <h2 className="font-semibold px-4 pt-3 w-full">Filtri:</h2>
-                <div className="p-4 flex flex-col gap-3 w-full">
-                  <Select
-                    variant="bordered"
-                    radius="sm"
-                    label="Tipologia Veicolo"
-                    selectedKeys={[searchFilter.vehicleTypeId]}
-                    onChange={(e) =>
-                      handleSearchFilterChange("vehicleTypeId", e.target.value)
-                    }
-                  >
-                    <SelectItem key="0" value="">
-                      Tutti
-                    </SelectItem>
-                    <SelectItem key="2" value="2">
-                      Auto
-                    </SelectItem>
-                    <SelectItem key="1" value="3">
-                      Moto
-                    </SelectItem>
-                  </Select>
-                  <Select
-                    variant="bordered"
-                    radius="sm"
-                    label="Tipo Polizza"
-                    selectedKeys={[searchFilter.policyTypeId]}
-                    onChange={(e) =>
-                      handleSearchFilterChange("policyTypeId", e.target.value)
-                    }
-                  >
-                    {policyTypeFilter.map((option) => (
-                      <SelectItem
-                        key={option.insuranceTypeId}
-                        value={option.insuranceTypeId}
-                      >
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Select
-                    variant="bordered"
-                    radius="sm"
-                    label="Durata"
-                    selectedKeys={[searchFilter.duration]}
-                    onChange={(e) =>
-                      handleSearchFilterChange("duration", e.target.value)
-                    }
-                  >
-                    <SelectItem key="0" value="">
-                      Tutte
-                    </SelectItem>
-                    <SelectItem key="6" value="6">
-                      6 mesi
-                    </SelectItem>
-                    <SelectItem key="12" value="12">
-                      1 anno
-                    </SelectItem>
-                  </Select>
-                  <Select
-                    variant="bordered"
-                    radius="sm"
-                    label="Stato"
-                    selectedKeys={[searchFilter.state]}
-                    onChange={(e) =>
-                      handleSearchFilterChange("state", e.target.value)
-                    }
-                  >
-                    <SelectItem key="0" value="">
-                      Tutti
-                    </SelectItem>
-                    <SelectItem key="1" value="attiva">
-                      Attiva
-                    </SelectItem>
-                    <SelectItem key="2" value="scadenza">
-                      Scadenza
-                    </SelectItem>
-                    <SelectItem key="3" value="interrotta">
-                      Interrotta
-                    </SelectItem>
-                  </Select>
-                  <Select
-                    variant="bordered"
-                    radius="sm"
-                    label="Stato Pagamento"
-                    selectedKeys={[searchFilter.paymentStatus]}
-                    onChange={(e) =>
-                      handleSearchFilterChange("paymentStatus", e.target.value)
-                    }
-                  >
-                    <SelectItem key="0" value="">
-                      Tutti
-                    </SelectItem>
-                    <SelectItem key="1" value="pagato">
-                      Pagato
-                    </SelectItem>
-                    <SelectItem key="2" value="nonPagato">
-                      Non Pagato
-                    </SelectItem>
-                    <SelectItem key="3" value="rate">
-                      Pagamento a Rate
-                    </SelectItem>
-                  </Select>
-                  <p className="text-xs text-gray-500 text-center">
-                    I filtri verranno applicati automaticamente.
-                    <br />
-                    Polizze trovate: {filteredPolicies.length}
-                  </p>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="flex gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 items-center">
+          <Input
+            isClearable
+            variant="bordered"
+            radius="full"
+            className="w-full sm:max-w-[44%]"
+            classNames={{
+              inputWrapper: "border-1",
+            }}
+            placeholder="Cerca polizza per cliente o targa..."
+            value={searchFilter.searchTerms}
+            startContent={
+              <Icon
+                icon="solar:magnifer-linear"
+                width={18}
+                className="text-default-400"
+              />
+            }
+            onChange={(e) => handleSearchQueryChange(e.target.value)}
+            onClear={() => handleSearchQueryChange("")}
+          />
+          <div className="flex gap-3">
             <Button
-              as={Link}
-              href="/policy/add-policy"
-              color="primary"
-              radius="sm"
-              endContent={<PostAddRoundedIcon />}
-              fullWidth
+              color={activeFiltersCount > 0 ? "primary" : "default"}
+              radius="full"
+              variant={activeFiltersCount > 0 ? "solid" : "bordered"}
+              startContent={<Icon icon="solar:filter-linear" width={16} />}
+              endContent={
+                activeFiltersCount > 0 && (
+                  <Badge size="sm">{activeFiltersCount}</Badge>
+                )
+              }
+              onPress={onFilterOpen}
             >
-              Crea nuova polizza
+              Filtri
+            </Button>
+            <Button
+              color="primary"
+              radius="full"
+              variant="flat"
+              startContent={
+                <Icon icon="solar:file-download-outline" width={16} />
+              }
+              onPress={downloadExcel}
+            >
+              Esporta
             </Button>
           </div>
         </div>
+        <div className="flex justify-between items-center">
+          <span className="text-default-400 text-small">
+            {filteredPolicies.length > 0
+              ? `${filteredPolicies.length} polizze trovate`
+              : "Nessuna polizza trovata"}
+          </span>
+          <label className="flex items-center text-default-400 text-small">
+            Righe per pagina:
+            <select
+              className="bg-transparent outline-none text-default-400 text-small ml-2"
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setPage(1);
+              }}
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+        </div>
       </div>
     );
-  }, [searchFilter, filteredPolicies.length, policyTypeFilter]);
+  }, [searchFilter, filteredPolicies.length, activeFiltersCount, rowsPerPage]);
 
   const bottomContent = useMemo(() => {
     return (
-      <div className="py-2 px-2 flex flex-col justify-center items-center w-full">
+      <div className="py-2 px-2 flex justify-between items-center">
+        <span className="text-default-400 text-small">
+          {filteredPolicies.length > 0 ? `Pagina ${page} di ${pages}` : ""}
+        </span>
         <Pagination
           isCompact
           showControls
           showShadow
           color="primary"
           page={page}
-          total={pages || 1}
+          total={pages}
           onChange={setPage}
+          radius="full"
         />
-        <div className="flex flex-row justify-start w-full">
-          <Button
-            color="primary"
-            radius="sm"
-            startContent={<SimCardDownloadRoundedIcon />}
-            onClick={downloadExcel}
-          >
-            Scarica excel del mensile
-          </Button>
-        </div>
       </div>
     );
-  }, [page, pages]);
+  }, [page, pages, filteredPolicies.length]);
+
+  const getVehicleType = (typeId: string): ReactNode => {
+    return (
+      <Icon
+        icon={typeId === "1" ? "mingcute:ebike-line" : "mingcute:car-3-line"}
+        width={30}
+        className="text-default-600"
+      />
+    );
+  };
 
   const renderCell = (policy: Policy, columnKey: string): React.ReactNode => {
-    const cellValue = policy[columnKey as keyof Policy];
-
     switch (columnKey) {
       case "fullName":
         return (
           <div className="flex flex-col">
-            <div className="font-medium">{policy.fullName}</div>
-            <div className="text-sm text-gray-500">{policy.email}</div>
+            <p className="text-bold text-small capitalize">{policy.fullName}</p>
+            <p className="text-bold text-tiny text-default-400">
+              {policy.email}
+            </p>
           </div>
         );
-      case "status":
+
+      case "vehicle":
         return (
-          <Chip
-            className="capitalize"
-            color={
-              statusColorMap[policy.status] as
-                | "success"
-                | "danger"
-                | "warning"
-                | "primary"
-                | "default"
-                | "secondary"
-                | undefined
-            }
-            size="sm"
-            variant="flat"
-          >
-            {policy.status}
-          </Chip>
-        );
-      case "paymentStatus":
-        return (
-          <Chip
-            className="capitalize"
-            color={
-              statusColorMap[policy.paymentStatus] as
-                | "default"
-                | "success"
-                | "danger"
-                | "warning"
-                | "primary"
-                | "secondary"
-                | undefined
-            }
-            size="sm"
-            variant="flat"
-          >
-            {policy.paymentStatus}
-          </Chip>
-        );
-      case "typeId":
-        return policy.typeId === "2" ? (
-          <div className="flex flex-col gap-2 justify-center items-center">
-            <div className="flex flex-row gap-2 justify-center items-center">
-              <DirectionsCarRoundedIcon />
-              Auto
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              {getVehicleType(policy.typeId)}
             </div>
-            <div className="text-gray-700">
-              <span className="font-semibold">Targa: </span>
+            <p className="text-bold text-tiny text-default-400">
               {policy.licensePlate}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-row gap-2 justify-center items-center">
-            <TwoWheelerRoundedIcon />
-            Moto
+            </p>
+            <p className="text-bold text-tiny text-default-500">
+              {policy.insuranceType}
+            </p>
           </div>
         );
-      case "startDate":
-        return <>{dayjs(policy.startDate).format("DD/MM/YYYY")}</>;
-      case "endDate":
-        return <>{dayjs(policy.endDate).format("DD/MM/YYYY")}</>;
-      case "insuranceType":
-        return (
-          <ul className="list-disc">
-            {policy.types.map((type: string, index) => {
-              return <li key={index}>{type}</li>;
-            })}
-          </ul>
-        );
+
       case "duration":
         return (
-          <>
-            {policy.duration === 12 ? "1 anno" : <p>{policy.duration} mesi</p>}
-          </>
+          <div className="flex items-center">
+            <Badge
+              content={`${policy.duration}m`}
+              color="primary"
+              size="sm"
+              variant="solid"
+            >
+              <Icon icon="solar:calendar-linear" width={18} />
+            </Badge>
+          </div>
         );
+
       case "amount":
-        return <p>€ {policy.amount}</p>;
+        return (
+          <div className="flex items-center justify-start">
+            <span className="text-bold text-small">€ {policy.amount}</span>
+          </div>
+        );
+
+      case "dates":
+        return (
+          <div className="flex flex-col">
+            <p className="text-bold text-tiny text-default-500">
+              <Icon
+                icon="solar:calendar-mark-linear"
+                className="mr-1 inline"
+                width={14}
+              />
+              {dayjs(policy.startDate).format("DD/MM/YYYY")}
+            </p>
+            <p className="text-bold text-tiny text-default-500">
+              <Icon
+                icon="solar:calendar-end-linear"
+                className="mr-1 inline"
+                width={14}
+              />
+              {dayjs(policy.endDate).format("DD/MM/YYYY")}
+            </p>
+          </div>
+        );
+
+      case "statuses":
+        return (
+          <div className="flex flex-col gap-2">
+            <Chip
+              className="capitalize"
+              color={statusColorMap[policy.status] || "default"}
+              size="sm"
+              variant="flat"
+              startContent={
+                <Icon icon="solar:shield-keyhole-linear" width={14} />
+              }
+            >
+              {policy.status}
+            </Chip>
+            <Chip
+              className="capitalize"
+              color={statusColorMap[policy.paymentStatus] || "default"}
+              size="sm"
+              variant="flat"
+              startContent={
+                <Icon icon="solar:wallet-money-linear" width={14} />
+              }
+            >
+              {policy.paymentStatus}
+            </Chip>
+          </div>
+        );
+
       case "actions":
         return (
-          <div className="relative flex justify-center items-center gap-2">
-            {policy.status === "Terminata 6 mesi" && (
-              <div
-                onClick={() =>
-                  setRenewSixModalData({
-                    ...RenewSixModalData,
-                    open: true,
-                    Policy: policy,
-                  })
-                }
-              >
-                <Tooltip
-                  color="warning"
-                  className="text-white"
-                  content="Rinnova semestre"
-                  closeDelay={0}
-                  showArrow
+          <div className="relative flex justify-end items-center gap-2">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button isIconOnly radius="full" size="sm" variant="light">
+                  <Icon icon="solar:menu-dots-bold" width={16} />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Policy Actions">
+                <DropdownItem
+                  key="view"
+                  startContent={<Icon icon="solar:eye-linear" width={16} />}
+                  onPress={() =>
+                    setViewModalData({
+                      ...ViewModalData,
+                      open: true,
+                      Policy: policy,
+                    })
+                  }
                 >
-                  <span className="text-lg text-warning cursor-pointer active:opacity-50">
-                    <RefreshRoundedIcon />
-                  </span>
-                </Tooltip>
-              </div>
-            )}
-            <div
-              onClick={() =>
-                setViewModalData({
-                  ...ViewModalData,
-                  open: true,
-                  Policy: policy,
-                })
-              }
-            >
-              <Tooltip content="Dettagli polizza" closeDelay={0} showArrow>
-                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                  <RemoveRedEyeRoundedIcon />
-                </span>
-              </Tooltip>
-            </div>
-            <div
-              onClick={() =>
-                setDeleteModalData({
-                  ...DeleteModalData,
-                  open: true,
-                  Policy: policy,
-                })
-              }
-            >
-              <Tooltip
-                color="danger"
-                content="Rimuovi polizza"
-                closeDelay={0}
-                showArrow
-              >
-                <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                  <DeleteRoundedIcon />
-                </span>
-              </Tooltip>
-            </div>
+                  Visualizza dettagli
+                </DropdownItem>
+                <DropdownItem
+                  key="renew"
+                  startContent={<Icon icon="solar:restart-linear" width={16} />}
+                  onPress={() =>
+                    setRenewSixModalData({
+                      ...RenewSixModalData,
+                      open: true,
+                      Policy: policy,
+                    })
+                  }
+                >
+                  Rinnova polizza
+                </DropdownItem>
+                <DropdownItem
+                  key="delete"
+                  startContent={
+                    <Icon icon="solar:trash-bin-trash-linear" width={16} />
+                  }
+                  color="danger"
+                  className="text-danger"
+                  onPress={() =>
+                    setDeleteModalData({
+                      ...DeleteModalData,
+                      open: true,
+                      Policy: policy,
+                    })
+                  }
+                >
+                  Elimina polizza
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         );
       default:
-        return cellValue as ReactNode;
+        return null;
     }
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <ViewPolicyModal
-        isOpen={ViewModalData.open}
-        isClosed={() => setViewModalData({ ...ViewModalData, open: false })}
-        PolicyData={ViewModalData.Policy}
-      />
-      <DeletePolicyModal
-        isOpen={DeleteModalData.open}
-        isClosed={() => setDeleteModalData({ ...DeleteModalData, open: false })}
-        PolicyData={DeleteModalData.Policy}
-      />
-      <RenewSixPolicyModal
-        isOpen={RenewSixModalData.open}
-        isClosed={() =>
-          setRenewSixModalData({ ...RenewSixModalData, open: false })
-        }
-        PolicyData={RenewSixModalData.Policy}
-      />
-      <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-        Polizze
-      </h2>
+    <Card shadow="sm" className="border-none">
+      <CardBody className="p-0">
+        <ViewPolicyModal
+          isOpen={ViewModalData.open}
+          isClosed={() => setViewModalData({ ...ViewModalData, open: false })}
+          PolicyData={ViewModalData.Policy}
+        />
+        <DeletePolicyModal
+          isOpen={DeleteModalData.open}
+          isClosed={() =>
+            setDeleteModalData({ ...DeleteModalData, open: false })
+          }
+          PolicyData={{
+            policyId: Number(DeleteModalData.Policy.policyId),
+            fullName: DeleteModalData.Policy.fullName,
+          }}
+        />
+        <RenewSixPolicyModal
+          isOpen={RenewSixModalData.open}
+          isClosed={() =>
+            setRenewSixModalData({ ...RenewSixModalData, open: false })
+          }
+          PolicyData={{
+            policyId: Number(RenewSixModalData.Policy.policyId),
+            fullName: "",
+          }}
+        />
 
-      <Table
-        aria-label="All policies"
-        topContent={topContent}
-        bottomContent={bottomContent}
-        isStriped
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody items={items}>
-          {(item) => (
-            <TableRow key={item.policyId}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, String(columnKey))}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+        <Modal
+          isOpen={isFilterOpen}
+          onClose={onFilterClose}
+          backdrop="blur"
+          scrollBehavior="inside"
+        >
+          <ModalContent>
+            <ModalHeader className="flex flex-col gap-1">
+              Filtri avanzati
+            </ModalHeader>
+            <ModalBody>
+              <div className="grid grid-cols-1 gap-4">
+                <Select
+                  variant="bordered"
+                  radius="sm"
+                  label="Tipologia Veicolo"
+                  selectedKeys={[searchFilter.vehicleTypeId]}
+                  onChange={(e) =>
+                    handleSearchFilterChange("vehicleTypeId", e.target.value)
+                  }
+                  className="w-full"
+                >
+                  <SelectItem key="0">Tutte</SelectItem>
+                  <SelectItem key="1">Moto</SelectItem>
+                  <SelectItem key="2">Auto</SelectItem>
+                </Select>
+
+                <Select
+                  variant="bordered"
+                  radius="sm"
+                  label="Tipo di polizza"
+                  selectedKeys={[searchFilter.policyTypeId]}
+                  onChange={(e) =>
+                    handleSearchFilterChange("policyTypeId", e.target.value)
+                  }
+                  className="w-full"
+                >
+                  {policyTypeFilter.map((type) => (
+                    <SelectItem key={String(type.insuranceTypeId)}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                <Select
+                  variant="bordered"
+                  radius="sm"
+                  label="Frazionamento"
+                  selectedKeys={[searchFilter.duration]}
+                  onChange={(e) =>
+                    handleSearchFilterChange("duration", e.target.value)
+                  }
+                  className="w-full"
+                >
+                  <SelectItem key="0">Tutte</SelectItem>
+                  <SelectItem key="6">6 mesi</SelectItem>
+                  <SelectItem key="12">12 mesi</SelectItem>
+                </Select>
+
+                <Select
+                  variant="bordered"
+                  radius="sm"
+                  label="Stato Polizza"
+                  selectedKeys={[searchFilter.state]}
+                  onChange={(e) =>
+                    handleSearchFilterChange("state", e.target.value)
+                  }
+                  className="w-full"
+                >
+                  <SelectItem key="0">Tutte</SelectItem>
+                  <SelectItem key="1">Attiva</SelectItem>
+                  <SelectItem key="2">In Scadenza</SelectItem>
+                  <SelectItem key="3">Terminata</SelectItem>
+                  <SelectItem key="4">In Scadenza 6 mesi</SelectItem>
+                  <SelectItem key="5">Terminata 6 mesi</SelectItem>
+                  <SelectItem key="6">Sospesa</SelectItem>
+                </Select>
+
+                <Select
+                  variant="bordered"
+                  radius="sm"
+                  label="Stato Pagamento"
+                  selectedKeys={[searchFilter.paymentStatus]}
+                  onChange={(e) =>
+                    handleSearchFilterChange("paymentStatus", e.target.value)
+                  }
+                  className="w-full"
+                >
+                  <SelectItem key="0">Tutte</SelectItem>
+                  <SelectItem key="1">Pagato</SelectItem>
+                  <SelectItem key="2">Non Pagato</SelectItem>
+                  <SelectItem key="3">Rate</SelectItem>
+                </Select>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="light" onPress={clearFilters}>
+                Reset filtri
+              </Button>
+              <Button color="primary" onPress={onFilterClose}>
+                Applica filtri
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Table
+          aria-label="Policy table"
+          topContent={topContent}
+          bottomContent={bottomContent}
+          isStriped
+          isHeaderSticky
+          classNames={{
+            base: "max-h-[calc(100vh-16.5rem)]",
+            table: "min-h-[400px]",
+            thead: "bg-default-50 [&>tr]:first:shadow-none",
+            th: "bg-default-50 text-default-500 text-xs font-semibold",
+            tr: "transition-all hover:bg-default-50",
+            td: "py-3",
+          }}
+        >
+          <TableHeader columns={columns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "end" : "start"}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            items={items}
+            emptyContent={
+              <div className="flex flex-col items-center justify-center py-10">
+                <Icon
+                  icon="solar:document-broken"
+                  width={48}
+                  className="text-default-300 mb-3"
+                />
+                <p className="text-default-500">
+                  {searchFilter.searchTerms || activeFiltersCount > 0
+                    ? "Nessuna polizza corrisponde ai criteri di ricerca"
+                    : "Non sono presenti polizze"}
+                </p>
+              </div>
+            }
+          >
+            {(item) => (
+              <TableRow key={item.policyId.toString()}>
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, String(columnKey))}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardBody>
+    </Card>
   );
 }

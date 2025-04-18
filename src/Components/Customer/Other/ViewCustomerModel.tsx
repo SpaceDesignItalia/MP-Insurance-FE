@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
-import InsertEmoticonOutlinedIcon from "@mui/icons-material/InsertEmoticonOutlined";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import CommuteRoundedIcon from "@mui/icons-material/CommuteRounded";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Input, Link, Skeleton } from "@nextui-org/react";
+import {
+  Button,
+  Input,
+  Link,
+  Skeleton,
+  Card,
+  CardBody,
+  CardHeader,
+  Chip,
+  Divider,
+  Avatar,
+  Tabs,
+  Tab,
+} from "@heroui/react";
 import VehiecleCard from "./VehiecleCard";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import VehiclePolicyCard from "./VehiclePolicyCard";
+import { Icon } from "@iconify/react";
 
 interface CustomerDataProps {
   clientId: number;
@@ -97,8 +103,10 @@ export default function ViewCustomerModel() {
   const [editingData, setEditingData] =
     useState<CustomerDataProps>(CUSTOMERDEFAULTVALUE);
   const [loadedAllData, setLoadedAllData] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState("vehicles");
 
   const [vehicleData, setVehicleData] = useState<VehicleDataProps[]>([]);
+
   useEffect(() => {
     fetchCustomerData();
   }, []);
@@ -139,6 +147,7 @@ export default function ViewCustomerModel() {
       if (res.status == 200) {
         setPolicyData(res.data);
         setShowPolicy(true);
+        setActiveTab("policy");
       }
     } catch (error) {
       console.error(error);
@@ -227,258 +236,332 @@ export default function ViewCustomerModel() {
       console.error(error);
     }
   }
+
+  // Generate initials for avatar
+  const getInitials = () => {
+    if (!customerData.firstName || !customerData.lastName) return "?";
+    return `${customerData.firstName.charAt(0)}${customerData.lastName.charAt(
+      0
+    )}`;
+  };
+
   return (
-    <main>
-      <header className="relative isolate border-b-2">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          {isEditingData ? (
-            <div className="mx-auto flex flex-col sm:flex-row max-w-2xl sm:items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none gap-5">
-              <div className="flex w-full items-center gap-x-6">
-                <h1 className="w-full sm:w-1/2 flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
+    <main className="bg-gray-50 min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <Card className="mb-8" shadow="sm">
+          <CardHeader className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center px-6 pt-6 pb-4">
+            <div className="flex items-center gap-4">
+              <Skeleton
+                isLoaded={loadedAllData}
+                className="rounded-full h-16 w-16"
+              >
+                <Avatar
+                  name={getInitials()}
+                  size="lg"
+                  color="primary"
+                  isBordered
+                  className="text-lg font-medium"
+                />
+              </Skeleton>
+
+              {isEditingData ? (
+                <div className="flex flex-col gap-2 flex-grow">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input
                       label="Nome"
                       name="firstName"
                       variant="bordered"
                       radius="sm"
-                      size="sm"
                       value={editingData.firstName}
                       onChange={(e) => handleEditCustomerData(e.target)}
+                      startContent={
+                        <Icon
+                          icon="solar:user-linear"
+                          width={16}
+                          className="text-default-400"
+                        />
+                      }
                     />
                     <Input
                       label="Cognome"
                       name="lastName"
                       variant="bordered"
                       radius="sm"
-                      size="sm"
                       value={editingData.lastName}
                       onChange={(e) => handleEditCustomerData(e.target)}
+                      startContent={
+                        <Icon
+                          icon="solar:user-linear"
+                          width={16}
+                          className="text-default-400"
+                        />
+                      }
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                    <Input
-                      label="Email"
-                      name="email"
-                      variant="bordered"
-                      radius="sm"
-                      size="sm"
-                      value={editingData.email}
-                      onChange={(e) => handleEditCustomerData(e.target)}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                    <Input
-                      label="Telefono"
-                      name="phoneNumber"
-                      variant="bordered"
-                      radius="sm"
-                      size="sm"
-                      value={editingData.phoneNumber}
-                      onChange={(e) => handleEditCustomerData(e.target)}
-                    />
-                  </div>
-                </h1>
-              </div>
-              <div className="flex flex-row sm:flex-col gap-3 items-center justify-center sm:items-end gap-x-4 sm:gap-x-6">
-                <Button
-                  color="danger"
-                  radius="sm"
-                  className="text-white"
-                  startContent={<CloseRoundedIcon />}
-                  onClick={clearEditingData}
-                >
-                  Annulla
-                </Button>
-                <Button
-                  color="warning"
-                  radius="sm"
-                  className="text-white"
-                  startContent={<SaveRoundedIcon />}
-                  isDisabled={!checkEditedData()}
-                  onClick={updateCustomerData}
-                >
-                  Salva modifiche
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="mx-auto flex flex-col sm:flex-row gap-5 max-w-2xl items-center justify-between gap-x-8 lg:mx-0 lg:max-w-none">
-              <div className="flex w-full items-center gap-x-6">
-                <h1 className="w-full flex flex-col gap-2">
-                  <Skeleton
-                    isLoaded={loadedAllData}
-                    className="w-full sm:w-1/3 rounded-lg"
-                  >
-                    <div className="flex flex-row gap-2 items-center mt-1 text-xl font-semibold leading-6 text-gray-900">
-                      <InsertEmoticonOutlinedIcon />
-                      {customerData.firstName + " " + customerData.lastName}
-                    </div>
-                  </Skeleton>
-
-                  <Skeleton
-                    isLoaded={loadedAllData}
-                    className="w-full sm:w-1/4 rounded-lg"
-                  >
-                    <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                      <EmailOutlinedIcon />
-                      {customerData.email}
-                    </div>
-                  </Skeleton>
-
-                  <Skeleton
-                    isLoaded={loadedAllData}
-                    className="w-full sm:w-1/5 rounded-lg"
-                  >
-                    <div className="flex flex-row gap-2 items-center mt-1 text-normal leading-6 text-gray-500">
-                      <PhoneAndroidOutlinedIcon />
-                      {customerData.phoneNumber}
-                    </div>
-                  </Skeleton>
-                </h1>
-              </div>
-              <div className="flex items-center gap-x-4 sm:gap-x-6">
-                <Skeleton
-                  isLoaded={loadedAllData}
-                  className="w-full rounded-lg"
-                >
-                  <Button
-                    color="warning"
+                  <Input
+                    label="Email"
+                    name="email"
+                    variant="bordered"
                     radius="sm"
-                    className="text-white"
-                    startContent={<EditRoundedIcon />}
-                    onClick={() => setIsEditingData(!isEditingData)}
+                    value={editingData.email}
+                    onChange={(e) => handleEditCustomerData(e.target)}
+                    startContent={
+                      <Icon
+                        icon="solar:mailbox-linear"
+                        width={16}
+                        className="text-default-400"
+                      />
+                    }
+                  />
+                  <Input
+                    label="Telefono"
+                    name="phoneNumber"
+                    variant="bordered"
+                    radius="sm"
+                    value={editingData.phoneNumber}
+                    onChange={(e) => handleEditCustomerData(e.target)}
+                    startContent={
+                      <Icon
+                        icon="solar:smartphone-2-linear"
+                        width={16}
+                        className="text-default-400"
+                      />
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="h-7 w-48 rounded-lg mb-1"
                   >
-                    Modifica dati
+                    <h1 className="text-xl font-bold">
+                      {customerData.firstName} {customerData.lastName}
+                    </h1>
+                  </Skeleton>
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="h-5 w-64 rounded-lg mb-1"
+                  >
+                    <div className="flex items-center gap-2 text-default-500">
+                      <Icon icon="solar:mailbox-linear" width={16} />
+                      <span>{customerData.email}</span>
+                    </div>
+                  </Skeleton>
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="h-5 w-36 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2 text-default-500">
+                      <Icon icon="solar:smartphone-2-linear" width={16} />
+                      <span>{customerData.phoneNumber}</span>
+                    </div>
+                  </Skeleton>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              {isEditingData ? (
+                <>
+                  <Button
+                    color="danger"
+                    radius="full"
+                    variant="flat"
+                    startContent={
+                      <Icon icon="mingcute:close-fill" width={16} />
+                    }
+                    onPress={clearEditingData}
+                  >
+                    Annulla
+                  </Button>
+                  <Button
+                    color="success"
+                    radius="full"
+                    variant="solid"
+                    startContent={
+                      <Icon icon="mingcute:save-2-line" width={16} />
+                    }
+                    isDisabled={!checkEditedData()}
+                    onPress={updateCustomerData}
+                  >
+                    Salva
+                  </Button>
+                </>
+              ) : (
+                <Skeleton isLoaded={loadedAllData} className="rounded-full">
+                  <Button
+                    color="primary"
+                    radius="full"
+                    variant="solid"
+                    startContent={<Icon icon="solar:pen-linear" width={16} />}
+                    onPress={() => setIsEditingData(true)}
+                  >
+                    Modifica
                   </Button>
                 </Skeleton>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <div className="flex flex-col gap-3 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-row justify-between items-center">
-          <h1 className="text-xl font-semibold">Veicoli intestati</h1>
-          <div className="flex flex-row gap-5">
-            <Skeleton isLoaded={loadedAllData} className="rounded-lg">
-              {vehicleData.length !== 0 && (
-                <Button
-                  as={Link}
-                  color="warning"
-                  className="text-white"
-                  radius="sm"
-                  startContent={<EditRoundedIcon />}
-                  href={
-                    "/customers/view-customer-data/" +
-                    clientId +
-                    "/edit-vehicles"
-                  }
-                >
-                  Modifica veicoli
-                </Button>
               )}
-            </Skeleton>
-          </div>
-        </div>
-        <div className="mt-4 mx-auto grid max-w-2xl  grid-cols-1 sm:grid-cols-2 grid-rows-1 items-start gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          {vehicleData.length !== 0 ? (
-            <>
-              {vehicleData.map((vehicle: VehicleDataProps) => {
-                return (
-                  <VehiecleCard
-                    key={Number(vehicle.vehicleId)}
-                    VehiecleCardProps={{
-                      vehicleId: Number(vehicle.vehicleId),
-                      licensePlate: vehicle.licensePlate,
-                      brand: vehicle.brand,
-                      model: vehicle.model,
-                      typeId: Number(vehicle.typeId),
-                      companyName: vehicle.companyName,
-                      statusId: Number(vehicle.statusId),
-                      startDate: vehicle.startDate,
-                      endDate: vehicle.endDate,
-                      paymentStatusId: Number(vehicle.paymentStatusId),
-                    }}
-                    variant="policy"
-                    isSelected={selectedVehicleId == vehicle.vehicleId}
-                    onSelect={handleVehicleSelect}
-                  />
-                );
-              })}
-            </>
-          ) : (
-            <>
-              <Skeleton
-                isLoaded={loadedAllData}
-                className="h-40 w-96 rounded-lg"
-              />
-              <Skeleton
-                isLoaded={loadedAllData}
-                className="h-40 w-96 rounded-lg"
-              />
-              <Skeleton
-                isLoaded={loadedAllData}
-                className="h-40 w-96 rounded-lg"
-              />
-            </>
-          )}
-        </div>
-        {vehicleData.length == 0 && (
-          <div className="flex flex-col items-center p-4 ">
-            <CommuteRoundedIcon sx={{ fontSize: 70 }} />
-            <h3 className="mt-4 text-lg font-semibold text-gray-900 text-center">
-              Nessun veicolo intestato a:{" "}
-              {customerData.firstName + " " + customerData.lastName}
-            </h3>
-            <p className="mt-2 text-sm text-gray-500 text-center">
-              Aggiungi un veicolo per continuare
-            </p>
-            <div className="mt-6 w-full flex justify-center">
-              <Button
-                as={Link}
-                href={
-                  "/customers/view-customer-data/" +
-                  customerData.clientId +
-                  "/add-vehicle"
-                }
-                color="primary"
-                radius="sm"
-                type="button"
-                startContent={<AddRoundedIcon />}
-              >
-                Aggiungi nuovo veicolo
-              </Button>
             </div>
-          </div>
-        )}
-        <div className="mt-3 px-4">
-          <VehiclePolicyCard
-            PolicyData={{
-              policyId: Number(policyData.policyId),
-              fullName: policyData.fullName,
-              email: policyData.email,
-              typeId: Number(policyData.typeId),
-              duration: Number(policyData.duration),
-              amount: Number(policyData.amount),
-              startDate: policyData.startDate,
-              endDate: policyData.endDate,
-              brand: policyData.brand,
-              model: policyData.model,
-              licensePlate: policyData.licensePlate,
-              status: policyData.status,
-              paymentStatus: policyData.paymentStatus,
-              companyName: policyData.companyName,
-              companyLogo: policyData.companyLogo,
-              types: policyData.types,
-              note: policyData.note,
-              startSuspensionDate: policyData.startSuspensionDate,
-            }}
-            isVisible={showPolicy}
-          />
-        </div>
+          </CardHeader>
+
+          <Divider />
+
+          <CardBody className="px-0 py-0">
+            <Tabs
+              selectedKey={activeTab}
+              onSelectionChange={setActiveTab as any}
+              color="primary"
+              variant="underlined"
+              classNames={{
+                tab: "px-6 py-4",
+                tabList: "px-6",
+                panel: "p-0",
+              }}
+            >
+              <Tab
+                key="vehicles"
+                title={
+                  <div className="flex items-center gap-2">
+                    <Icon icon="solar:car-bold" width={18} />
+                    <span>Veicoli</span>
+                    {vehicleData.length > 0 && (
+                      <Chip size="sm" variant="flat" color="primary">
+                        {vehicleData.length}
+                      </Chip>
+                    )}
+                  </div>
+                }
+              >
+                <div className="p-6 border-t">
+                  <div className="flex flex-row justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold">Veicoli intestati</h2>
+                    <div className="flex flex-row gap-2">
+                      <Skeleton
+                        isLoaded={loadedAllData}
+                        className="rounded-full"
+                      >
+                        {vehicleData.length !== 0 ? (
+                          <Button
+                            as={Link}
+                            color="primary"
+                            variant="flat"
+                            radius="full"
+                            href={`/customers/view-customer-data/${clientId}/edit-vehicles`}
+                            startContent={
+                              <Icon icon="solar:pen-linear" width={16} />
+                            }
+                          >
+                            Modifica veicoli
+                          </Button>
+                        ) : (
+                          <Button
+                            as={Link}
+                            color="primary"
+                            radius="full"
+                            href={`/customers/view-customer-data/${customerData.clientId}/add-vehicle`}
+                            startContent={
+                              <Icon icon="mingcute:add-fill" width={16} />
+                            }
+                          >
+                            Aggiungi veicolo
+                          </Button>
+                        )}
+                      </Skeleton>
+                    </div>
+                  </div>
+
+                  {vehicleData.length !== 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {vehicleData.map((vehicle: VehicleDataProps) => (
+                        <VehiecleCard
+                          key={Number(vehicle.vehicleId)}
+                          VehiecleCardProps={{
+                            vehicleId: Number(vehicle.vehicleId),
+                            licensePlate: vehicle.licensePlate,
+                            brand: vehicle.brand,
+                            model: vehicle.model,
+                            typeId: Number(vehicle.typeId),
+                            companyName: vehicle.companyName,
+                            statusId: Number(vehicle.statusId),
+                            startDate: vehicle.startDate,
+                            endDate: vehicle.endDate,
+                            paymentStatusId: Number(vehicle.paymentStatusId),
+                          }}
+                          variant="policy"
+                          isSelected={selectedVehicleId == vehicle.vehicleId}
+                          onSelect={handleVehicleSelect}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center py-12 px-4 bg-default-50 rounded-lg">
+                      <Icon
+                        icon="solar:bus-outline"
+                        width={64}
+                        className="text-default-400 mb-4"
+                      />
+                      <h3 className="text-lg font-semibold text-center mb-2">
+                        Nessun veicolo intestato
+                      </h3>
+                      <p className="text-sm text-default-500 text-center mb-6 max-w-md">
+                        Questo cliente non ha ancora veicoli intestati. Aggiungi
+                        un veicolo per continuare.
+                      </p>
+                      <Button
+                        as={Link}
+                        href={`/customers/view-customer-data/${customerData.clientId}/add-vehicle`}
+                        color="primary"
+                        radius="full"
+                        startContent={
+                          <Icon icon="mingcute:add-fill" width={16} />
+                        }
+                      >
+                        Aggiungi nuovo veicolo
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Tab>
+
+              <Tab
+                key="policy"
+                title={
+                  <div className="flex items-center gap-2">
+                    <Icon icon="solar:shield-check-outline" width={18} />
+                    <span>Polizza</span>
+                  </div>
+                }
+                isDisabled={!showPolicy}
+              >
+                <div className="p-6 border-t">
+                  <VehiclePolicyCard
+                    PolicyData={{
+                      policyId: Number(policyData.policyId),
+                      fullName: policyData.fullName,
+                      email: policyData.email,
+                      typeId: Number(policyData.typeId),
+                      duration: Number(policyData.duration),
+                      amount: Number(policyData.amount),
+                      startDate: policyData.startDate,
+                      endDate: policyData.endDate,
+                      brand: policyData.brand,
+                      model: policyData.model,
+                      licensePlate: policyData.licensePlate,
+                      status: policyData.status,
+                      paymentStatus: policyData.paymentStatus,
+                      companyName: policyData.companyName,
+                      companyLogo: policyData.companyLogo,
+                      types: policyData.types,
+                      note: policyData.note,
+                      startSuspensionDate: policyData.startSuspensionDate,
+                    }}
+                    isVisible={showPolicy}
+                  />
+                </div>
+              </Tab>
+            </Tabs>
+          </CardBody>
+        </Card>
       </div>
     </main>
   );

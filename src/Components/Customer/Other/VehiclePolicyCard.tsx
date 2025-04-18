@@ -1,15 +1,32 @@
-import { Button, Select, SelectItem, User } from "@nextui-org/react";
+import {
+  Button,
+  Select,
+  SelectItem,
+  User,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
+  Chip,
+  Divider,
+  Tooltip,
+  Badge,
+  Tabs,
+  Tab,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/react";
 import dayjs from "dayjs";
 import { API_URL_IMG } from "../../../API/API";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import DeletePolicyModal from "../../Dashboard/Other/DeletePolicyModal";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ReactQuill from "react-quill";
-import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import "react-quill/dist/quill.snow.css";
+import { Icon } from "@iconify/react";
 
 interface PolicyDataProps {
   policyId: number;
@@ -51,6 +68,11 @@ export default function VehiclePolicyCard({
     Policy: {} as PolicyDataProps,
   });
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [actionType, setActionType] = useState<"suspend" | "reactivate" | null>(
+    null
+  );
+
   const PaymentStatus = [
     { value: 1, label: "Pagato" },
     { value: 2, label: "Non Pagato" },
@@ -58,6 +80,7 @@ export default function VehiclePolicyCard({
   ];
 
   const [note, setNote] = useState<string>();
+  const [selectedTab, setSelectedTab] = useState("details");
 
   useEffect(() => {
     setNote(PolicyData.note);
@@ -121,6 +144,7 @@ export default function VehiclePolicyCard({
       console.error(error);
     }
   }
+
   async function reactivatePolicy() {
     try {
       const res = await axios.post(
@@ -139,6 +163,52 @@ export default function VehiclePolicyCard({
     }
   }
 
+  const confirmAction = () => {
+    if (actionType === "suspend") {
+      suspendPolicy();
+    } else if (actionType === "reactivate") {
+      reactivatePolicy();
+    }
+    setShowConfirmModal(false);
+  };
+
+  const handleActionClick = (type: "suspend" | "reactivate") => {
+    setActionType(type);
+    setShowConfirmModal(true);
+  };
+
+  // Calculate days until expiration
+  const daysUntilExpiration = dayjs(PolicyData.endDate).diff(dayjs(), "day");
+
+  // Determine status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Attiva":
+        return "success";
+      case "Sospesa":
+        return "warning";
+      case "Terminata":
+        return "danger";
+      default:
+        return "default";
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case "Pagato":
+        return "success";
+      case "Non Pagato":
+        return "danger";
+      case "Rate":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
+
+  if (!isVisible) return null;
+
   return (
     <>
       <DeletePolicyModal
@@ -149,227 +219,334 @@ export default function VehiclePolicyCard({
           fullName: deleteModalData.Policy.fullName,
         }}
       />
-      {isVisible && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-10 sm:flex-row justify-between items-center">
-            <h1 className="text-xl font-semibold">
-              Polizza del veicolo: {PolicyData.brand + " " + PolicyData.model}
-            </h1>
+
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        backdrop="blur"
+      >
+        <ModalContent>
+          <ModalHeader>
+            {actionType === "suspend" ? "Sospendi Polizza" : "Attiva Polizza"}
+          </ModalHeader>
+          <ModalBody>
+            <p>
+              {actionType === "suspend"
+                ? "Sei sicuro di voler sospendere questa polizza? Il veicolo non sarà più coperto dall'assicurazione."
+                : "Sei sicuro di voler riattivare questa polizza?"}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              color="default"
+              variant="light"
+              onPress={() => setShowConfirmModal(false)}
+            >
+              Annulla
+            </Button>
+            <Button
+              color={actionType === "suspend" ? "warning" : "success"}
+              onPress={confirmAction}
+            >
+              Conferma
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Card shadow="sm" className="w-full overflow-visible" isHoverable>
+        <CardHeader className="flex justify-between items-center px-6 pt-6">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold">
+                {PolicyData.brand} {PolicyData.model}
+              </h1>
+              <Chip
+                size="sm"
+                color={getStatusColor(PolicyData.status) as any}
+                variant="flat"
+              >
+                {PolicyData.status}
+              </Chip>
+            </div>
+            <p className="text-sm text-gray-500">
+              ID Polizza: {PolicyData.policyId}
+            </p>
+          </div>
+          <div className="flex gap-2">
             <Button
               color="danger"
-              radius="sm"
-              startContent={<DeleteRoundedIcon />}
-              className="w-full sm:w-1/6"
-              onClick={() =>
+              radius="full"
+              variant="flat"
+              isIconOnly
+              onPress={() =>
                 setDeleteModalData({
                   ...deleteModalData,
                   open: true,
                   Policy: PolicyData,
                 })
               }
+              aria-label="Elimina polizza"
             >
-              Elimina polizza
+              <Icon icon="solar:trash-bin-trash-linear" width={20} />
             </Button>
           </div>
+        </CardHeader>
 
-          <div className="-mx-4 px-4 py-8 shadow-sm border-1 ring-1 ring-gray-900/5 sm:mx-0 rounded-lg sm:px-8 sm:pb-14 lg:col-span-2 lg:row-span-2 lg:row-end-2 xl:px-16 xl:pb-20 xl:pt-16">
-            {PolicyData.status == "Sospesa" &&
-              PolicyData.startSuspensionDate !== null && (
-                <div className="rounded-md bg-yellow-50 p-4 mb-5">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <ReportProblemRoundedIcon className="h-5 w-5 text-yellow-400" />
+        <Divider className="my-2" />
+
+        <CardBody className="px-6">
+          {PolicyData.status === "Sospesa" &&
+            PolicyData.startSuspensionDate !== null && (
+              <div className="mb-5 bg-warning-50 rounded-lg p-4 flex items-start gap-3">
+                <div className="text-warning">
+                  <Icon icon="solar:shield-warning-bold" width={24} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-warning-800">
+                    Polizza Sospesa
+                  </h3>
+                  <p className="mt-1 text-sm text-warning-700">
+                    La polizza è stata sospesa a partire dal{" "}
+                    <strong>
+                      {dayjs(PolicyData.startSuspensionDate).format(
+                        "DD/MM/YYYY"
+                      )}
+                    </strong>
+                  </p>
+                </div>
+              </div>
+            )}
+
+          <Tabs
+            selectedKey={selectedTab}
+            onSelectionChange={setSelectedTab as any}
+            color="primary"
+            variant="underlined"
+            classNames={{
+              tab: "px-4 py-2",
+              tabList: "mb-6",
+            }}
+          >
+            <Tab
+              key="details"
+              title={
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:document-linear" width={18} />
+                  <span>Dettagli</span>
+                </div>
+              }
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <User
+                      name={PolicyData.companyName}
+                      description="Compagnia assicurativa"
+                      avatarProps={{
+                        size: "lg",
+                        isBordered: true,
+                        src:
+                          PolicyData.companyLogo &&
+                          API_URL_IMG +
+                            "/CompanyLogo/" +
+                            PolicyData.companyLogo,
+                      }}
+                    />
+                    <Chip
+                      color={
+                        getPaymentStatusColor(PolicyData.paymentStatus) as any
+                      }
+                      variant="flat"
+                      startContent={
+                        <Icon icon="solar:wallet-money-linear" width={16} />
+                      }
+                    >
+                      {PolicyData.paymentStatus}
+                    </Chip>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-medium font-semibold">Intestatario</h3>
+                    <div className="rounded-lg bg-default-50 p-4">
+                      <p className="text-medium font-semibold">
+                        {PolicyData.fullName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {PolicyData.email}
+                      </p>
                     </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-yellow-800">
-                        Avviso Importante
-                      </h3>
-                      <div className="mt-2 text-sm text-yellow-700">
-                        <p>
-                          La polizza è stata sospesa a partire dal{" "}
-                          <strong>
-                            {dayjs(PolicyData.startSuspensionDate).format(
-                              "DD/MM/YYYY"
-                            )}
-                          </strong>
-                          .
-                        </p>
-                      </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-medium font-semibold">Veicolo</h3>
+                    <div className="rounded-lg bg-default-50 p-4">
+                      <p className="text-medium font-semibold">
+                        {PolicyData.typeId === 2 ? "Auto" : "Moto"}:{" "}
+                        {PolicyData.brand} {PolicyData.model}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Targa: {PolicyData.licensePlate}
+                      </p>
                     </div>
                   </div>
                 </div>
-              )}
-            <h2 className="text-base font-semibold leading-6 text-gray-900">
-              Polizza assicurativa
-            </h2>
-            <div className="flex flex-row justify-between">
-              <User
-                name={PolicyData.companyName}
-                avatarProps={{
-                  size: "lg",
-                  isBordered: true,
-                  src:
-                    PolicyData.companyLogo &&
-                    API_URL_IMG + "/CompanyLogo/" + PolicyData.companyLogo,
-                }}
-                className="mt-3"
-              />
-              <Select
-                label="Stato del pagamento"
-                labelPlacement="outside"
-                variant="bordered"
-                radius="sm"
-                placeholder="Seleziona uno stato"
-                selectedKeys={[PolicyData.paymentStatus]}
-                className="max-w-xs"
-                onChange={(e) => handlePaymentStatusChange(e.target.value)}
-              >
-                {PaymentStatus.map((status) => (
-                  <SelectItem key={status.label}>{status.label}</SelectItem>
-                ))}
-              </Select>
-            </div>
-            <dl className="mt-6 grid grid-cols-1 text-sm leading-6 sm:grid-cols-2">
-              <div className="sm:pr-4">
-                <dt className="inline text-gray-500">Attivata il</dt>{" "}
-                <dd className="inline text-gray-700">
-                  <time dateTime="2023-23-01">
-                    {dayjs(PolicyData.startDate).format("DD/MM/YYYY")}
-                  </time>
-                </dd>
-              </div>
-              <div className="mt-2 sm:mt-0 sm:pl-4">
-                <dt className="inline text-gray-500">Scade il:</dt>{" "}
-                <dd className="inline text-gray-700">
-                  {dayjs(PolicyData.endDate).format("DD/MM/YYYY")}
-                  <time dateTime="2023-31-01"></time>
-                </dd>
-              </div>
-              <div className="mt-6 border-t border-gray-900/5 pt-6 sm:pr-4">
-                <dt className="font-semibold text-gray-900">
-                  Dati intestatario:
-                </dt>
-                <dd className="mt-2 text-gray-500">
-                  <span className="font-medium text-gray-900">
-                    {PolicyData.fullName}
-                  </span>
-                  <br />
-                  {PolicyData.email}
-                  <br />
-                </dd>
-              </div>
-              <div className="mt-8 sm:mt-6 sm:border-t sm:border-gray-900/5 sm:pl-4 sm:pt-6">
-                <dt className="font-semibold text-gray-900">Dati veicolo:</dt>
-                <dd className="mt-2 text-gray-500">
-                  <span className="font-medium text-gray-900">
-                    {PolicyData.typeId === 2 ? "Auto" : "Moto"}:{" "}
-                    {PolicyData.brand + " " + PolicyData.model}
-                  </span>
-                  <br />
-                  Targa: {PolicyData.licensePlate}
-                </dd>
-              </div>
 
-              <div className="mt-8 sm:mt-6 sm:border-t sm:border-b sm:border-gray-900/5 sm:pl-4 sm:pt-6 col-span-2">
-                <dt className="font-semibold text-gray-900">Note:</dt>
-                <dd className="mt-2 text-gray-500">
-                  <div className="w-full flex flex-col gap-3">
-                    <ReactQuill
-                      theme="snow"
-                      value={note}
-                      onChange={setNote}
-                      className="w-full"
-                    />
-                    <div className="flex flex-row justify-end mb-5">
-                      <Button
-                        color="primary"
-                        radius="sm"
-                        onClick={handleUpdateNote}
-                        isDisabled={PolicyData.note === note}
+                <div className="space-y-6">
+                  <div className="rounded-lg bg-primary-50 p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-medium font-semibold">
+                        Periodo di copertura
+                      </h3>
+                      <Tooltip
+                        content={`${PolicyData.duration} mesi di durata`}
                       >
-                        Aggiorna nota
-                      </Button>
+                        <Badge
+                          content={`${PolicyData.duration}m`}
+                          color="primary"
+                          placement="top-right"
+                        >
+                          <Icon icon="solar:calendar-linear" width={24} />
+                        </Badge>
+                      </Tooltip>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500">Data inizio</p>
+                        <p className="font-medium">
+                          {dayjs(PolicyData.startDate).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-500">Data fine</p>
+                        <p className="font-medium">
+                          {dayjs(PolicyData.endDate).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                    </div>
+                    {daysUntilExpiration > 0 && (
+                      <div className="mt-3 px-3 py-2 bg-white rounded-md border border-gray-200">
+                        <p className="text-xs text-gray-500">
+                          {daysUntilExpiration < 30 ? (
+                            <span className="flex items-center text-danger">
+                              <Icon
+                                icon="solar:alarm-linear"
+                                className="mr-1"
+                                width={14}
+                              />
+                              Scade tra {daysUntilExpiration} giorni
+                            </span>
+                          ) : (
+                            <span>Scade tra {daysUntilExpiration} giorni</span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-medium font-semibold">Coperture</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {PolicyData.types.map((type, index) => (
+                        <Chip key={index} color="secondary" variant="flat">
+                          {type}
+                        </Chip>
+                      ))}
                     </div>
                   </div>
-                </dd>
-              </div>
-            </dl>
 
-            <table className="mt-16 w-full whitespace-nowrap text-left text-sm leading-6">
-              <colgroup>
-                <col className="w-full" />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <thead className="border-b border-gray-200 text-gray-900">
-                <tr>
-                  <th scope="col" className="px-0 py-3 font-semibold">
-                    Tipo di polizza
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {PolicyData.types.map((type, index) => (
-                  <tr key={index} className="border-b border-gray-100">
-                    <td className="max-w-0 px-0 py-5 align-top">
-                      <div className="truncate font-medium text-gray-900">
-                        {type}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th
-                    scope="row"
-                    className="pt-4 font-semibold text-gray-900 sm:hidden"
-                  >
-                    Total
-                  </th>
-                  <th
-                    scope="row"
-                    colSpan={3}
-                    className="hidden pt-4 text-right font-semibold text-gray-900 sm:table-cell"
-                  >
-                    Totale
-                  </th>
-                  <td className="pb-0 pl-8 pr-0 pt-4 text-right font-semibold tabular-nums text-gray-900">
-                    € {PolicyData.amount}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-
-            {PolicyData.status !== "Terminata" && (
-              <div>
-                {PolicyData.status == "Sospesa" ? (
-                  <Button
-                    color="success"
-                    radius="sm"
-                    className="text-white"
-                    startContent={<PlayArrowRoundedIcon />}
-                    onClick={reactivatePolicy}
-                  >
-                    Attiva polizza
-                  </Button>
-                ) : (
-                  <Button
-                    color="warning"
-                    radius="sm"
-                    className="text-white"
-                    startContent={<PauseRoundedIcon />}
-                    onClick={suspendPolicy}
-                  >
-                    Sospendi polizza
-                  </Button>
-                )}
+                  <div className="space-y-3">
+                    <h3 className="text-medium font-semibold">
+                      Stato Pagamento
+                    </h3>
+                    <Select
+                      label="Modifica stato pagamento"
+                      variant="bordered"
+                      radius="sm"
+                      placeholder="Seleziona uno stato"
+                      selectedKeys={[PolicyData.paymentStatus]}
+                      className="w-full"
+                      onChange={(e) =>
+                        handlePaymentStatusChange(e.target.value)
+                      }
+                    >
+                      {PaymentStatus.map((status) => (
+                        <SelectItem key={status.label}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
               </div>
-            )}
+            </Tab>
+            <Tab
+              key="notes"
+              title={
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:notebook-linear" width={18} />
+                  <span>Note</span>
+                </div>
+              }
+            >
+              <div className="space-y-4">
+                <ReactQuill
+                  theme="snow"
+                  value={note}
+                  onChange={setNote}
+                  className="w-full min-h-[200px]"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    color="primary"
+                    radius="sm"
+                    onClick={handleUpdateNote}
+                    isDisabled={PolicyData.note === note}
+                    startContent={<Icon icon="solar:pen-linear" width={18} />}
+                  >
+                    Aggiorna nota
+                  </Button>
+                </div>
+              </div>
+            </Tab>
+          </Tabs>
+        </CardBody>
+
+        <Divider />
+
+        <CardFooter className="flex justify-between items-center">
+          <div className="font-medium">
+            <span className="text-gray-500 mr-2">Totale:</span>
+            <span className="text-xl">€ {PolicyData.amount}</span>
           </div>
-        </div>
-      )}
+
+          {PolicyData.status !== "Terminata" && (
+            <div>
+              {PolicyData.status === "Sospesa" ? (
+                <Button
+                  color="success"
+                  variant="solid"
+                  radius="full"
+                  startContent={<Icon icon="solar:play-linear" width={18} />}
+                  onPress={() => handleActionClick("reactivate")}
+                >
+                  Attiva polizza
+                </Button>
+              ) : (
+                <Button
+                  color="warning"
+                  variant="solid"
+                  radius="full"
+                  startContent={<Icon icon="solar:pause-linear" width={18} />}
+                  onPress={() => handleActionClick("suspend")}
+                >
+                  Sospendi polizza
+                </Button>
+              )}
+            </div>
+          )}
+        </CardFooter>
+      </Card>
     </>
   );
 }

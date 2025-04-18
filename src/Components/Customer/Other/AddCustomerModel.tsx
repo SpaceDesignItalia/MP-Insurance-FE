@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Input, Progress, Button, cn } from "@nextui-org/react";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import {
+  Input,
+  Progress,
+  Button,
+  cn,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
+  Divider,
+} from "@heroui/react";
+import { Icon } from "@iconify/react";
 import axios from "axios";
 import AlertCard from "../../Layout/AlertCard";
 
@@ -101,7 +106,9 @@ export default function AddCustomerModel() {
           description: "<p>Il cliente è stato creato correttamente!</p>",
         });
 
-        setTimeout((window.location.href = "/customers"));
+        setTimeout(() => {
+          window.location.href = "/customers";
+        }, 1500);
       }
     } catch (error) {
       console.error(error);
@@ -121,7 +128,7 @@ export default function AddCustomerModel() {
     setVehicleData({ ...vehicleData, veichleTypeId: typeId });
   };
 
-  const progressValue = step === 1 ? 0 : 100;
+  const progressValue = step === 1 ? 50 : 100;
 
   function checkCustomerDataCompleted() {
     return (
@@ -144,288 +151,439 @@ export default function AddCustomerModel() {
   return (
     <>
       <AlertCard AlertCardProps={alertCardProps} />
-      <div className="mb-6">
-        <Progress
-          value={progressValue}
-          color="primary"
-          className="mb-4"
-          size="sm"
-        />
-        <div className="flex justify-between text-sm font-medium">
-          <span
-            className={
-              "text-primary flex flex-row gap-2 justify-center items-center"
-            }
-            aria-label="Cliente"
-          >
-            <PersonRoundedIcon /> Cliente
-          </span>
-          <span
-            className={cn(
-              step === 2
-                ? "text-primary flex flex-row gap-2 justify-center items-center"
-                : "text-gray-400 flex flex-row gap-2 justify-center items-center"
-            )}
-            aria-label="Veicolo"
-          >
-            <DirectionsCarRoundedIcon /> Veicolo
-          </span>
-        </div>
-      </div>
 
-      {step === 1 && (
-        <div className="space-y-12">
-          <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-gray-900/10 pb-12 md:grid-cols-3">
-            <div>
-              <h2 className="text-base font-semibold leading-7 text-gray-900">
-                Informazioni del cliente
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Compila tutti i campi necessari con le informazioni del cliente
-              </p>
+      <Card className="shadow-md border border-gray-200 max-w-4xl mx-auto">
+        <CardHeader className="flex flex-col gap-2 pb-0 pt-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-900">
+              {step === 1 ? "Nuovo Cliente" : "Nuovo Veicolo"}
+            </h2>
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex items-center justify-center h-8 w-8 rounded-full ${
+                  step >= 1
+                    ? "bg-primary text-white"
+                    : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                1
+              </div>
+              <div
+                className={`h-0.5 w-4 ${
+                  step >= 2 ? "bg-primary" : "bg-gray-200"
+                }`}
+              ></div>
+              <div
+                className={`flex items-center justify-center h-8 w-8 rounded-full ${
+                  step >= 2
+                    ? "bg-primary text-white"
+                    : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                2
+              </div>
             </div>
+          </div>
 
-            <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="first-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Nome
-                </label>
-                <div className="mt-2">
+          <Progress
+            value={progressValue}
+            color="primary"
+            className="mb-2"
+            size="md"
+            radius="full"
+            classNames={{
+              indicator:
+                step === 2 ? "bg-gradient-to-r from-primary to-success" : "",
+              base: "bg-gray-100",
+            }}
+          />
+
+          <div className="flex justify-between text-xs text-gray-500 mb-4 px-1">
+            <span className={step >= 1 ? "text-primary font-medium" : ""}>
+              Dati Cliente
+            </span>
+            <span className={step >= 2 ? "text-primary font-medium" : ""}>
+              Dati Veicolo
+            </span>
+          </div>
+        </CardHeader>
+
+        <Divider />
+
+        <CardBody className="py-6">
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <Icon icon="solar:user-rounded-bold" width={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                    Informazioni del cliente
+                  </h3>
+                  <p className="text-sm leading-5 text-gray-600">
+                    Compila tutti i campi necessari con le informazioni del
+                    cliente
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                  >
+                    Nome
+                  </label>
                   <Input
                     name="firstName"
                     variant="bordered"
                     aria-labelledby="nome"
                     radius="sm"
                     placeholder="Mario"
+                    startContent={
+                      <Icon
+                        icon="solar:user-linear"
+                        width={18}
+                        className="text-gray-400"
+                      />
+                    }
                     onChange={(e) => handleCustomerInputChange(e.target)}
+                    value={customerData.firstName}
+                    classNames={{
+                      inputWrapper: "shadow-sm border-gray-300",
+                      input: "placeholder:text-gray-400",
+                    }}
                   />
                 </div>
-              </div>
 
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="last-name"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Cognome
-                </label>
-                <div className="mt-2">
+                <div>
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                  >
+                    Cognome
+                  </label>
                   <Input
                     name="lastName"
                     variant="bordered"
                     aria-labelledby="cognome"
                     radius="sm"
                     placeholder="Rossi"
+                    startContent={
+                      <Icon
+                        icon="solar:user-linear"
+                        width={18}
+                        className="text-gray-400"
+                      />
+                    }
                     onChange={(e) => handleCustomerInputChange(e.target)}
+                    value={customerData.lastName}
+                    classNames={{
+                      inputWrapper: "shadow-sm border-gray-300",
+                      input: "placeholder:text-gray-400",
+                    }}
                   />
                 </div>
-              </div>
 
-              <div className="sm:col-span-6">
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Email
-                </label>
-                <div className="mt-2">
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                  >
+                    Email
+                  </label>
                   <Input
                     name="email"
+                    type="email"
                     variant="bordered"
                     aria-labelledby="email"
                     radius="sm"
                     placeholder="example@gmail.com"
+                    startContent={
+                      <Icon
+                        icon="solar:letter-linear"
+                        width={18}
+                        className="text-gray-400"
+                      />
+                    }
                     onChange={(e) => handleCustomerInputChange(e.target)}
                     value={customerData.email}
+                    classNames={{
+                      inputWrapper: "shadow-sm border-gray-300",
+                      input: "placeholder:text-gray-400",
+                    }}
                   />
                 </div>
-              </div>
 
-              <div className="sm:col-span-6">
-                <label
-                  htmlFor="phoneNumber"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Numero di telefono
-                </label>
-                <div className="mt-2">
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="phoneNumber"
+                    className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                  >
+                    Numero di telefono
+                  </label>
                   <Input
                     name="phoneNumber"
                     variant="bordered"
                     aria-label="telefono"
                     radius="sm"
-                    placeholder="N. telefono"
+                    placeholder="3401234567"
+                    startContent={
+                      <Icon
+                        icon="solar:phone-linear"
+                        width={18}
+                        className="text-gray-400"
+                      />
+                    }
+                    endContent={
+                      <div className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-500 font-medium">
+                        {customerData.phoneNumber.length}/10
+                      </div>
+                    }
                     onChange={(e) => handleCustomerInputChange(e.target)}
                     value={customerData.phoneNumber}
+                    classNames={{
+                      inputWrapper: "shadow-sm border-gray-300",
+                      input: "placeholder:text-gray-400",
+                    }}
                   />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {step === 2 && (
-        <div className="space-y-12">
-          <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-gray-900/10 pb-12 md:grid-cols-3">
-            <div>
-              <h2 className="text-base font-semibold leading-7 text-gray-900">
-                Informazioni del veicolo
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Compila tutti i campi necessari con le informazioni del veicolo
-              </p>
-            </div>
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <Icon icon="solar:car-bold" width={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                    Informazioni del veicolo
+                  </h3>
+                  <p className="text-sm leading-5 text-gray-600">
+                    Compila tutti i campi necessari con le informazioni del
+                    veicolo
+                  </p>
+                </div>
+              </div>
 
-            <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
-              <div className="sm:col-span-6">
+              <div>
                 <label
-                  htmlFor="vehicle-make"
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  htmlFor="vehicle-type"
+                  className="block text-sm font-medium leading-6 text-gray-900 mb-3"
                 >
                   Tipo di veicolo
                 </label>
-                <div className="mt-2 flex gap-4 items-center justify-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     type="button"
                     aria-label="Seleziona Auto"
                     className={cn(
-                      "flex flex-col gap-3 justify-center items-center h-56 w-56 border-2 shadow-xl rounded-xl",
+                      "flex flex-col gap-3 justify-center items-center p-8 border-2 rounded-xl transition-all duration-200",
                       vehicleData.veichleTypeId === 2
-                        ? "bg-primary text-white"
-                        : "bg-white text-gray-900"
+                        ? "bg-primary/10 border-primary text-primary shadow-md"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-primary/30 hover:bg-primary/5"
                     )}
                     onClick={() => handleVehicleTypeSelect(2)}
                   >
-                    <DirectionsCarRoundedIcon sx={{ fontSize: 50 }} />
-                    Auto
+                    <Icon
+                      icon="solar:car-bold"
+                      width={48}
+                      className={
+                        vehicleData.veichleTypeId === 2
+                          ? "text-primary"
+                          : "text-gray-500"
+                      }
+                    />
+                    <span className="font-medium">Auto</span>
                   </button>
                   <button
                     type="button"
                     aria-label="Seleziona Moto"
                     className={cn(
-                      "flex flex-col gap-3 justify-center items-center h-56 w-56 border-2 shadow-xl rounded-xl",
+                      "flex flex-col gap-3 justify-center items-center p-8 border-2 rounded-xl transition-all duration-200",
                       vehicleData.veichleTypeId === 1
-                        ? "bg-primary text-white"
-                        : "bg-white text-gray-900"
+                        ? "bg-primary/10 border-primary text-primary shadow-md"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-primary/30 hover:bg-primary/5"
                     )}
                     onClick={() => handleVehicleTypeSelect(1)}
                   >
-                    <TwoWheelerRoundedIcon sx={{ fontSize: 50 }} />
-                    Moto
+                    <Icon
+                      icon="solar:motorbike-bold"
+                      width={48}
+                      className={
+                        vehicleData.veichleTypeId === 1
+                          ? "text-primary"
+                          : "text-gray-500"
+                      }
+                    />
+                    <span className="font-medium">Moto</span>
                   </button>
                 </div>
               </div>
-              {vehicleData.veichleTypeId != 0 && (
-                <>
-                  <div className="sm:col-span-6">
+
+              {vehicleData.veichleTypeId !== 0 && (
+                <div className="space-y-6 animate-in fade-in duration-300 pt-2">
+                  <div>
                     <label
-                      htmlFor="vehicle-make"
-                      className="block text-sm font-medium leading-6 text-gray-900"
+                      htmlFor="brand"
+                      className="block text-sm font-medium leading-6 text-gray-900 mb-2"
                     >
                       Marca del veicolo
                     </label>
-                    <div className="mt-2">
-                      <Input
-                        name="brand"
-                        variant="bordered"
-                        aria-labelledby="marca veicolo"
-                        radius="sm"
-                        placeholder="Inserisci la marca"
-                        onChange={(e) => handleVehicleInputChange(e.target)}
-                        value={vehicleData.brand}
-                      />
-                    </div>
+                    <Input
+                      name="brand"
+                      variant="bordered"
+                      aria-labelledby="marca veicolo"
+                      radius="sm"
+                      placeholder="Es. Fiat, BMW, Honda..."
+                      startContent={
+                        <Icon
+                          icon="solar:car-bold-duotone"
+                          width={18}
+                          className="text-gray-400"
+                        />
+                      }
+                      onChange={(e) => handleVehicleInputChange(e.target)}
+                      value={vehicleData.brand}
+                      classNames={{
+                        inputWrapper: "shadow-sm border-gray-300",
+                        input: "placeholder:text-gray-400",
+                      }}
+                    />
                   </div>
 
-                  <div className="sm:col-span-6">
+                  <div>
                     <label
-                      htmlFor="vehicle-model"
-                      className="block text-sm font-medium leading-6 text-gray-900"
+                      htmlFor="model"
+                      className="block text-sm font-medium leading-6 text-gray-900 mb-2"
                     >
                       Modello del veicolo
                     </label>
-                    <div className="mt-2">
-                      <Input
-                        name="model"
-                        variant="bordered"
-                        aria-labelledby="modello veicolo"
-                        radius="sm"
-                        placeholder="Inserisci il modello"
-                        onChange={(e) => handleVehicleInputChange(e.target)}
-                        value={vehicleData.model}
-                      />
-                    </div>
+                    <Input
+                      name="model"
+                      variant="bordered"
+                      aria-labelledby="modello veicolo"
+                      radius="sm"
+                      placeholder="Es. Panda, Serie 3, CBR..."
+                      startContent={
+                        <Icon
+                          icon="solar:slider-horizontal-minimalistic-linear"
+                          width={18}
+                          className="text-gray-400"
+                        />
+                      }
+                      onChange={(e) => handleVehicleInputChange(e.target)}
+                      value={vehicleData.model}
+                      classNames={{
+                        inputWrapper: "shadow-sm border-gray-300",
+                        input: "placeholder:text-gray-400",
+                      }}
+                    />
                   </div>
 
-                  <div className="sm:col-span-6">
+                  <div>
                     <label
-                      htmlFor="vehicle-license-plate"
-                      className="block text-sm font-medium leading-6 text-gray-900"
+                      htmlFor="licensePlate"
+                      className="block text-sm font-medium leading-6 text-gray-900 mb-2"
                     >
                       Targa del veicolo
                     </label>
-                    <div className="mt-2">
-                      <Input
-                        name="licensePlate"
-                        variant="bordered"
-                        aria-labelledby="targa veicolo"
-                        radius="sm"
-                        placeholder={
-                          vehicleData.veichleTypeId == 1 ? "AA000AA" : "AA00000"
-                        }
-                        onChange={(e) => handleVehicleInputChange(e.target)}
-                        value={vehicleData.licensePlate}
-                      />
-                    </div>
+                    <Input
+                      name="licensePlate"
+                      variant="bordered"
+                      aria-labelledby="targa veicolo"
+                      radius="sm"
+                      placeholder={
+                        vehicleData.veichleTypeId === 1 ? "AA000AA" : "AA00000"
+                      }
+                      startContent={
+                        <Icon
+                          icon="solar:bookmark-square-linear"
+                          width={18}
+                          className="text-gray-400"
+                        />
+                      }
+                      onChange={(e) => handleVehicleInputChange(e.target)}
+                      value={vehicleData.licensePlate}
+                      description={
+                        <div className="flex justify-between mt-1">
+                          <span className="text-xs text-gray-500">
+                            Formato:{" "}
+                            {vehicleData.veichleTypeId === 1
+                              ? "AA000AA"
+                              : "AA00000"}
+                          </span>
+                          <span
+                            className={`text-xs font-medium ${
+                              vehicleData.licensePlate.length === 7
+                                ? "text-success"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {vehicleData.licensePlate.length}/7
+                          </span>
+                        </div>
+                      }
+                      classNames={{
+                        inputWrapper: "shadow-sm border-gray-300",
+                        input: "placeholder:text-gray-400",
+                      }}
+                    />
                   </div>
-                </>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </CardBody>
 
-      <div className="mt-6 flex items-center justify-between gap-x-6">
-        {step > 1 && (
-          <Button
-            radius="sm"
-            color="primary"
-            onClick={() => setStep(1)}
-            startContent={<ArrowBackRoundedIcon />}
-          >
-            Indietro
-          </Button>
-        )}
-        {step < 2 ? (
-          <>
-            <div />
+        <Divider />
+
+        <CardFooter className="flex justify-between py-4">
+          {step > 1 ? (
             <Button
-              radius="sm"
+              radius="full"
+              variant="flat"
+              color="primary"
+              onClick={() => setStep(1)}
+              startContent={<Icon icon="solar:arrow-left-linear" width={18} />}
+            >
+              Indietro
+            </Button>
+          ) : (
+            <div></div>
+          )}
+
+          {step < 2 ? (
+            <Button
+              radius="full"
               color="primary"
               onClick={() => setStep(2)}
               isDisabled={checkCustomerDataCompleted()}
-              endContent={<ArrowForwardRoundedIcon />}
+              endContent={<Icon icon="solar:arrow-right-linear" width={18} />}
             >
               Avanti
             </Button>
-          </>
-        ) : (
-          <Button
-            radius="sm"
-            color="primary"
-            isLoading={isSaving}
-            isDisabled={checkVehicleDataCompleted()}
-            startContent={!isSaving && <SaveRoundedIcon />}
-            onClick={handleCreateCustomer}
-          >
-            Salva
-          </Button>
-        )}
-      </div>
+          ) : (
+            <Button
+              radius="full"
+              color="primary"
+              isLoading={isSaving}
+              isDisabled={checkVehicleDataCompleted()}
+              startContent={
+                !isSaving && <Icon icon="solar:diskette-linear" width={18} />
+              }
+              onClick={handleCreateCustomer}
+            >
+              Salva Cliente
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </>
   );
 }

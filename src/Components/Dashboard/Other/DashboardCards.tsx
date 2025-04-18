@@ -1,9 +1,8 @@
-import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
-import AccessAlarmRoundedIcon from "@mui/icons-material/AccessAlarmRounded";
-import Groups2RoundedIcon from "@mui/icons-material/Groups2Rounded";
-import CommuteRoundedIcon from "@mui/icons-material/CommuteRounded";
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { useEffect, useState } from "react";
+
+import { Card, cn } from "@heroui/react";
+import { Icon } from "@iconify/react";
 
 export default function DashboardCards() {
   const [stats, setStats] = useState([
@@ -11,25 +10,25 @@ export default function DashboardCards() {
       id: 1,
       name: "Polizze attive",
       stat: "",
-      icon: ArticleRoundedIcon,
+      icon: "solar:document-medicine-linear",
     },
     {
       id: 2,
       name: "Polizze in scadenza (-10g)",
       stat: "",
-      icon: AccessAlarmRoundedIcon,
+      icon: "solar:document-text-linear",
     },
     {
       id: 3,
       name: "Clienti registrati",
       stat: "",
-      icon: Groups2RoundedIcon,
+      icon: "solar:users-group-two-rounded-linear",
     },
     {
       id: 4,
       name: "Veicoli registrati",
       stat: "",
-      icon: CommuteRoundedIcon,
+      icon: "mingcute:car-3-line",
     },
   ]);
 
@@ -92,24 +91,34 @@ export default function DashboardCards() {
     <div>
       <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((item) => (
-          <div
+          <Card
             key={item.id}
-            className="relative overflow-hidden rounded-lg bg-white px-4 pt-5 shadow sm:px-6 sm:pt-6"
+            className="border border-transparent dark:border-default-100"
           >
-            <dt>
-              <div className="absolute rounded-md bg-primary p-3">
-                <item.icon aria-hidden="true" className="h-6 w-6 text-white" />
+            <div className="flex p-4">
+              <div
+                className={cn(
+                  "mt-1 flex h-8 w-8 items-center justify-center rounded-md",
+                  {
+                    "bg-success-50": item.id === 1,
+                    "bg-warning-50": item.id === 2,
+                    "bg-primary-50": item.id === 3 || item.id === 4,
+                  }
+                )}
+              >
+                <Icon className="text-primary" icon={item.icon} width={20} />
               </div>
-              <p className="ml-16 truncate text-sm font-medium text-gray-500">
-                {item.name}
-              </p>
-            </dt>
-            <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
-              <p className="text-2xl font-semibold text-gray-900">
-                {item.stat}
-              </p>
-            </dd>
-          </div>
+
+              <div className="flex flex-col gap-y-2">
+                <dt className="mx-4 text-small font-medium text-default-500">
+                  {item.name}
+                </dt>
+                <dd className="px-4 text-2xl font-semibold text-default-700">
+                  {item.stat}
+                </dd>
+              </div>
+            </div>
+          </Card>
         ))}
       </dl>
     </div>

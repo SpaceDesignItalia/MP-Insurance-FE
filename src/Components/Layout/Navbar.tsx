@@ -1,16 +1,13 @@
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
+import { Icon } from "@iconify/react";
 import {
   Avatar,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-} from "@nextui-org/react";
+} from "@heroui/react";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
@@ -19,7 +16,7 @@ import Logo from "../../assets/MpLogo.png";
 interface NavigationItem {
   name: string;
   href: string;
-  icon: React.ElementType;
+  icon: React.ReactNode;
   requiredCondition: boolean;
   current: boolean;
 }
@@ -50,7 +47,7 @@ export default function Navbar() {
     {
       name: "Dashboard",
       href: "/",
-      icon: DashboardOutlinedIcon,
+      icon: <Icon fontSize={23} icon="solar:home-linear" />,
       requiredCondition: true,
       current: isSubRoute({
         currentUrl,
@@ -60,7 +57,7 @@ export default function Navbar() {
     {
       name: "Clienti",
       href: "/customers",
-      icon: PeopleAltOutlinedIcon,
+      icon: <Icon fontSize={23} icon="solar:users-group-two-rounded-linear" />,
       requiredCondition: true,
       current: isSubRoute({
         currentUrl,
@@ -76,7 +73,7 @@ export default function Navbar() {
     {
       name: "Calendario",
       href: "/calendar",
-      icon: CalendarMonthRoundedIcon,
+      icon: <Icon fontSize={23} icon="solar:calendar-linear" />,
       requiredCondition: true,
       current: isSubRoute({
         currentUrl,
@@ -127,7 +124,7 @@ export default function Navbar() {
                       "inline-flex justify-center items-center gap-2 border-b-2"
                     )}
                   >
-                    <item.icon />
+                    {item.icon}
                     {item.name}
                   </a>
                 );
@@ -153,9 +150,9 @@ export default function Navbar() {
                 </div>
               </DropdownTrigger>
               <DropdownMenu aria-label="User Actions" variant="flat">
-                <DropdownItem key="logout" color="danger" onClick={logout}>
+                <DropdownItem key="logout" color="danger" onPress={logout}>
                   <div className="flex flex-row gap-2 ">
-                    <LogoutRoundedIcon className="h-6 w-6 shrink-0 text-gray-400 group-hover:text-danger" />
+                    <Icon fontSize={23} icon="solar:logout-linear" />
                     Logout
                   </div>
                 </DropdownItem>
@@ -202,19 +199,20 @@ export default function Navbar() {
                     "border-l-4 flex items-center gap-2"
                   )}
                 >
-                  <item.icon />
+                  {item.icon}
                   {item.name}
                 </a>
               ))}
             </div>
             <div className="border-t border-gray-200 pb-3 pt-4">
               <div className="mt-3 space-y-1">
-                <a
-                  href="#"
+                <div
+                  onClick={logout}
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                 >
+                  <Icon fontSize={23} icon="solar:logout-linear" />
                   Logout
-                </a>
+                </div>
               </div>
             </div>
           </motion.div>

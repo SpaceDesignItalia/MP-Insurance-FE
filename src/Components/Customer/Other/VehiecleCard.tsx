@@ -1,7 +1,15 @@
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
-import { Chip } from "@nextui-org/react";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Chip,
+  Divider,
+  Image,
+  Tooltip,
+} from "@heroui/react";
+import { Icon } from "@iconify/react";
 import dayjs from "dayjs";
+import { API_URL_IMG } from "../../../API/API";
 
 interface VehiecleCardProps {
   vehicleId: number;
@@ -10,6 +18,7 @@ interface VehiecleCardProps {
   model: string;
   typeId: number;
   companyName: string;
+  companyLogo?: string;
   statusId: number;
   startDate: Date | null;
   endDate: Date | null;
@@ -42,6 +51,7 @@ export default function VehiecleCard({
   isSelected,
   onSelect,
 }: VehiecleCardComponentProps) {
+  console.log(VehiecleCardProps);
   function checkPaymentStatus(): string {
     switch (VehiecleCardProps.paymentStatusId) {
       case 1:
@@ -84,118 +94,200 @@ export default function VehiecleCard({
 
   const isDisabled = checkIsUninsured();
 
-  return (
-    <>
-      {variant == "policy" && (
-        <>
-          <div
-            className={`max-w-sm rounded-lg overflow-hidden bg-white transition-shadow duration-300 transform ${
-              isSelected ? "shadow-xl border-primary border-3" : "border"
-            } ${
-              isDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:shadow-xl cursor-pointer"
-            }`}
-            onClick={() => !isDisabled && onSelect(VehiecleCardProps.vehicleId)}
-          >
-            <div className="flex justify-between p-6 bg-primary-900 text-white">
-              <div>
-                <h2 className="text-xl font-bold">
-                  {VehiecleCardProps.brand} {VehiecleCardProps.model}
-                </h2>
-                <p className="mt-1 text-sm opacity-80">
-                  Targa: {VehiecleCardProps.licensePlate}
-                </p>
-              </div>
-              <div className="flex items-center">
-                {VehiecleCardProps.typeId === 1 ? (
-                  <TwoWheelerRoundedIcon fontSize="large" />
-                ) : (
-                  <DirectionsCarRoundedIcon fontSize="large" />
-                )}
-              </div>
-            </div>
+  // Calculate days left in policy if dates are available
+  const getDaysLeft = (): number | null => {
+    if (!VehiecleCardProps.endDate) return null;
+    return dayjs(VehiecleCardProps.endDate).diff(dayjs(), "day");
+  };
 
-            <div className="flex flex-col gap-2 px-6 py-4">
-              <p className="text-gray-700">
-                <strong>Tipo:</strong>{" "}
-                {VehiecleCardProps.typeId === 1 ? "Moto" : "Auto"}
-              </p>
-              {!isDisabled ? (
-                <>
-                  <p className="text-gray-700">
-                    <strong> Compagnia assicurativa:</strong>{" "}
-                    {VehiecleCardProps.companyName}
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Data copertura:</strong>{" "}
+  const daysLeft = getDaysLeft();
+
+  if (variant === "policy") {
+    return (
+      <Card
+        isPressable={!isDisabled}
+        isHoverable
+        shadow={isSelected ? "md" : "sm"}
+        className={`w-full ${isSelected ? "border-primary border-2" : ""} ${
+          isDisabled ? "opacity-70" : ""
+        }`}
+        onPress={() => !isDisabled && onSelect(VehiecleCardProps.vehicleId)}
+        disableRipple={isDisabled}
+      >
+        <CardHeader className="flex justify-between p-4 bg-gradient-to-r from-primary-600 to-primary-800 text-white overflow-hidden">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-bold text-left">
+              {VehiecleCardProps.brand} {VehiecleCardProps.model}
+            </h2>
+            <p className="text-xs text-white/80 text-left">
+              Targa: {VehiecleCardProps.licensePlate}
+            </p>
+          </div>
+          <div className="flex items-center">
+            {VehiecleCardProps.typeId === 2 ? (
+              <Icon icon="mingcute:car-3-line" width={42} height={42} />
+            ) : (
+              <Icon icon="mingcute:ebike-line" width={42} height={42} />
+            )}
+          </div>
+        </CardHeader>
+
+        <Divider />
+
+        <CardBody className="p-4 flex flex-col gap-3">
+          {!isDisabled ? (
+            <>
+              <div className="flex items-center gap-2">
+                <Icon
+                  icon="solar:buildings-3-linear"
+                  width={18}
+                  className="text-primary"
+                />
+                <div className="flex justify-between w-full items-center">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Compagnia assicurativa
+                    </p>
+                    {VehiecleCardProps.companyName && (
+                      <div className="h-10 w-10 ml-2">
+                        <Image
+                          radius="sm"
+                          className="h-full w-full object-contain scale-150 -pt-1"
+                          src={`${API_URL_IMG}/CompanyLogo/${VehiecleCardProps.companyName}Logo.png`}
+                          alt={VehiecleCardProps.companyName}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Icon
+                  icon="solar:calendar-linear"
+                  width={18}
+                  className="text-primary"
+                />
+                <div>
+                  <p className="text-sm text-gray-500">Periodo copertura</p>
+                  <p className="text-medium">
                     {dayjs(VehiecleCardProps.startDate).format("DD/MM/YYYY")} -{" "}
                     {dayjs(VehiecleCardProps.endDate).format("DD/MM/YYYY")}
                   </p>
-                  <div className="flex flex-row gap-2">
-                    <Chip
-                      className="capitalize"
-                      color={statusColorMap[checkPaymentStatus()] || "default"}
-                      variant="dot"
-                      radius="sm"
-                    >
-                      {checkPaymentStatus()}
-                    </Chip>
+                </div>
+              </div>
 
-                    <Chip
-                      className="capitalize"
-                      color={statusColorMap[checkPolicyStatus()] || "default"}
-                      variant="dot"
-                      radius="sm"
-                    >
-                      {checkPolicyStatus()}
-                    </Chip>
-                  </div>
-                </>
-              ) : (
-                <p className="text-gray-700">
-                  <strong> Veicolo non assicurato</strong>
-                </p>
+              {daysLeft !== null && daysLeft > 0 && (
+                <div
+                  className={`text-xs px-3 py-1.5 rounded-md ${
+                    daysLeft < 30
+                      ? "bg-danger-50 text-danger"
+                      : "bg-default-50 text-default-500"
+                  }`}
+                >
+                  {daysLeft < 30 ? (
+                    <div className="flex items-center">
+                      <Icon
+                        icon="solar:alarm-linear"
+                        width={14}
+                        className="mr-1"
+                      />
+                      Scade tra {daysLeft} giorni
+                    </div>
+                  ) : (
+                    <div>Scade tra {daysLeft} giorni</div>
+                  )}
+                </div>
               )}
-            </div>
-          </div>
-        </>
-      )}
-      {variant == "edit" && (
-        <>
-          <div
-            className={`sm:max-w-sm rounded-lg overflow-hidden bg-white transition-shadow duration-300 transform cursor-pointer ${
-              isSelected ? "shadow-xl border-primary border-3" : "border"
-            }`}
-            onClick={() => onSelect(VehiecleCardProps.vehicleId)}
-          >
-            <div className="flex justify-between p-6 bg-primary-900 text-white">
-              <div>
-                <h2 className="text-xl font-bold">
-                  {VehiecleCardProps.brand} {VehiecleCardProps.model}
-                </h2>
-                <p className="mt-1 text-sm opacity-80">
-                  Targa: {VehiecleCardProps.licensePlate}
-                </p>
-              </div>
-              <div className="flex items-center">
-                {VehiecleCardProps.typeId === 1 ? (
-                  <TwoWheelerRoundedIcon fontSize="large" />
-                ) : (
-                  <DirectionsCarRoundedIcon fontSize="large" />
-                )}
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-2 px-6 py-4">
-              <p className="text-gray-700">
-                <strong>Tipo:</strong>{" "}
-                {VehiecleCardProps.typeId === 1 ? "Moto" : "Auto"}
-              </p>
+              <div className="flex flex-row gap-2 mt-1">
+                <Tooltip content="Stato pagamento">
+                  <Chip
+                    className="capitalize"
+                    color={statusColorMap[checkPaymentStatus()] || "default"}
+                    variant="flat"
+                    radius="sm"
+                    startContent={
+                      <Icon icon="solar:wallet-money-linear" width={14} />
+                    }
+                  >
+                    {checkPaymentStatus()}
+                  </Chip>
+                </Tooltip>
+
+                <Tooltip content="Stato polizza">
+                  <Chip
+                    className="capitalize"
+                    color={statusColorMap[checkPolicyStatus()] || "default"}
+                    variant="flat"
+                    radius="sm"
+                    startContent={
+                      <Icon icon="solar:shield-keyhole-linear" width={14} />
+                    }
+                  >
+                    {checkPolicyStatus()}
+                  </Chip>
+                </Tooltip>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center py-2 gap-2">
+              <Icon
+                icon="solar:shield-warning-linear"
+                width={20}
+                className="text-warning"
+              />
+              <p className="text-medium text-warning">Veicolo non assicurato</p>
             </div>
+          )}
+        </CardBody>
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      isPressable
+      isHoverable
+      shadow={isSelected ? "md" : "sm"}
+      className={`w-full ${isSelected ? "border-primary border-2" : ""}`}
+      onPress={() => onSelect(VehiecleCardProps.vehicleId)}
+    >
+      <CardHeader className="flex justify-between p-4 bg-gradient-to-r from-primary-600 to-primary-800 text-white overflow-hidden">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-bold">
+            {VehiecleCardProps.brand} {VehiecleCardProps.model}
+          </h2>
+          <p className="text-xs text-white/80">
+            Targa: {VehiecleCardProps.licensePlate}
+          </p>
+        </div>
+        <div className="flex items-center">
+          {VehiecleCardProps.typeId === 1 ? (
+            <Icon icon="solar:motorbike-linear" width={42} height={42} />
+          ) : (
+            <Icon icon="solar:car-linear" width={42} height={42} />
+          )}
+        </div>
+      </CardHeader>
+
+      <Divider />
+
+      <CardBody className="p-4">
+        <div className="flex items-center gap-2">
+          <Icon
+            icon="solar:info-circle-linear"
+            width={18}
+            className="text-primary"
+          />
+          <div>
+            <p className="text-sm text-gray-500">Tipo veicolo</p>
+            <p className="text-medium font-semibold">
+              {VehiecleCardProps.typeId === 1 ? "Moto" : "Auto"}
+            </p>
           </div>
-        </>
-      )}
-    </>
+        </div>
+      </CardBody>
+    </Card>
   );
 }

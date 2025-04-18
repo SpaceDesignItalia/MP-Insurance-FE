@@ -1,11 +1,20 @@
 import { useState } from "react";
-import { Input, Button, cn } from "@nextui-org/react";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import TwoWheelerRoundedIcon from "@mui/icons-material/TwoWheelerRounded";
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import {
+  Input,
+  Button,
+  cn,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
+  Divider,
+  Breadcrumbs,
+  BreadcrumbItem,
+} from "@heroui/react";
+import { Icon } from "@iconify/react";
 import axios from "axios";
 import AlertCard from "../../Layout/AlertCard";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 interface VehicleDataProps {
   veichleTypeId: number;
@@ -55,12 +64,13 @@ export default function AddVehicleModel() {
   };
 
   function checkVehicleDataCompleted() {
-    return (
-      vehicleData.veichleTypeId === 0 ||
-      vehicleData.brand === "" ||
-      vehicleData.model === "" ||
-      vehicleData.licensePlate.length !== 7
-    );
+    const isValid =
+      vehicleData.veichleTypeId !== 0 &&
+      vehicleData.brand.trim() !== "" &&
+      vehicleData.model.trim() !== "" &&
+      vehicleData.licensePlate.length === 7;
+
+    return !isValid;
   }
 
   async function handleCreateVehicle() {
@@ -83,9 +93,9 @@ export default function AddVehicleModel() {
           description: "<p>Il veicolo è stato aggiunto correttamente!</p>",
         });
 
-        setTimeout(
-          (window.location.href = "/customers/view-customer-data/" + clientId)
-        );
+        setTimeout(() => {
+          window.location.href = "/customers/view-customer-data/" + clientId;
+        }, 1500);
       }
     } catch (error) {
       console.error(error);
@@ -104,136 +114,357 @@ export default function AddVehicleModel() {
   return (
     <>
       <AlertCard AlertCardProps={alertCardProps} />
-      <div className="space-y-12">
-        <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-gray-900/10 pb-12 md:grid-cols-3">
-          <div>
-            <h2 className="text-base font-semibold leading-7 text-gray-900">
-              Informazioni del veicolo
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-gray-600">
-              Compila tutti i campi necessari con le informazioni del veicolo
-            </p>
-          </div>
 
-          <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
-            <div className="sm:col-span-6">
+      <div className="mb-6">
+        <Breadcrumbs size="sm">
+          <BreadcrumbItem>
+            <Link to="/customers" className="text-gray-500 hover:text-primary">
+              <Icon
+                icon="solar:users-group-rounded-linear"
+                className="mr-1"
+                width={16}
+              />
+              Clienti
+            </Link>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <Link
+              to={`/customers/view-customer-data/${clientId}`}
+              className="text-gray-500 hover:text-primary"
+            >
+              <Icon
+                icon="solar:user-rounded-linear"
+                className="mr-1"
+                width={16}
+              />
+              Dettaglio Cliente
+            </Link>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <span className="text-primary font-medium flex items-center">
+              <Icon icon="solar:car-linear" className="mr-1" width={16} />
+              Nuovo Veicolo
+            </span>
+          </BreadcrumbItem>
+        </Breadcrumbs>
+      </div>
+
+      <Card className="shadow-md border border-gray-200 max-w-4xl mx-auto overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary-600 to-primary-800 text-white">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Icon icon="solar:car-bold" width={24} />
+              Aggiungi Nuovo Veicolo
+            </h2>
+          </div>
+        </CardHeader>
+
+        <CardBody className="py-6 px-8">
+          <div className="space-y-8">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
+              <div className="rounded-full bg-primary/10 p-3 text-primary">
+                <Icon icon="solar:car-bold" width={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                  Informazioni del veicolo
+                </h3>
+                <p className="text-sm leading-5 text-gray-600">
+                  Compila tutti i campi necessari con le informazioni del
+                  veicolo
+                </p>
+              </div>
+            </div>
+
+            <div>
               <label
-                htmlFor="vehicle-make"
-                className="block text-sm font-medium leading-6 text-gray-900"
+                htmlFor="vehicle-type"
+                className="block text-sm font-medium leading-6 text-gray-900 mb-3"
               >
                 Tipo di veicolo
               </label>
-              <div className="mt-2 flex gap-4 items-center justify-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   type="button"
                   aria-label="Seleziona Auto"
                   className={cn(
-                    "flex flex-col gap-3 justify-center items-center h-56 w-56 border-2 shadow-xl rounded-xl",
+                    "relative group overflow-hidden flex flex-col gap-3 justify-center items-center p-8 border-2 rounded-xl transition-all duration-200",
                     vehicleData.veichleTypeId === 2
-                      ? "bg-primary text-white"
-                      : "bg-white text-gray-900"
+                      ? "bg-primary text-white border-primary shadow-lg"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-primary/50"
                   )}
                   onClick={() => handleVehicleTypeSelect(2)}
                 >
-                  <DirectionsCarRoundedIcon sx={{ fontSize: 50 }} />
-                  Auto
+                  {vehicleData.veichleTypeId === 2 && (
+                    <div className="absolute top-2 right-2">
+                      <Icon icon="solar:check-circle-bold" width={20} />
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "rounded-full p-4 mb-2 transition-all duration-200",
+                      vehicleData.veichleTypeId === 2
+                        ? "bg-white/20"
+                        : "bg-primary/5 group-hover:bg-primary/10"
+                    )}
+                  >
+                    <Icon
+                      icon="solar:car-bold"
+                      width={48}
+                      className={
+                        vehicleData.veichleTypeId === 2
+                          ? "text-white"
+                          : "text-primary"
+                      }
+                    />
+                  </div>
+                  <span className="font-semibold text-lg">Auto</span>
+                  <span className="text-xs opacity-80">
+                    Automobili, SUV, furgoni...
+                  </span>
                 </button>
+
                 <button
                   type="button"
                   aria-label="Seleziona Moto"
                   className={cn(
-                    "flex flex-col gap-3 justify-center items-center h-56 w-56 border-2 shadow-xl rounded-xl",
+                    "relative group overflow-hidden flex flex-col gap-3 justify-center items-center p-8 border-2 rounded-xl transition-all duration-200",
                     vehicleData.veichleTypeId === 1
-                      ? "bg-primary text-white"
-                      : "bg-white text-gray-900"
+                      ? "bg-primary text-white border-primary shadow-lg"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-primary/50"
                   )}
                   onClick={() => handleVehicleTypeSelect(1)}
                 >
-                  <TwoWheelerRoundedIcon sx={{ fontSize: 50 }} />
-                  Moto
+                  {vehicleData.veichleTypeId === 1 && (
+                    <div className="absolute top-2 right-2">
+                      <Icon icon="solar:check-circle-bold" width={20} />
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "rounded-full p-4 mb-2 transition-all duration-200",
+                      vehicleData.veichleTypeId === 1
+                        ? "bg-white/20"
+                        : "bg-primary/5 group-hover:bg-primary/10"
+                    )}
+                  >
+                    <Icon
+                      icon="solar:motorbike-bold"
+                      width={48}
+                      className={
+                        vehicleData.veichleTypeId === 1
+                          ? "text-white"
+                          : "text-primary"
+                      }
+                    />
+                  </div>
+                  <span className="font-semibold text-lg">Moto</span>
+                  <span className="text-xs opacity-80">
+                    Motociclette, scooter, ciclomotori...
+                  </span>
                 </button>
               </div>
             </div>
-            {vehicleData.veichleTypeId != 0 && (
-              <>
-                <div className="sm:col-span-6">
-                  <label
-                    htmlFor="vehicle-make"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
-                    Marca del veicolo
-                  </label>
-                  <div className="mt-2">
+
+            {vehicleData.veichleTypeId !== 0 && (
+              <div className="space-y-6 animate-in fade-in duration-300 pt-4">
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+                  <div>
+                    <label
+                      htmlFor="brand"
+                      className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                    >
+                      Marca del veicolo
+                    </label>
                     <Input
                       name="brand"
                       variant="bordered"
                       aria-labelledby="marca veicolo"
                       radius="sm"
-                      placeholder="Inserisci la marca"
+                      placeholder="Es. Fiat, BMW, Honda..."
+                      startContent={
+                        <div className="bg-primary/10 p-1 rounded">
+                          <Icon
+                            icon="solar:bookmark-square-bold"
+                            width={18}
+                            className="text-primary"
+                          />
+                        </div>
+                      }
                       onChange={(e) => handleVehicleInputChange(e.target)}
                       value={vehicleData.brand}
+                      classNames={{
+                        inputWrapper: "shadow-sm border-gray-300",
+                        input: "placeholder:text-gray-400",
+                      }}
                     />
                   </div>
-                </div>
 
-                <div className="sm:col-span-6">
-                  <label
-                    htmlFor="vehicle-model"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
-                    Modello del veicolo
-                  </label>
-                  <div className="mt-2">
+                  <div>
+                    <label
+                      htmlFor="model"
+                      className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                    >
+                      Modello del veicolo
+                    </label>
                     <Input
                       name="model"
                       variant="bordered"
                       aria-labelledby="modello veicolo"
                       radius="sm"
-                      placeholder="Inserisci il modello"
+                      placeholder="Es. Panda, Serie 3, CBR..."
+                      startContent={
+                        <div className="bg-primary/10 p-1 rounded">
+                          <Icon
+                            icon="solar:slider-horizontal-bold"
+                            width={18}
+                            className="text-primary"
+                          />
+                        </div>
+                      }
                       onChange={(e) => handleVehicleInputChange(e.target)}
                       value={vehicleData.model}
+                      classNames={{
+                        inputWrapper: "shadow-sm border-gray-300",
+                        input: "placeholder:text-gray-400",
+                      }}
                     />
                   </div>
-                </div>
 
-                <div className="sm:col-span-6">
-                  <label
-                    htmlFor="vehicle-license-plate"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
-                    Targa del veicolo
-                  </label>
-                  <div className="mt-2">
+                  <div>
+                    <label
+                      htmlFor="licensePlate"
+                      className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                    >
+                      Targa del veicolo
+                    </label>
                     <Input
                       name="licensePlate"
                       variant="bordered"
                       aria-labelledby="targa veicolo"
                       radius="sm"
                       placeholder={
-                        vehicleData.veichleTypeId == 1 ? "AA000AA" : "AA00000"
+                        vehicleData.veichleTypeId === 1 ? "AA000AA" : "AA00000"
+                      }
+                      startContent={
+                        <div className="bg-primary/10 p-1 rounded">
+                          <Icon
+                            icon="solar:licence-bold"
+                            width={18}
+                            className="text-primary"
+                          />
+                        </div>
                       }
                       onChange={(e) => handleVehicleInputChange(e.target)}
                       value={vehicleData.licensePlate}
+                      classNames={{
+                        inputWrapper: "shadow-sm border-gray-300",
+                        input: "placeholder:text-gray-400 uppercase",
+                      }}
                     />
+                    <div className="flex justify-between mt-2">
+                      <span className="text-xs text-gray-500">
+                        Formato:{" "}
+                        {vehicleData.veichleTypeId === 1
+                          ? "AA000AA"
+                          : "AA00000"}
+                      </span>
+                      <span
+                        className={`text-xs font-medium ${
+                          vehicleData.licensePlate.length === 7
+                            ? "text-success"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {vehicleData.licensePlate.length}/7 caratteri
+                        {vehicleData.licensePlate.length === 7 && (
+                          <Icon
+                            icon="solar:check-circle-bold"
+                            className="ml-1 text-success"
+                            width={14}
+                            inline={true}
+                          />
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
-        </div>
-        <div className="flex flex-row justify-end">
+        </CardBody>
+
+        <Divider />
+
+        <CardFooter className="flex justify-between py-4 px-8 bg-gray-50">
           <Button
-            radius="sm"
+            radius="full"
+            variant="flat"
+            color="default"
+            as={Link}
+            to={`/customers/view-customer-data/${clientId}`}
+            startContent={<Icon icon="solar:arrow-left-linear" width={18} />}
+          >
+            Annulla
+          </Button>
+
+          <Button
+            radius="full"
             color="primary"
             isLoading={isSaving}
             isDisabled={checkVehicleDataCompleted()}
-            startContent={!isSaving && <SaveRoundedIcon />}
+            startContent={
+              !isSaving && <Icon icon="solar:diskette-bold" width={18} />
+            }
             onClick={handleCreateVehicle}
+            className={!checkVehicleDataCompleted() ? "shadow-lg" : ""}
           >
-            Salva
+            {isSaving ? "Salvataggio..." : "Salva Veicolo"}
           </Button>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
+
+      {/* Preview panel */}
+      {vehicleData.veichleTypeId !== 0 &&
+        vehicleData.brand &&
+        vehicleData.model && (
+          <div className="mt-6 max-w-4xl mx-auto">
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium text-gray-500">
+                  Anteprima veicolo
+                </h3>
+              </CardHeader>
+              <CardBody className="py-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/10 p-4 rounded-full">
+                    <Icon
+                      icon={
+                        vehicleData.veichleTypeId === 1
+                          ? "solar:motorbike-bold"
+                          : "solar:car-bold"
+                      }
+                      width={36}
+                      className="text-primary"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">
+                      {vehicleData.brand} {vehicleData.model}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {vehicleData.licensePlate.length === 7
+                        ? vehicleData.licensePlate
+                        : "Targa non completa"}
+                      <span className="mx-2">•</span>
+                      {vehicleData.veichleTypeId === 1 ? "Moto" : "Auto"}
+                    </p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        )}
     </>
   );
 }

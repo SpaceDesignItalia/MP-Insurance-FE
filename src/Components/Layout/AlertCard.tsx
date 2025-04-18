@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import HighlightOffOutlinedIcon from "@mui/icons-material/HighlightOffOutlined";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import { cn } from "@nextui-org/react";
+import { cn } from "@heroui/react";
 
 interface AlertCardProps {
   isOpen: boolean;

@@ -11,13 +11,18 @@ import {
   Button,
   Input,
   Link,
-} from "@nextui-org/react";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
+  Chip,
+  Card,
+  CardBody,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  User,
+} from "@heroui/react";
 import axios from "axios";
 import DeleteCustomerModal from "../Other/DeleteCustomerModal";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 interface CustomerProps {
   clientId: number;
@@ -33,15 +38,15 @@ interface DeleteModalData {
 }
 
 const columns = [
-  { name: "Nome cliente", uid: "name" },
-  { name: "Email", uid: "email" },
-  { name: "N.Telefono", uid: "phone" },
-  { name: "Azioni", uid: "actions" },
+  { name: "CLIENTE", uid: "name" },
+  { name: "CONTATTI", uid: "contacts" },
+  { name: "AZIONI", uid: "actions" },
 ];
 
 export default function CustomerTable() {
   const [customer, setCustomer] = useState<CustomerProps[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [loading, setLoading] = useState(true);
   const rowsPerPage = 10;
   const [page, setPage] = useState(1);
   const [deleteModalData, setDeleteModalData] = useState<DeleteModalData>({
@@ -54,6 +59,7 @@ export default function CustomerTable() {
   }, []);
 
   const fetchCustomers = async () => {
+    setLoading(true);
     try {
       const response = await axios.get("/Customer/GET/GetAllCustomers", {
         withCredentials: true,
@@ -61,10 +67,18 @@ export default function CustomerTable() {
       setCustomer(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const searchCustomer = async (searchQuery: string) => {
+    if (searchQuery.trim() === "") {
+      fetchCustomers();
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await axios.get("/Customer/GET/SearchCustomer", {
         params: { searchTerm: searchQuery },
@@ -76,16 +90,21 @@ export default function CustomerTable() {
       }
     } catch (error) {
       console.error("Errore nella ricerca del cliente: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    searchCustomer(query);
-    if (query === "") {
-      fetchCustomers(); // Reset customers if search query is cleared
-    }
+
+    // Use debounce to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      searchCustomer(query);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
   };
 
   const pages = Math.ceil(customer.length / rowsPerPage);
@@ -96,149 +115,251 @@ export default function CustomerTable() {
     return customer.slice(start, end);
   }, [page, customer, rowsPerPage]);
 
+  // Get initials from name
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row justify-between gap-3 items-end">
-          <div className="flex flex-row gap-5 w-full">
-            <Input
-              variant="bordered"
-              radius="sm"
-              className="w-full sm:w-1/3"
-              placeholder="Cerca cliente per nome o email..."
-              onChange={handleSearchQuery}
-              startContent={<SearchRoundedIcon />}
-            />
-          </div>
-          <div className="flex gap-3 w-full sm:w-auto">
+          <Input
+            variant="bordered"
+            radius="full"
+            classNames={{
+              base: "w-full sm:max-w-[44%]",
+              inputWrapper: "border-1",
+            }}
+            placeholder="Cerca cliente per nome, email o telefono..."
+            value={searchQuery}
+            onChange={handleSearchQuery}
+            startContent={
+              <Icon
+                icon="solar:magnifer-linear"
+                width={18}
+                className="text-default-400"
+              />
+            }
+            endContent={
+              searchQuery ? (
+                <Button
+                  isIconOnly
+                  radius="full"
+                  size="sm"
+                  variant="light"
+                  onPress={() => {
+                    setSearchQuery("");
+                    fetchCustomers();
+                  }}
+                >
+                  <Icon icon="solar:close-circle-linear" width={16} />
+                </Button>
+              ) : null
+            }
+          />
+          <div className="flex gap-3">
             <Button
               as={Link}
               href="./customers/add-customer"
               color="primary"
-              radius="sm"
-              endContent={<PersonAddAlt1RoundedIcon />}
-              fullWidth
+              radius="full"
+              variant="solid"
+              endContent={<Icon icon="mingcute:add-fill" width={16} />}
             >
               Aggiungi cliente
             </Button>
           </div>
         </div>
+        <div className="flex justify-between items-center">
+          <span className="text-default-400 text-small">
+            {customer.length > 0
+              ? `${customer.length} clienti trovati`
+              : "Nessun cliente trovato"}
+          </span>
+          <label className="flex items-center text-default-400 text-small">
+            Righe per pagina:
+            <select
+              className="bg-transparent outline-none text-default-400 text-small ml-2"
+              onChange={(e) => setPage(1)}
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+        </div>
       </div>
     );
-  }, [searchQuery]);
+  }, [searchQuery, customer.length]);
 
   const bottomContent = React.useMemo(() => {
     return (
-      <div className="py-2 px-2 flex justify-center items-center w-full">
+      <div className="py-2 px-2 flex justify-between items-center">
+        <span className="text-default-400 text-small">
+          {customer.length > 0 ? `Pagina ${page} di ${pages}` : ""}
+        </span>
         <Pagination
           isCompact
           showControls
           showShadow
           color="primary"
           page={page}
-          total={pages || 1}
+          total={pages}
           onChange={setPage}
+          radius="full"
         />
       </div>
     );
-  }, [page, pages]);
+  }, [page, pages, customer.length]);
 
   const renderCell = React.useCallback(
     (customer: CustomerProps, columnKey: any) => {
-      const cellValue = customer[columnKey as keyof CustomerProps];
-
       switch (columnKey) {
         case "name":
           return (
+            <User
+              name={`${customer.firstName} ${customer.lastName}`}
+              avatarProps={{
+                radius: "full",
+                name: getInitials(customer.firstName, customer.lastName),
+                classNames: {
+                  base: "bg-primary/10 text-primary",
+                },
+              }}
+            />
+          );
+        case "contacts":
+          return (
             <div className="flex flex-col">
-              {customer.firstName + " " + customer.lastName}
+              <p className="text-bold text-small flex items-center gap-1">
+                <Icon
+                  icon="solar:letter-linear"
+                  width={14}
+                  className="text-default-400"
+                />
+                {customer.email}
+              </p>
+              <p className="text-bold text-small flex items-center gap-1">
+                <Icon
+                  icon="solar:phone-linear"
+                  width={14}
+                  className="text-default-400"
+                />
+                {customer.phoneNumber}
+              </p>
             </div>
           );
-        case "email":
-          return <div className="flex flex-col">{customer.email}</div>;
-        case "phone":
-          return <div className="flex flex-col">{customer.phoneNumber}</div>;
         case "actions":
           return (
-            <div className="relative flex justify-center items-center gap-2">
-              <Tooltip content="Dettagli cliente" closeDelay={0} showArrow>
-                <Link
-                  as={"a"}
-                  href={"/customers/view-customer-data/" + customer.clientId}
-                  className="text-lg text-default-400 cursor-pointer active:opacity-50"
-                >
-                  <RemoveRedEyeRoundedIcon />
-                </Link>
-              </Tooltip>
-              <div
-                onClick={() =>
-                  setDeleteModalData({
-                    ...deleteModalData,
-                    open: true,
-                    customer: customer,
-                  })
-                }
-              >
-                <Tooltip
-                  color="danger"
-                  content="Rimuovi cliente"
-                  closeDelay={0}
-                  showArrow
-                >
-                  <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                    <DeleteRoundedIcon />
-                  </span>
-                </Tooltip>
-              </div>
+            <div className="relative flex justify-end items-center gap-2">
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button isIconOnly radius="full" size="sm" variant="light">
+                    <Icon icon="solar:menu-dots-bold" width={16} />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Customer Actions">
+                  <DropdownItem
+                    key="view"
+                    startContent={<Icon icon="solar:eye-linear" width={16} />}
+                    as={Link}
+                    onPress={() => {
+                      window.location.href = `/customers/view-customer-data/${customer.clientId}`;
+                    }}
+                  >
+                    Visualizza dettagli
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    startContent={
+                      <Icon icon="solar:trash-bin-trash-linear" width={16} />
+                    }
+                    color="danger"
+                    className="text-danger"
+                    onPress={() =>
+                      setDeleteModalData({
+                        ...deleteModalData,
+                        open: true,
+                        customer: customer,
+                      })
+                    }
+                  >
+                    Elimina cliente
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </div>
           );
         default:
-          return cellValue as React.ReactNode;
+          return null;
       }
     },
     []
   );
 
   return (
-    <div className="flex flex-col gap-5">
-      <DeleteCustomerModal
-        isOpen={deleteModalData.open}
-        isClosed={() => setDeleteModalData({ ...deleteModalData, open: false })}
-        CustomerData={deleteModalData.customer}
-      />
-      <Table
-        aria-label="All policies"
-        topContent={topContent}
-        bottomContent={bottomContent}
-        isStriped
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody
-          items={items}
-          emptyContent={
-            searchQuery
-              ? "Nessun cliente trovato!"
-              : "Non sono presenti clienti!"
+    <Card shadow="sm" className="border-none">
+      <CardBody className="p-0">
+        <DeleteCustomerModal
+          isOpen={deleteModalData.open}
+          isClosed={() =>
+            setDeleteModalData({ ...deleteModalData, open: false })
           }
+          CustomerData={deleteModalData.customer}
+        />
+        <Table
+          aria-label="Customer table"
+          topContent={topContent}
+          bottomContent={bottomContent}
+          isStriped
+          isHeaderSticky
+          classNames={{
+            base: "max-h-[calc(100vh-16.5rem)]",
+            table: "min-h-[400px]",
+            thead: "bg-default-50 [&>tr]:first:shadow-none",
+            th: "bg-default-50 text-default-500 text-xs font-semibold",
+            tr: "transition-all hover:bg-default-50",
+            td: "py-3",
+          }}
         >
-          {(item) => (
-            <TableRow key={item.clientId}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+          <TableHeader columns={columns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "end" : "start"}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            items={items}
+            emptyContent={
+              <div className="flex flex-col items-center justify-center py-10">
+                <Icon
+                  icon="solar:user-broken"
+                  width={48}
+                  className="text-default-300 mb-3"
+                />
+                <p className="text-default-500">
+                  {searchQuery
+                    ? "Nessun cliente corrisponde alla ricerca"
+                    : "Non sono presenti clienti"}
+                </p>
+              </div>
+            }
+          >
+            {(item) => (
+              <TableRow key={item.clientId}>
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardBody>
+    </Card>
   );
 }

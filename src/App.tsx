@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { Spinner } from "@nextui-org/react";
+import { Spinner } from "@heroui/react";
 import axios from "axios";
 import { API_URL } from "./API/API";
 import Navbar from "./Components/Layout/Navbar";

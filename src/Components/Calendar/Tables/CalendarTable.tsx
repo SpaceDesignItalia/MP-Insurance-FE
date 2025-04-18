@@ -1,12 +1,12 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
-import { useDisclosure } from "@nextui-org/react";
+import { Badge, Button, Card, Divider, Tooltip } from "@heroui/react";
+import { Icon } from "@iconify/react";
 import axios from "axios";
 import dayjs from "dayjs";
-import "dayjs/locale/it"; // Importa la localizzazione italiana
-import React, { useEffect, useState } from "react";
+import "dayjs/locale/it";
+import { useEffect, useState } from "react";
 import EventModal from "../Other/EventModal";
 
-dayjs.locale("it"); // Imposta la localizzazione italiana
+dayjs.locale("it");
 
 export interface Policy {
   policyId: number;
@@ -29,13 +29,13 @@ const CustomCalendar: React.FC = () => {
   const [events, setEvents] = useState<Policy[]>([]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedEvent, setSelectedEvent] = useState<Policy | null>(null);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("/Policy/GET/GetCalendarExpiration");
-        console.log("Data fetched:", response.data); // Verifica i dati
+        console.log("Data fetched:", response.data);
         setEvents(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -47,7 +47,7 @@ const CustomCalendar: React.FC = () => {
 
   const handleEventClick = (event: Policy) => {
     setSelectedEvent(event);
-    onOpen(); // Apre il disclosure
+    setIsModalOpen(true);
   };
 
   const DayEvents: React.FC<{
@@ -61,29 +61,59 @@ const CustomCalendar: React.FC = () => {
     const visibleEvents = showAll ? events : events.slice(0, 2);
 
     return (
-      <div>
-        <ul className="mt-2 space-y-1">
+      <div className="mt-1">
+        <ul className="space-y-1.5">
           {visibleEvents.map((event) => (
             <li
               key={event.policyId}
-              className="flex flex-col truncate font-medium text-gray-900 cursor-pointer hover:text-primary list-disc"
               onClick={() => onEventClick(event)}
+              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 cursor-pointer transition-colors duration-150 text-sm"
             >
-              <span>{`${event.fullName}`}</span>
-              <span>{event.licensePlate}</span>
+              <div className="flex flex-col">
+                <span className="font-medium text-gray-900">
+                  {event.fullName}
+                </span>
+                <Badge
+                  content={event.status}
+                  color={getStatusColor(event.status)}
+                  placement="top-right"
+                >
+                  <span className="text-xs text-gray-500">
+                    {event.licensePlate}
+                  </span>
+                </Badge>
+              </div>
+              <Icon
+                icon="solar:arrow-right-linear"
+                className="text-primary"
+                width={16}
+              />
             </li>
           ))}
           {events.length > 2 && !showAll && (
             <li
-              className="text-blue-600 cursor-pointer hover:underline"
+              className="text-primary text-xs cursor-pointer hover:underline font-medium px-1.5 py-1"
               onClick={() => setShowAll(true)}
             >
-              Altri...
+              Mostra altri ({events.length - 2})
             </li>
           )}
         </ul>
       </div>
     );
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Attiva":
+        return "success";
+      case "Sospesa":
+        return "warning";
+      case "Terminata":
+        return "danger";
+      default:
+        return "default";
+    }
   };
 
   const getEventsForDay = (day: dayjs.Dayjs) => {
@@ -97,21 +127,21 @@ const CustomCalendar: React.FC = () => {
   const getDaysArray = () => {
     const startOfMonth = currentMonth.startOf("month");
     const daysInMonth = currentMonth.daysInMonth();
-    const startDayOfWeek = startOfMonth.day(); // Giorno della settimana del 1° giorno (0 per domenica, 6 per sabato)
+    const startDayOfWeek = startOfMonth.day(); // 0 for Sunday, 6 for Saturday
+
+    // Adjust for Monday as first day of week (European calendar)
+    const mondayAdjustedDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
 
     const daysInPreviousMonth = dayjs(startOfMonth)
       .subtract(1, "month")
       .daysInMonth();
+
     const daysToShowFromPreviousMonth = Array.from(
-      { length: startDayOfWeek === 0 ? 6 : startDayOfWeek },
-      (_, i) =>
-        daysInPreviousMonth -
-        (startDayOfWeek === 0 ? 6 : startDayOfWeek) +
-        i +
-        1
+      { length: mondayAdjustedDay },
+      (_, i) => daysInPreviousMonth - mondayAdjustedDay + i + 1
     );
 
-    const totalDaysInGrid = 6 * 7; // Sempre 6 righe
+    const totalDaysInGrid = 6 * 7; // Always 6 rows
 
     const daysToShowFromNextMonth = Array.from(
       {
@@ -123,36 +153,60 @@ const CustomCalendar: React.FC = () => {
 
     let days: JSX.Element[] = [];
 
-    // Aggiungi giorni del mese precedente
+    // Add days from previous month
     daysToShowFromPreviousMonth.forEach((day) => {
       days.push(
-        <li key={`prev-${day}`} className="p-2 bg-gray-100 text-gray-500">
-          <div className="font-semibold">{day}</div>
+        <li
+          key={`prev-${day}`}
+          className="bg-gray-50 rounded-lg border border-gray-100"
+        >
+          <div className="p-2">
+            <div className="text-gray-400 font-medium text-sm">{day}</div>
+          </div>
         </li>
       );
     });
 
-    // Aggiungi giorni del mese corrente
+    // Add days from current month
     for (let i = 1; i <= daysInMonth; i++) {
       const day = startOfMonth.date(i);
       const isToday = day.isSame(dayjs(), "day");
       const isPast = day.isBefore(dayjs(), "day");
+      const hasEvents = events.some((event) =>
+        dayjs(event.endDate).isSame(day, "day")
+      );
 
       days.push(
         <li
           key={i}
-          className={`min-h-48 max-h-auto ${
-            isPast ? "bg-gray-100 text-gray-500" : "bg-white"
-          }`}
+          className={`min-h-48 max-h-auto rounded-lg transition-all duration-200 
+            ${
+              isPast
+                ? "bg-gray-50 border border-gray-100"
+                : "bg-white border border-gray-200 hover:border-primary-200"
+            } 
+            ${hasEvents && !isPast ? "shadow-sm hover:shadow-md" : ""} 
+            ${isToday ? "ring-2 ring-primary ring-offset-2" : ""}
+          `}
         >
           <div className="p-2">
-            <div
-              className={`font-semibold ${
-                isToday &&
-                "flex h-6 w-6 items-center justify-center rounded-full bg-primary font-semibold text-white"
-              }`}
-            >
-              {i}
+            <div className="flex justify-between items-center mb-1">
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full 
+                  ${
+                    isToday
+                      ? "bg-primary text-white font-semibold"
+                      : "font-medium text-gray-700"
+                  }
+                `}
+              >
+                {i}
+              </div>
+              {hasEvents && (
+                <Tooltip content="Polizze in scadenza">
+                  <div className="h-2 w-2 rounded-full bg-primary"></div>
+                </Tooltip>
+              )}
             </div>
             {getEventsForDay(day)}
           </div>
@@ -160,11 +214,16 @@ const CustomCalendar: React.FC = () => {
       );
     }
 
-    // Aggiungi giorni del mese successivo
+    // Add days from next month
     daysToShowFromNextMonth.forEach((day) => {
       days.push(
-        <li key={`next-${day}`} className="p-2 bg-gray-100 text-gray-500">
-          <div className="font-semibold">{day}</div>
+        <li
+          key={`next-${day}`}
+          className="bg-gray-50 rounded-lg border border-gray-100"
+        >
+          <div className="p-2">
+            <div className="text-gray-400 font-medium text-sm">{day}</div>
+          </div>
         </li>
       );
     });
@@ -185,101 +244,93 @@ const CustomCalendar: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <Card className="shadow-sm border border-gray-200">
       <EventModal
-        isOpen={isOpen}
+        isOpen={isModalOpen}
         event={selectedEvent}
-        onClose={onOpenChange}
+        onClose={() => setIsModalOpen(false)}
       />
+
       <div className="lg:flex lg:h-full lg:flex-col">
-        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4 lg:flex-none">
-          <h1 className="text-base font-semibold leading-6 text-gray-900 capitalize">
+        <div className="flex items-center justify-between px-6 py-4">
+          <h1 className="text-xl font-semibold capitalize text-gray-900 flex items-center gap-2">
+            <Icon
+              icon="solar:calendar-bold"
+              className="text-primary"
+              width={24}
+            />
             {currentMonth.format("MMMM YYYY").toString()}
           </h1>
-          <div className="flex items-center">
-            <div className="relative flex items-center rounded-md bg-white shadow-sm md:items-stretch">
-              <button
-                type="button"
-                className="flex h-9 w-12 items-center justify-center rounded-l-md border-y border-l border-gray-300 pr-1 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:pr-0 md:hover:bg-gray-50"
-                onClick={handlePreviousMonth}
-              >
-                <span className="sr-only">Previous month</span>
-                <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className="hidden border-y border-gray-300 px-3.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus:relative md:block"
-                onClick={handleToday}
-              >
-                Vai a oggi
-              </button>
-              <span className="relative -mx-px h-5 w-px bg-gray-300 md:hidden" />
-              <button
-                type="button"
-                className="flex h-9 w-12 items-center justify-center rounded-r-md border-y border-r border-gray-300 pl-1 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:pl-0 md:hover:bg-gray-50"
-                onClick={handleNextMonth}
-              >
-                <span className="sr-only">Next month</span>
-                <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </header>
-        <div className="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col">
-          <div className="grid grid-cols-7 gap-px bg-gray-200 text-center text-xs font-semibold leading-6 text-gray-700 lg:flex-none">
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Lunedí
-            </div>
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Martedí
-            </div>
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Mercoledí
-            </div>
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Giovedí
-            </div>
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Venerdí
-            </div>
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Sabato
-            </div>
-            <div className="hidden sm:block bg-white py-2 border-gray-300">
-              Domenica
-            </div>
 
-            {/* Mobile */}
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              L
-            </div>
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              M
-            </div>
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              M
-            </div>
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              G
-            </div>
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              V
-            </div>
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              S
-            </div>
-            <div className="block sm:hidden bg-white py-2 border-gray-300">
-              D
-            </div>
+          <div className="flex items-center gap-2">
+            <Tooltip content="Mese precedente">
+              <Button
+                isIconOnly
+                variant="flat"
+                radius="full"
+                color="primary"
+                onClick={handlePreviousMonth}
+                aria-label="Mese precedente"
+              >
+                <Icon icon="solar:arrow-left-linear" width={20} />
+              </Button>
+            </Tooltip>
+
+            <Button
+              variant="flat"
+              radius="full"
+              color="primary"
+              onClick={handleToday}
+              className="px-4"
+            >
+              Oggi
+            </Button>
+
+            <Tooltip content="Mese successivo">
+              <Button
+                isIconOnly
+                variant="flat"
+                radius="full"
+                color="primary"
+                onClick={handleNextMonth}
+                aria-label="Mese successivo"
+              >
+                <Icon icon="solar:arrow-right-linear" width={20} />
+              </Button>
+            </Tooltip>
           </div>
-          <div className="flex bg-gray-300 text-xs leading-6 text-gray-700 lg:flex-auto">
-            <ul className="grid w-full grid-cols-7 gap-px border border-gray-300">
-              {getDaysArray()}
-            </ul>
+        </div>
+
+        <Divider />
+
+        <div className="lg:flex lg:flex-auto lg:flex-col">
+          <div className="grid grid-cols-7 gap-px text-center font-medium text-sm text-gray-700 bg-gray-50 py-2">
+            {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((day, i) => (
+              <div key={day} className="px-2">
+                <span className="hidden sm:inline">
+                  {
+                    [
+                      "Lunedì",
+                      "Martedì",
+                      "Mercoledì",
+                      "Giovedì",
+                      "Venerdì",
+                      "Sabato",
+                      "Domenica",
+                    ][i]
+                  }
+                </span>
+                <span className="sm:hidden">{day}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white flex-auto">
+            <ul className="grid grid-cols-7 gap-2 p-2">{getDaysArray()}</ul>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

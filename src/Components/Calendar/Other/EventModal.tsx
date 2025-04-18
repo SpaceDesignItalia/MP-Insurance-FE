@@ -5,7 +5,14 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-} from "@nextui-org/react";
+  Button,
+  User,
+  Divider,
+  Card,
+  CardBody,
+} from "@heroui/react";
+import { Icon } from "@iconify/react";
+import dayjs from "dayjs";
 import ReactQuill from "react-quill";
 
 interface Policy {
@@ -36,127 +43,215 @@ export default function EventModal({
   event,
   onClose,
 }: EventModalProps) {
-  if (!isOpen) return null; // Assicurati che il modal non venga renderizzato se non è aperto
+  if (!event) return null;
 
-  if (!event) return null; // Assicurati che l'evento sia definito
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Attiva":
+        return "success";
+      case "Sospesa":
+        return "warning";
+      case "Terminata":
+        return "danger";
+      default:
+        return "default";
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case "Pagato":
+        return "success";
+      case "Non Pagato":
+        return "danger";
+      case "Rate":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      aria-labelledby="modal-title"
       size="xl"
       scrollBehavior="inside"
       placement="center"
       backdrop="blur"
     >
       <ModalContent>
-        <ModalHeader>Assicurazione di {event.fullName}</ModalHeader>
-        <ModalBody>
-          <div className="mt-6 border-t border-gray-100">
-            <dl className="divide-y divide-gray-100">
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Nome Cliente
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.fullName}
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Email Cliente
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.email}
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Tipo di Polizza
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0 flex flex-row flex-wrap items-center gap-2">
-                  {event.types.map((type) => (
-                    <Chip color="primary" key={type}>
-                      {type}
-                    </Chip>
-                  ))}
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Stato del Pagamento
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.paymentStatus}
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Targa Veicolo
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.licensePlate}
-                </dd>
+        <ModalHeader className="flex gap-2 items-center">
+          <Icon
+            icon="solar:shield-keyhole-bold"
+            className="text-primary"
+            width={24}
+          />
+          Polizza in scadenza
+        </ModalHeader>
+
+        <Divider />
+
+        <ModalBody className="p-6">
+          <div className="flex flex-col space-y-6">
+            {/* Client Info */}
+            <div className="bg-primary-50 rounded-xl p-4">
+              <User
+                name={event.fullName}
+                description={event.email}
+                avatarProps={{
+                  radius: "lg",
+                  src: `https://api.dicebear.com/6.x/initials/svg?seed=${event.fullName}`,
+                  className: "bg-primary text-white",
+                }}
+                className="justify-start"
+              />
+            </div>
+
+            {/* Policy Status Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card shadow="sm" className="border border-gray-200">
+                <CardBody className="p-4">
+                  <div className="flex flex-col items-center text-center">
+                    <Icon
+                      icon="solar:calendar-bold"
+                      className="text-primary mb-2"
+                      width={24}
+                    />
+                    <p className="text-sm text-gray-500">Scadenza</p>
+                    <p className="text-lg font-semibold">
+                      {dayjs(event.endDate).format("DD/MM/YYYY")}
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
+
+              <Card shadow="sm" className="border border-gray-200">
+                <CardBody className="p-4">
+                  <div className="flex flex-col items-center text-center">
+                    <Icon
+                      icon="solar:car-bold"
+                      className="text-primary mb-2"
+                      width={24}
+                    />
+                    <p className="text-sm text-gray-500">Veicolo</p>
+                    <p className="text-lg font-semibold">
+                      {event.licensePlate}
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
+
+              <Card shadow="sm" className="border border-gray-200">
+                <CardBody className="p-4">
+                  <div className="flex flex-col items-center text-center">
+                    <Icon
+                      icon="solar:wallet-money-bold"
+                      className="text-primary mb-2"
+                      width={24}
+                    />
+                    <p className="text-sm text-gray-500">Importo</p>
+                    <p className="text-lg font-semibold">{event.amount} €</p>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+
+            {/* Policy Details */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Dettagli Polizza</h3>
+                <Chip color={getStatusColor(event.status)} variant="flat">
+                  {event.status}
+                </Chip>
               </div>
 
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Durata Polizza
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.duration} mesi
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Importo Polizza
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.amount} €
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Stato Polizza
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {event.status}
-                </dd>
-              </div>
-              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Data Inizio Polizza
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {new Date(event.startDate).toLocaleDateString("it-IT")}
-                </dd>
-                <dt className="text-sm font-medium leading-6 text-gray-900">
-                  Data Fine Polizza
-                </dt>
-                <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {new Date(event.endDate).toLocaleDateString("it-IT")}
-                </dd>
+              <Divider />
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Durata</p>
+                    <p className="font-medium">{event.duration} mesi</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Stato Pagamento</p>
+                    <Chip
+                      color={getPaymentStatusColor(event.paymentStatus)}
+                      variant="flat"
+                      size="sm"
+                    >
+                      {event.paymentStatus}
+                    </Chip>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Data Inizio</p>
+                    <p className="font-medium">
+                      {dayjs(event.startDate).format("DD/MM/YYYY")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Data Fine</p>
+                    <p className="font-medium">
+                      {dayjs(event.endDate).format("DD/MM/YYYY")}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">Tipo di Polizza</p>
+                  <div className="flex flex-wrap gap-2">
+                    {event.types.map((type) => (
+                      <Chip
+                        key={type}
+                        color="primary"
+                        variant="flat"
+                        radius="sm"
+                      >
+                        {type}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+
                 {event.note && (
-                  <>
-                    <dt className="text-sm font-medium leading-6 text-gray-900">
-                      Note
-                    </dt>
-                    <dd className="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Note</p>
+                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                       <ReactQuill
                         value={event.note}
                         readOnly={true}
-                        theme={"bubble"}
+                        theme="bubble"
                       />
-                    </dd>
-                  </>
+                    </div>
+                  </div>
                 )}
               </div>
-            </dl>
+            </div>
           </div>
         </ModalBody>
+
+        <Divider />
+
         <ModalFooter>
-          <button onClick={onClose}>Close</button>
+          <Button
+            color="primary"
+            variant="light"
+            radius="full"
+            onPress={onClose}
+            startContent={<Icon icon="solar:close-circle-linear" width={18} />}
+          >
+            Chiudi
+          </Button>
+          <Button
+            color="primary"
+            radius="full"
+            as="a"
+            href={`/customers/view-customer-data/${event.policyId}`}
+            startContent={<Icon icon="solar:user-circle-linear" width={18} />}
+          >
+            Vai al profilo cliente
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

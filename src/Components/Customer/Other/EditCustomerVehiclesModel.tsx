@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Link, Skeleton } from "@nextui-org/react";
+import { Button, Link, Skeleton } from "@heroui/react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import VehiecleCard from "./VehiecleCard";
