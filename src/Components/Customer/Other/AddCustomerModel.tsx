@@ -154,14 +154,14 @@ export default function AddCustomerModel() {
 
       <Card className="shadow-md border border-gray-200 max-w-4xl mx-auto">
         <CardHeader className="flex flex-col gap-2 pb-0 pt-6">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-2">
             <h2 className="text-xl font-bold text-gray-900">
               {step === 1 ? "Nuovo Cliente" : "Nuovo Veicolo"}
             </h2>
             <div className="flex items-center gap-2">
               <div
                 className={`flex items-center justify-center h-8 w-8 rounded-full ${
-                  step >= 1
+                  step === 1
                     ? "bg-primary text-white"
                     : "bg-gray-200 text-gray-500"
                 }`}
@@ -170,12 +170,12 @@ export default function AddCustomerModel() {
               </div>
               <div
                 className={`h-0.5 w-4 ${
-                  step >= 2 ? "bg-primary" : "bg-gray-200"
+                  step === 2 ? "bg-primary" : "bg-gray-200"
                 }`}
               ></div>
               <div
                 className={`flex items-center justify-center h-8 w-8 rounded-full ${
-                  step >= 2
+                  step === 2
                     ? "bg-primary text-white"
                     : "bg-gray-200 text-gray-500"
                 }`}
@@ -193,16 +193,26 @@ export default function AddCustomerModel() {
             radius="full"
             classNames={{
               indicator:
-                step === 2 ? "bg-gradient-to-r from-primary to-success" : "",
+                step === 2
+                  ? "bg-gradient-to-r from-primary to-success"
+                  : "bg-gradient-to-r from-primary to-success/40",
               base: "bg-gray-100",
             }}
           />
 
           <div className="flex justify-between text-xs text-gray-500 mb-4 px-1">
-            <span className={step >= 1 ? "text-primary font-medium" : ""}>
+            <span
+              className={
+                step === 1 ? "text-primary font-medium text-small" : "hidden"
+              }
+            >
               Dati Cliente
             </span>
-            <span className={step >= 2 ? "text-primary font-medium" : ""}>
+            <span
+              className={
+                step === 2 ? "text-primary font-medium text-small" : "hidden"
+              }
+            >
               Dati Veicolo
             </span>
           </div>
@@ -358,7 +368,7 @@ export default function AddCustomerModel() {
             <div className="space-y-6">
               <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
                 <div className="rounded-full bg-primary/10 p-3 text-primary">
-                  <Icon icon="solar:car-bold" width={24} />
+                  <Icon icon="mingcute:car-3-line" width={24} />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold leading-6 text-gray-900">
@@ -391,7 +401,7 @@ export default function AddCustomerModel() {
                     onClick={() => handleVehicleTypeSelect(2)}
                   >
                     <Icon
-                      icon="solar:car-bold"
+                      icon="mingcute:car-3-line"
                       width={48}
                       className={
                         vehicleData.veichleTypeId === 2
@@ -413,7 +423,7 @@ export default function AddCustomerModel() {
                     onClick={() => handleVehicleTypeSelect(1)}
                   >
                     <Icon
-                      icon="solar:motorbike-bold"
+                      icon="mingcute:ebike-line"
                       width={48}
                       className={
                         vehicleData.veichleTypeId === 1
@@ -547,7 +557,7 @@ export default function AddCustomerModel() {
           {step > 1 ? (
             <Button
               radius="full"
-              variant="flat"
+              variant="ghost"
               color="primary"
               onClick={() => setStep(1)}
               startContent={<Icon icon="solar:arrow-left-linear" width={18} />}

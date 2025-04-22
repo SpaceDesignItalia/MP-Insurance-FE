@@ -333,7 +333,7 @@ export default function ViewCustomerModel() {
                 <div className="flex flex-col">
                   <Skeleton
                     isLoaded={loadedAllData}
-                    className="h-7 w-48 rounded-lg mb-1"
+                    className="h-7 w-full rounded-lg mb-1"
                   >
                     <h1 className="text-xl font-bold">
                       {customerData.firstName} {customerData.lastName}
@@ -341,7 +341,7 @@ export default function ViewCustomerModel() {
                   </Skeleton>
                   <Skeleton
                     isLoaded={loadedAllData}
-                    className="h-5 w-64 rounded-lg mb-1"
+                    className="h-5 w-full rounded-lg mb-1"
                   >
                     <div className="flex items-center gap-2 text-default-500">
                       <Icon icon="solar:mailbox-linear" width={16} />
@@ -350,7 +350,7 @@ export default function ViewCustomerModel() {
                   </Skeleton>
                   <Skeleton
                     isLoaded={loadedAllData}
-                    className="h-5 w-36 rounded-lg"
+                    className="h-5 w-full rounded-lg"
                   >
                     <div className="flex items-center gap-2 text-default-500">
                       <Icon icon="solar:smartphone-2-linear" width={16} />
@@ -393,7 +393,7 @@ export default function ViewCustomerModel() {
                   <Button
                     color="primary"
                     radius="full"
-                    variant="solid"
+                    variant="ghost"
                     startContent={<Icon icon="solar:pen-linear" width={16} />}
                     onPress={() => setIsEditingData(true)}
                   >
@@ -411,12 +411,8 @@ export default function ViewCustomerModel() {
               selectedKey={activeTab}
               onSelectionChange={setActiveTab as any}
               color="primary"
-              variant="underlined"
-              classNames={{
-                tab: "px-6 py-4",
-                tabList: "px-6",
-                panel: "p-0",
-              }}
+              variant="solid"
+              className="pl-2 pt-2"
             >
               <Tab
                 key="vehicles"
@@ -424,11 +420,13 @@ export default function ViewCustomerModel() {
                   <div className="flex items-center gap-2">
                     <Icon icon="solar:car-bold" width={18} />
                     <span>Veicoli</span>
-                    {vehicleData.length > 0 && (
-                      <Chip size="sm" variant="flat" color="primary">
-                        {vehicleData.length}
-                      </Chip>
-                    )}
+                    <Chip
+                      size="sm"
+                      variant="bordered"
+                      color={activeTab === "vehicles" ? "secondary" : "default"}
+                    >
+                      {vehicleData.length}
+                    </Chip>
                   </div>
                 }
               >
@@ -444,7 +442,7 @@ export default function ViewCustomerModel() {
                           <Button
                             as={Link}
                             color="primary"
-                            variant="flat"
+                            variant="ghost"
                             radius="full"
                             href={`/customers/view-customer-data/${clientId}/edit-vehicles`}
                             startContent={
@@ -496,7 +494,7 @@ export default function ViewCustomerModel() {
                   ) : (
                     <div className="flex flex-col items-center py-12 px-4 bg-default-50 rounded-lg">
                       <Icon
-                        icon="solar:bus-outline"
+                        icon="mingcute:car-3-line"
                         width={64}
                         className="text-default-400 mb-4"
                       />

@@ -1,15 +1,20 @@
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Icon } from "@iconify/react";
 import {
   Avatar,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Link,
+  Navbar,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
 } from "@heroui/react";
+import { Icon } from "@iconify/react";
 import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import Logo from "../../assets/MpLogo.png";
 
@@ -21,7 +26,7 @@ interface NavigationItem {
   current: boolean;
 }
 
-export default function Navbar() {
+export default function NavbarComponent() {
   const currentUrl = window.location.pathname;
   const [isOpen, setIsOpen] = useState(false);
 
@@ -95,129 +100,122 @@ export default function Navbar() {
       });
   }
 
-  function classNames(...classes: string[]): string {
-    return classes.filter(Boolean).join(" ");
-  }
-
   return (
-    <div className="bg-white shadow">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
-            <div className="flex flex-shrink-0 items-center">
-              <img
-                alt="Space Design Italia"
-                src={Logo}
-                className="h-16 w-auto"
-              />
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navigation.map((item, index) => {
-                return (
-                  <a
-                    key={index}
-                    href={item.href}
-                    className={classNames(
-                      item.current
-                        ? " border-primary px-1 pt-1 text-sm font-medium text-primary"
-                        : "border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700",
-                      "inline-flex justify-center items-center gap-2 border-b-2"
-                    )}
-                  >
-                    {item.icon}
-                    {item.name}
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-          <div className="hidden sm:flex flex-1 justify-end items-center gap-x-4 self-stretch lg:gap-x-6">
-            {/* Profile dropdown */}
-            <Dropdown placement="bottom-start" radius="sm">
-              <DropdownTrigger>
-                <div className="-m-1.5 flex items-center p-1.5 cursor-pointer">
-                  <Avatar
-                    className="h-8 w-8 rounded-full bg-gray-100"
-                    alt=""
-                    src={Logo}
-                  />
-                  <span className="hidden lg:flex lg:items-center">
-                    <ChevronDownIcon
-                      className="ml-2 h-5 w-5 text-gray-400"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </div>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="User Actions" variant="flat">
-                <DropdownItem key="logout" color="danger" onPress={logout}>
-                  <div className="flex flex-row gap-2 ">
-                    <Icon fontSize={23} icon="solar:logout-linear" />
-                    Logout
-                  </div>
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-          <div className="-mr-2 flex items-center sm:hidden">
-            {/* Mobile menu button */}
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              <span className="sr-only">Open main menu</span>
-              {isOpen ? (
-                <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
+    <Navbar
+      classNames={{
+        base: "py-4 backdrop-filter-none bg-transparent",
+        wrapper: "px-0 w-full justify-center bg-transparent",
+        item: "hidden md:flex",
+      }}
+      height="54px"
+      isMenuOpen={isOpen}
+      onMenuOpenChange={setIsOpen}
+    >
+      <NavbarContent
+        className="gap-4 rounded-full border-small border-default-200/20 bg-background/60 px-2 shadow-medium backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50"
+        justify="center"
+      >
+        {/* Toggle */}
+        <NavbarMenuToggle className="ml-2 text-default-400 md:hidden" />
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            key="menu"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="sm:hidden"
-          >
-            <div className="space-y-1 pb-3 pt-2">
-              {navigation.map((item, index) => (
-                <a
-                  key={index}
-                  href={item.href}
-                  className={classNames(
-                    item.current
-                      ? "border-primary bg-indigo-50 py-2 pl-3 pr-4 text-base font-medium text-primary"
-                      : "border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700",
-                    "border-l-4 flex items-center gap-2"
-                  )}
-                >
-                  {item.icon}
-                  {item.name}
-                </a>
-              ))}
-            </div>
-            <div className="border-t border-gray-200 pb-3 pt-4">
-              <div className="mt-3 space-y-1">
-                <div
-                  onClick={logout}
-                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                >
+        {/* Items */}
+        {navigation.map((item, index) => (
+          <NavbarItem key={index} isActive={item.current} className="px-2">
+            <Link
+              className={
+                item.current
+                  ? "bg-black text-white px-3 py-1.5 rounded-full"
+                  : "text-default-500"
+              }
+              href={item.href}
+              size="sm"
+              aria-current={item.current ? "page" : undefined}
+              color={item.current ? "foreground" : undefined}
+            >
+              <div className="flex items-center gap-2">
+                {item.icon}
+                {item.name}
+              </div>
+            </Link>
+          </NavbarItem>
+        ))}
+
+        {/* Profile dropdown */}
+        <NavbarItem className="ml-2 !flex">
+          <Dropdown placement="bottom-start" radius="sm">
+            <DropdownTrigger>
+              <div className="-m-1.5 flex items-center p-1.5 cursor-pointer">
+                <Avatar
+                  className="h-8 w-8 rounded-full bg-gray-100"
+                  alt=""
+                  src={Logo}
+                />
+                <span className="hidden lg:flex lg:items-center">
+                  <ChevronDownIcon
+                    className="ml-2 h-5 w-5 text-gray-400"
+                    aria-hidden="true"
+                  />
+                </span>
+              </div>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="User Actions" variant="flat">
+              <DropdownItem key="logout" color="danger" onPress={logout}>
+                <div className="flex flex-row gap-2 ">
                   <Icon fontSize={23} icon="solar:logout-linear" />
                   Logout
                 </div>
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </NavbarItem>
+      </NavbarContent>
+
+      {/* Menu */}
+      <NavbarMenu
+        className="top-[calc(var(--navbar-height)/2)] mx-auto mt-16 max-h-[40vh] w-full rounded-large border-small border-default-200/20 bg-background/60 py-6 shadow-medium backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50"
+        motionProps={{
+          initial: { opacity: 0, y: -20 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: -20 },
+          transition: {
+            ease: "easeInOut",
+            duration: 0.2,
+          },
+        }}
+      >
+        {navigation.map((item, index) => (
+          <NavbarMenuItem key={`${item.name}-${index}`}>
+            <Link
+              className={`w-full ${
+                item.current
+                  ? "bg-black text-white px-3 py-1.5 rounded-full"
+                  : "text-default-500"
+              }`}
+              href={item.href}
+              size="md"
+            >
+              <div className="flex items-center gap-2">
+                {item.icon}
+                {item.name}
               </div>
+            </Link>
+          </NavbarMenuItem>
+        ))}
+
+        <NavbarMenuItem>
+          <Link
+            className="w-full text-danger-500"
+            href="#"
+            size="md"
+            onClick={logout}
+          >
+            <div className="flex items-center gap-2">
+              <Icon fontSize={23} icon="solar:logout-linear" />
+              Logout
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          </Link>
+        </NavbarMenuItem>
+      </NavbarMenu>
+    </Navbar>
   );
 }

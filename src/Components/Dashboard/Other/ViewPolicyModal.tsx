@@ -1,19 +1,18 @@
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  Badge,
   Button,
-  Chip,
-  Divider,
   Card,
   CardBody,
-  User,
-  Badge,
-  Tooltip,
-  Tabs,
+  Chip,
+  Divider,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Tab,
+  Tabs,
+  User,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import dayjs from "dayjs";
@@ -34,6 +33,7 @@ interface Policy {
   paymentStatus: string;
   types: string[];
   note: string;
+  clientId: number;
 }
 
 interface ViewPolicyModalProps {
@@ -53,7 +53,7 @@ export default function ViewPolicyModal({
         return "success";
       case "Sospesa":
         return "warning";
-      case "Terminata":
+      case "Scaduta":
         return "danger";
       default:
         return "default";
@@ -102,7 +102,7 @@ export default function ViewPolicyModal({
             <ModalBody className="p-6">
               <div className="flex flex-col space-y-6">
                 {/* Client Info */}
-                <div className="bg-primary-50 rounded-xl p-4">
+                <div className="bg-zinc-100 rounded-xl p-4">
                   <User
                     name={PolicyData.fullName}
                     description={PolicyData.email}
@@ -121,7 +121,7 @@ export default function ViewPolicyModal({
                     <CardBody className="p-4">
                       <div className="flex flex-col items-center text-center">
                         <Icon
-                          icon="solar:calendar-bold"
+                          icon="solar:calendar-linear"
                           className="text-primary mb-2"
                           width={24}
                         />
@@ -136,11 +136,19 @@ export default function ViewPolicyModal({
                   <Card shadow="sm" className="border border-gray-200">
                     <CardBody className="p-4">
                       <div className="flex flex-col items-center text-center">
-                        <Icon
-                          icon="solar:car-bold"
-                          className="text-primary mb-2"
-                          width={24}
-                        />
+                        {PolicyData.typeId == "2" ? (
+                          <Icon
+                            icon="mingcute:car-3-line"
+                            className="text-primary mb-2"
+                            width={24}
+                          />
+                        ) : (
+                          <Icon
+                            icon="mingcute:ebike-line"
+                            className="text-primary mb-2"
+                            width={24}
+                          />
+                        )}
                         <p className="text-sm text-gray-500">Veicolo</p>
                         <p className="text-lg font-semibold">
                           {PolicyData.licensePlate}
@@ -153,7 +161,7 @@ export default function ViewPolicyModal({
                     <CardBody className="p-4">
                       <div className="flex flex-col items-center text-center">
                         <Icon
-                          icon="solar:wallet-money-bold"
+                          icon="solar:wallet-money-linear"
                           className="text-primary mb-2"
                           width={24}
                         />
@@ -170,7 +178,7 @@ export default function ViewPolicyModal({
                 <Tabs
                   aria-label="Policy details"
                   color="primary"
-                  variant="underlined"
+                  variant="solid"
                   classNames={{
                     tab: "px-4 py-2",
                     tabList: "gap-6",
@@ -268,7 +276,7 @@ export default function ViewPolicyModal({
                             <Chip
                               key={type}
                               color="primary"
-                              variant="flat"
+                              variant="bordered"
                               radius="sm"
                             >
                               {type}
@@ -320,9 +328,7 @@ export default function ViewPolicyModal({
                 color="default"
                 variant="light"
                 radius="full"
-                startContent={
-                  <Icon icon="solar:close-circle-linear" width={18} />
-                }
+                startContent={<Icon icon="mingcute:close-line" width={18} />}
                 onPress={onClose}
               >
                 Chiudi
@@ -331,7 +337,7 @@ export default function ViewPolicyModal({
                 color="primary"
                 radius="full"
                 as="a"
-                href={`/customers/view-customer-data/${PolicyData.policyId}`}
+                href={`/customers/view-customer-data/${PolicyData.clientId}`}
                 startContent={
                   <Icon icon="solar:user-circle-linear" width={18} />
                 }

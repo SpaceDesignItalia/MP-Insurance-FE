@@ -150,7 +150,7 @@ export default function Login() {
 
                 <div className="text-sm leading-6">
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="font-semibold text-primary hover:text-primary-500"
                   >
                     Password dimenticata?

@@ -187,7 +187,7 @@ export default function VehiclePolicyCard({
         return "success";
       case "Sospesa":
         return "warning";
-      case "Terminata":
+      case "Scaduta":
         return "danger";
       default:
         return "default";
@@ -520,7 +520,7 @@ export default function VehiclePolicyCard({
             <span className="text-xl">€ {PolicyData.amount}</span>
           </div>
 
-          {PolicyData.status !== "Terminata" && (
+          {PolicyData.status !== "Scaduta" && (
             <div>
               {PolicyData.status === "Sospesa" ? (
                 <Button

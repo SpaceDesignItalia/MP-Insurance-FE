@@ -9,21 +9,19 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
   Pagination,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectItem,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
   TableColumn,
   TableHeader,
   TableRow,
-  useDisclosure,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
@@ -49,6 +47,7 @@ interface Policy {
   paymentStatus: string;
   types: string[];
   note: string;
+  clientId: number;
 }
 
 interface SearchFilter {
@@ -86,10 +85,11 @@ const statusColorMap: Record<
   "success" | "danger" | "warning" | "primary" | "default" | "secondary"
 > = {
   Attiva: "success",
+  Scaduta: "danger",
   Terminata: "danger",
   "In Scadenza": "warning",
   "In Scadenza 6 mesi": "warning",
-  "Terminata 6 mesi": "danger",
+  "Scaduta 6 mesi": "danger",
   Sospesa: "warning",
   Pagato: "success",
   "Non Pagato": "danger",
@@ -110,11 +110,7 @@ export default function PolicyTable() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
-  const {
-    isOpen: isFilterOpen,
-    onOpen: onFilterOpen,
-    onClose: onFilterClose,
-  } = useDisclosure();
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   let [policyTypeFilter, setPolicyTypeFilter] = useState<PolicyTypeFilter[]>(
     []
@@ -140,6 +136,23 @@ export default function PolicyTable() {
     state: "0",
     paymentStatus: "0",
   });
+
+  // Usiamo uno stato temporaneo per i filtri mentre il popover è aperto
+  const [tempFilters, setTempFilters] = useState<SearchFilter>({
+    searchTerms: "",
+    vehicleTypeId: "0",
+    policyTypeId: "0",
+    duration: "0",
+    state: "0",
+    paymentStatus: "0",
+  });
+
+  // Aggiorna i filtri temporanei quando il popover viene aperto
+  useEffect(() => {
+    if (isPopoverOpen) {
+      setTempFilters(searchFilter);
+    }
+  }, [isPopoverOpen]);
 
   useEffect(() => {
     fetchPolicies();
@@ -188,7 +201,8 @@ export default function PolicyTable() {
   }
 
   const handleSearchFilterChange = (key: keyof SearchFilter, value: any) => {
-    setSearchFilter((prev) => ({
+    // Aggiorna solo i filtri temporanei, non i filtri principali
+    setTempFilters((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -206,16 +220,18 @@ export default function PolicyTable() {
   };
 
   const clearFilters = () => {
-    setSearchFilter({
+    const resetFilters = {
       searchTerms: "",
       vehicleTypeId: "0",
       policyTypeId: "0",
       duration: "0",
       state: "0",
       paymentStatus: "0",
-    });
+    };
+    setTempFilters(resetFilters);
+    setSearchFilter(resetFilters);
     fetchPolicies();
-    onFilterClose();
+    setIsPopoverOpen(false);
   };
 
   const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([]);
@@ -250,8 +266,10 @@ export default function PolicyTable() {
       }
     };
 
-    fetchFilteredPolicies();
-  }, [searchFilter]);
+    if (!isPopoverOpen || searchFilter.searchTerms) {
+      fetchFilteredPolicies();
+    }
+  }, [searchFilter, isPopoverOpen]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -269,6 +287,12 @@ export default function PolicyTable() {
     if (searchFilter.state !== "0") count++;
     if (searchFilter.paymentStatus !== "0") count++;
     return count;
+  };
+
+  const handleApplyFilters = () => {
+    // Applica i filtri temporanei ai filtri principali
+    setSearchFilter(tempFilters);
+    setIsPopoverOpen(false);
   };
 
   const activeFiltersCount = countActiveFilters();
@@ -298,24 +322,140 @@ export default function PolicyTable() {
             onClear={() => handleSearchQueryChange("")}
           />
           <div className="flex gap-3">
-            <Button
-              color={activeFiltersCount > 0 ? "primary" : "default"}
-              radius="full"
-              variant={activeFiltersCount > 0 ? "solid" : "bordered"}
-              startContent={<Icon icon="solar:filter-linear" width={16} />}
-              endContent={
-                activeFiltersCount > 0 && (
-                  <Badge size="sm">{activeFiltersCount}</Badge>
-                )
-              }
-              onPress={onFilterOpen}
+            <Popover
+              isOpen={isPopoverOpen}
+              onOpenChange={setIsPopoverOpen}
+              placement="bottom-end"
+              offset={10}
+              showArrow
+              backdrop="transparent"
             >
-              Filtri
-            </Button>
+              <PopoverTrigger>
+                <Button
+                  color={activeFiltersCount > 0 ? "primary" : "default"}
+                  radius="full"
+                  variant={activeFiltersCount > 0 ? "solid" : "bordered"}
+                  startContent={<Icon icon="solar:filter-linear" width={16} />}
+                >
+                  Filtri
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full">
+                <div className="py-2">
+                  <div className="text-small font-bold mb-2">
+                    Filtri avanzati
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <Select
+                      variant="bordered"
+                      radius="sm"
+                      label="Tipologia Veicolo"
+                      selectedKeys={[tempFilters.vehicleTypeId]}
+                      onChange={(e) =>
+                        handleSearchFilterChange(
+                          "vehicleTypeId",
+                          e.target.value
+                        )
+                      }
+                      className="w-full"
+                    >
+                      <SelectItem key="0">Tutte</SelectItem>
+                      <SelectItem key="1">Moto</SelectItem>
+                      <SelectItem key="2">Auto</SelectItem>
+                    </Select>
+
+                    <Select
+                      variant="bordered"
+                      radius="sm"
+                      label="Tipo di polizza"
+                      selectedKeys={[tempFilters.policyTypeId]}
+                      onChange={(e) =>
+                        handleSearchFilterChange("policyTypeId", e.target.value)
+                      }
+                      className="w-full"
+                    >
+                      {policyTypeFilter.map((type) => (
+                        <SelectItem key={String(type.insuranceTypeId)}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </Select>
+
+                    <Select
+                      variant="bordered"
+                      radius="sm"
+                      label="Frazionamento"
+                      selectedKeys={[tempFilters.duration]}
+                      onChange={(e) =>
+                        handleSearchFilterChange("duration", e.target.value)
+                      }
+                      className="w-full"
+                    >
+                      <SelectItem key="0">Tutte</SelectItem>
+                      <SelectItem key="6">6 mesi</SelectItem>
+                      <SelectItem key="12">12 mesi</SelectItem>
+                    </Select>
+
+                    <Select
+                      variant="bordered"
+                      radius="sm"
+                      label="Stato Polizza"
+                      selectedKeys={[tempFilters.state]}
+                      onChange={(e) =>
+                        handleSearchFilterChange("state", e.target.value)
+                      }
+                      className="w-full"
+                    >
+                      <SelectItem key="0">Tutte</SelectItem>
+                      <SelectItem key="1">Attiva</SelectItem>
+                      <SelectItem key="2">In Scadenza</SelectItem>
+                      <SelectItem key="3">Scaduta</SelectItem>
+                      <SelectItem key="4">In Scadenza 6 mesi</SelectItem>
+                      <SelectItem key="5">Scaduta 6 mesi</SelectItem>
+                      <SelectItem key="6">Sospesa</SelectItem>
+                    </Select>
+
+                    <Select
+                      variant="bordered"
+                      radius="sm"
+                      label="Stato Pagamento"
+                      selectedKeys={[tempFilters.paymentStatus]}
+                      onChange={(e) =>
+                        handleSearchFilterChange(
+                          "paymentStatus",
+                          e.target.value
+                        )
+                      }
+                      className="w-full"
+                    >
+                      <SelectItem key="0">Tutte</SelectItem>
+                      <SelectItem key="1">Pagato</SelectItem>
+                      <SelectItem key="2">Non Pagato</SelectItem>
+                      <SelectItem key="3">Rate</SelectItem>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      color="danger"
+                      variant="light"
+                      onPress={() => {
+                        clearFilters();
+                        setIsPopoverOpen(false);
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button color="primary" onPress={handleApplyFilters}>
+                      Applica
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button
               color="primary"
               radius="full"
-              variant="flat"
+              variant="solid"
               startContent={
                 <Icon icon="solar:file-download-outline" width={16} />
               }
@@ -349,7 +489,14 @@ export default function PolicyTable() {
         </div>
       </div>
     );
-  }, [searchFilter, filteredPolicies.length, activeFiltersCount, rowsPerPage]);
+  }, [
+    searchFilter,
+    filteredPolicies.length,
+    activeFiltersCount,
+    rowsPerPage,
+    tempFilters,
+    isPopoverOpen,
+  ]);
 
   const bottomContent = useMemo(() => {
     return (
@@ -395,16 +542,13 @@ export default function PolicyTable() {
 
       case "vehicle":
         return (
-          <div className="flex flex-col">
+          <div className="flex flex-col items-left">
             <div className="flex items-center gap-2">
-              {getVehicleType(policy.typeId)}
+              <div>{getVehicleType(policy.typeId)}</div>
+              <p className="text-bold text-tiny text-default-400">
+                {policy.licensePlate}
+              </p>
             </div>
-            <p className="text-bold text-tiny text-default-400">
-              {policy.licensePlate}
-            </p>
-            <p className="text-bold text-tiny text-default-500">
-              {policy.insuranceType}
-            </p>
           </div>
         );
 
@@ -463,7 +607,7 @@ export default function PolicyTable() {
                 <Icon icon="solar:shield-keyhole-linear" width={14} />
               }
             >
-              {policy.status}
+              {policy.status.replace("Terminata", "Scaduta")}
             </Chip>
             <Chip
               className="capitalize"
@@ -502,19 +646,23 @@ export default function PolicyTable() {
                 >
                   Visualizza dettagli
                 </DropdownItem>
-                <DropdownItem
-                  key="renew"
-                  startContent={<Icon icon="solar:restart-linear" width={16} />}
-                  onPress={() =>
-                    setRenewSixModalData({
-                      ...RenewSixModalData,
-                      open: true,
-                      Policy: policy,
-                    })
-                  }
-                >
-                  Rinnova polizza
-                </DropdownItem>
+                {Number(policy.duration) === 6 ? (
+                  <DropdownItem
+                    key="renew"
+                    startContent={
+                      <Icon icon="solar:restart-linear" width={16} />
+                    }
+                    onPress={() =>
+                      setRenewSixModalData({
+                        ...RenewSixModalData,
+                        open: true,
+                        Policy: policy,
+                      })
+                    }
+                  >
+                    Rinnova polizza
+                  </DropdownItem>
+                ) : null}
                 <DropdownItem
                   key="delete"
                   startContent={
@@ -540,6 +688,27 @@ export default function PolicyTable() {
         return null;
     }
   };
+
+  // LoadingSkeleton component for table rows
+  const LoadingSkeleton = () => (
+    <>
+      {[...Array(5)].map((_, index) => (
+        <TableRow key={`loading-row-${index}`}>
+          {columns.map((column) => (
+            <TableCell key={`loading-cell-${column.uid}`}>
+              <Skeleton className="rounded-lg">
+                <div
+                  className={
+                    column.uid === "actions" ? "h-8 w-8" : "h-12 w-full"
+                  }
+                ></div>
+              </Skeleton>
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
+  );
 
   return (
     <Card shadow="sm" className="border-none">
@@ -570,112 +739,6 @@ export default function PolicyTable() {
           }}
         />
 
-        <Modal
-          isOpen={isFilterOpen}
-          onClose={onFilterClose}
-          backdrop="blur"
-          scrollBehavior="inside"
-        >
-          <ModalContent>
-            <ModalHeader className="flex flex-col gap-1">
-              Filtri avanzati
-            </ModalHeader>
-            <ModalBody>
-              <div className="grid grid-cols-1 gap-4">
-                <Select
-                  variant="bordered"
-                  radius="sm"
-                  label="Tipologia Veicolo"
-                  selectedKeys={[searchFilter.vehicleTypeId]}
-                  onChange={(e) =>
-                    handleSearchFilterChange("vehicleTypeId", e.target.value)
-                  }
-                  className="w-full"
-                >
-                  <SelectItem key="0">Tutte</SelectItem>
-                  <SelectItem key="1">Moto</SelectItem>
-                  <SelectItem key="2">Auto</SelectItem>
-                </Select>
-
-                <Select
-                  variant="bordered"
-                  radius="sm"
-                  label="Tipo di polizza"
-                  selectedKeys={[searchFilter.policyTypeId]}
-                  onChange={(e) =>
-                    handleSearchFilterChange("policyTypeId", e.target.value)
-                  }
-                  className="w-full"
-                >
-                  {policyTypeFilter.map((type) => (
-                    <SelectItem key={String(type.insuranceTypeId)}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </Select>
-
-                <Select
-                  variant="bordered"
-                  radius="sm"
-                  label="Frazionamento"
-                  selectedKeys={[searchFilter.duration]}
-                  onChange={(e) =>
-                    handleSearchFilterChange("duration", e.target.value)
-                  }
-                  className="w-full"
-                >
-                  <SelectItem key="0">Tutte</SelectItem>
-                  <SelectItem key="6">6 mesi</SelectItem>
-                  <SelectItem key="12">12 mesi</SelectItem>
-                </Select>
-
-                <Select
-                  variant="bordered"
-                  radius="sm"
-                  label="Stato Polizza"
-                  selectedKeys={[searchFilter.state]}
-                  onChange={(e) =>
-                    handleSearchFilterChange("state", e.target.value)
-                  }
-                  className="w-full"
-                >
-                  <SelectItem key="0">Tutte</SelectItem>
-                  <SelectItem key="1">Attiva</SelectItem>
-                  <SelectItem key="2">In Scadenza</SelectItem>
-                  <SelectItem key="3">Terminata</SelectItem>
-                  <SelectItem key="4">In Scadenza 6 mesi</SelectItem>
-                  <SelectItem key="5">Terminata 6 mesi</SelectItem>
-                  <SelectItem key="6">Sospesa</SelectItem>
-                </Select>
-
-                <Select
-                  variant="bordered"
-                  radius="sm"
-                  label="Stato Pagamento"
-                  selectedKeys={[searchFilter.paymentStatus]}
-                  onChange={(e) =>
-                    handleSearchFilterChange("paymentStatus", e.target.value)
-                  }
-                  className="w-full"
-                >
-                  <SelectItem key="0">Tutte</SelectItem>
-                  <SelectItem key="1">Pagato</SelectItem>
-                  <SelectItem key="2">Non Pagato</SelectItem>
-                  <SelectItem key="3">Rate</SelectItem>
-                </Select>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button color="danger" variant="light" onPress={clearFilters}>
-                Reset filtri
-              </Button>
-              <Button color="primary" onPress={onFilterClose}>
-                Applica filtri
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-
         <Table
           aria-label="Policy table"
           topContent={topContent}
@@ -704,19 +767,25 @@ export default function PolicyTable() {
           <TableBody
             items={items}
             emptyContent={
-              <div className="flex flex-col items-center justify-center py-10">
-                <Icon
-                  icon="solar:document-broken"
-                  width={48}
-                  className="text-default-300 mb-3"
-                />
-                <p className="text-default-500">
-                  {searchFilter.searchTerms || activeFiltersCount > 0
-                    ? "Nessuna polizza corrisponde ai criteri di ricerca"
-                    : "Non sono presenti polizze"}
-                </p>
-              </div>
+              loading ? (
+                <LoadingSkeleton />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <Icon
+                    icon="solar:document-broken"
+                    width={48}
+                    className="text-default-300 mb-3"
+                  />
+                  <p className="text-default-500">
+                    {searchFilter.searchTerms || activeFiltersCount > 0
+                      ? "Nessuna polizza corrisponde ai criteri di ricerca"
+                      : "Non sono presenti polizze"}
+                  </p>
+                </div>
+              )
             }
+            loadingContent={<LoadingSkeleton />}
+            loadingState={loading ? "loading" : "idle"}
           >
             {(item) => (
               <TableRow key={item.policyId.toString()}>

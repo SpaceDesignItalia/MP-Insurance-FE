@@ -1,20 +1,18 @@
-import { useState } from "react";
 import {
-  Input,
   Button,
-  cn,
   Card,
   CardBody,
-  CardHeader,
   CardFooter,
+  CardHeader,
+  cn,
   Divider,
-  Breadcrumbs,
-  BreadcrumbItem,
+  Input,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import AlertCard from "../../Layout/AlertCard";
-import { useParams, Link } from "react-router-dom";
 
 interface VehicleDataProps {
   veichleTypeId: number;
@@ -115,45 +113,11 @@ export default function AddVehicleModel() {
     <>
       <AlertCard AlertCardProps={alertCardProps} />
 
-      <div className="mb-6">
-        <Breadcrumbs size="sm">
-          <BreadcrumbItem>
-            <Link to="/customers" className="text-gray-500 hover:text-primary">
-              <Icon
-                icon="solar:users-group-rounded-linear"
-                className="mr-1"
-                width={16}
-              />
-              Clienti
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <Link
-              to={`/customers/view-customer-data/${clientId}`}
-              className="text-gray-500 hover:text-primary"
-            >
-              <Icon
-                icon="solar:user-rounded-linear"
-                className="mr-1"
-                width={16}
-              />
-              Dettaglio Cliente
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <span className="text-primary font-medium flex items-center">
-              <Icon icon="solar:car-linear" className="mr-1" width={16} />
-              Nuovo Veicolo
-            </span>
-          </BreadcrumbItem>
-        </Breadcrumbs>
-      </div>
-
       <Card className="shadow-md border border-gray-200 max-w-4xl mx-auto overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary-600 to-primary-800 text-white">
+        <CardHeader className="bg-gradient-to-r from-primary to-success text-white">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <Icon icon="solar:car-bold" width={24} />
+              <Icon icon="mingcute:car-3-line" width={24} />
               Aggiungi Nuovo Veicolo
             </h2>
           </div>
@@ -163,7 +127,7 @@ export default function AddVehicleModel() {
           <div className="space-y-8">
             <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
               <div className="rounded-full bg-primary/10 p-3 text-primary">
-                <Icon icon="solar:car-bold" width={24} />
+                <Icon icon="mingcute:car-3-line" width={24} />
               </div>
               <div>
                 <h3 className="text-lg font-semibold leading-6 text-gray-900">
@@ -209,7 +173,7 @@ export default function AddVehicleModel() {
                     )}
                   >
                     <Icon
-                      icon="solar:car-bold"
+                      icon="mingcute:car-3-line"
                       width={48}
                       className={
                         vehicleData.veichleTypeId === 2
@@ -249,7 +213,7 @@ export default function AddVehicleModel() {
                     )}
                   >
                     <Icon
-                      icon="solar:motorbike-bold"
+                      icon="mingcute:ebike-line"
                       width={48}
                       className={
                         vehicleData.veichleTypeId === 1
@@ -400,10 +364,10 @@ export default function AddVehicleModel() {
           <Button
             radius="full"
             variant="flat"
-            color="default"
+            className="text-black"
             as={Link}
             to={`/customers/view-customer-data/${clientId}`}
-            startContent={<Icon icon="solar:arrow-left-linear" width={18} />}
+            startContent={<Icon icon="mingcute:close-fill" width={18} />}
           >
             Annulla
           </Button>

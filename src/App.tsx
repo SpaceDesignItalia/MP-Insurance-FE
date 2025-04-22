@@ -14,6 +14,7 @@ import CalendarDashboard from "./Pages/Calendar/CalendarDashboard";
 import AddPolicyPage from "./Pages/Policy/AddPolicyPage";
 import AddVehiclePage from "./Pages/Customer/AddVehiclePage";
 import EditCustomerVehicles from "./Pages/Customer/EditCustomerVehicles";
+import ForgotPassword from "./Pages/Login/ForgotPassword";
 
 const App: React.FC = () => {
   axios.defaults.baseURL = API_URL;
@@ -56,6 +57,7 @@ const App: React.FC = () => {
       {isAuth && <Navbar />}
       <Routes>
         {!isAuth && <Route element={<Login />} path="/login" />}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/*"
           element={

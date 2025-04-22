@@ -1,28 +1,27 @@
-import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Tooltip,
-  Pagination,
   Button,
-  Input,
-  Link,
-  Chip,
   Card,
   CardBody,
   Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
   DropdownItem,
-  User,
+  DropdownMenu,
+  DropdownTrigger,
+  Input,
+  Link,
+  Pagination,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+  Avatar,
 } from "@heroui/react";
-import axios from "axios";
-import DeleteCustomerModal from "../Other/DeleteCustomerModal";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import DeleteCustomerModal from "../Other/DeleteCustomerModal";
 
 interface CustomerProps {
   clientId: number;
@@ -181,7 +180,7 @@ export default function CustomerTable() {
             Righe per pagina:
             <select
               className="bg-transparent outline-none text-default-400 text-small ml-2"
-              onChange={(e) => setPage(1)}
+              onChange={() => setPage(1)}
             >
               <option value="10">10</option>
               <option value="20">20</option>
@@ -218,23 +217,27 @@ export default function CustomerTable() {
       switch (columnKey) {
         case "name":
           return (
-            <User
-              name={`${customer.firstName} ${customer.lastName}`}
-              avatarProps={{
-                radius: "full",
-                name: getInitials(customer.firstName, customer.lastName),
-                classNames: {
-                  base: "bg-primary/10 text-primary",
-                },
-              }}
-            />
+            <div className="flex items-center gap-3">
+              <Avatar
+                name={getInitials(customer.firstName, customer.lastName)}
+                size="sm"
+                color="primary"
+                isBordered
+                className="text-small font-thin"
+              />
+              <div className="flex flex-col">
+                <p className="text-bold text-sm">
+                  {customer.firstName} {customer.lastName}
+                </p>
+              </div>
+            </div>
           );
         case "contacts":
           return (
             <div className="flex flex-col">
               <p className="text-bold text-small flex items-center gap-1">
                 <Icon
-                  icon="solar:letter-linear"
+                  icon="solar:mailbox-linear"
                   width={14}
                   className="text-default-400"
                 />
@@ -242,7 +245,7 @@ export default function CustomerTable() {
               </p>
               <p className="text-bold text-small flex items-center gap-1">
                 <Icon
-                  icon="solar:phone-linear"
+                  icon="solar:smartphone-2-linear"
                   width={14}
                   className="text-default-400"
                 />
@@ -298,6 +301,31 @@ export default function CustomerTable() {
     []
   );
 
+  // LoadingSkeleton component for table rows
+  const LoadingSkeleton = () => (
+    <>
+      {[...Array(5)].map((_, index) => (
+        <TableRow key={`loading-row-${index}`}>
+          {columns.map((column) => (
+            <TableCell key={`loading-cell-${column.uid}`}>
+              <Skeleton className="rounded-lg">
+                <div
+                  className={
+                    column.uid === "actions"
+                      ? "h-8 w-8"
+                      : column.uid === "name"
+                      ? "h-10 w-32"
+                      : "h-12 w-full"
+                  }
+                ></div>
+              </Skeleton>
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
+  );
+
   return (
     <Card shadow="sm" className="border-none">
       <CardBody className="p-0">
@@ -336,19 +364,25 @@ export default function CustomerTable() {
           <TableBody
             items={items}
             emptyContent={
-              <div className="flex flex-col items-center justify-center py-10">
-                <Icon
-                  icon="solar:user-broken"
-                  width={48}
-                  className="text-default-300 mb-3"
-                />
-                <p className="text-default-500">
-                  {searchQuery
-                    ? "Nessun cliente corrisponde alla ricerca"
-                    : "Non sono presenti clienti"}
-                </p>
-              </div>
+              loading ? (
+                <LoadingSkeleton />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <Icon
+                    icon="solar:user-broken"
+                    width={48}
+                    className="text-default-300 mb-3"
+                  />
+                  <p className="text-default-500">
+                    {searchQuery
+                      ? "Nessun cliente corrisponde alla ricerca"
+                      : "Non sono presenti clienti"}
+                  </p>
+                </div>
+              )
             }
+            loadingContent={<LoadingSkeleton />}
+            loadingState={loading ? "loading" : "idle"}
           >
             {(item) => (
               <TableRow key={item.clientId}>

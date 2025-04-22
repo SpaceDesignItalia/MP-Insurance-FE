@@ -19,7 +19,7 @@ interface Policy {
   policyId: number;
   fullName: string;
   email: string;
-  typeId: string;
+  typeId: number;
   duration: number;
   amount: string;
   startDate: Date;
@@ -30,6 +30,7 @@ interface Policy {
   paymentStatus: string;
   types: string[];
   note: string;
+  clientId: number;
 }
 
 interface EventModalProps {
@@ -51,7 +52,7 @@ export default function EventModal({
         return "success";
       case "Sospesa":
         return "warning";
-      case "Terminata":
+      case "Scaduta":
         return "danger";
       default:
         return "default";
@@ -83,7 +84,7 @@ export default function EventModal({
       <ModalContent>
         <ModalHeader className="flex gap-2 items-center">
           <Icon
-            icon="solar:shield-keyhole-bold"
+            icon="solar:shield-keyhole-linear"
             className="text-primary"
             width={24}
           />
@@ -95,14 +96,14 @@ export default function EventModal({
         <ModalBody className="p-6">
           <div className="flex flex-col space-y-6">
             {/* Client Info */}
-            <div className="bg-primary-50 rounded-xl p-4">
+            <div className="bg-zinc-100 rounded-xl p-4">
               <User
                 name={event.fullName}
                 description={event.email}
                 avatarProps={{
                   radius: "lg",
                   src: `https://api.dicebear.com/6.x/initials/svg?seed=${event.fullName}`,
-                  className: "bg-primary text-white",
+                  className: "bg-black text-white",
                 }}
                 className="justify-start"
               />
@@ -114,7 +115,7 @@ export default function EventModal({
                 <CardBody className="p-4">
                   <div className="flex flex-col items-center text-center">
                     <Icon
-                      icon="solar:calendar-bold"
+                      icon="solar:calendar-linear"
                       className="text-primary mb-2"
                       width={24}
                     />
@@ -129,11 +130,19 @@ export default function EventModal({
               <Card shadow="sm" className="border border-gray-200">
                 <CardBody className="p-4">
                   <div className="flex flex-col items-center text-center">
-                    <Icon
-                      icon="solar:car-bold"
-                      className="text-primary mb-2"
-                      width={24}
-                    />
+                    {event.typeId == 2 ? (
+                      <Icon
+                        icon="mingcute:car-3-line"
+                        className="text-primary mb-2"
+                        width={24}
+                      />
+                    ) : (
+                      <Icon
+                        icon="mingcute:ebike-line"
+                        className="text-primary mb-2"
+                        width={24}
+                      />
+                    )}
                     <p className="text-sm text-gray-500">Veicolo</p>
                     <p className="text-lg font-semibold">
                       {event.licensePlate}
@@ -146,7 +155,7 @@ export default function EventModal({
                 <CardBody className="p-4">
                   <div className="flex flex-col items-center text-center">
                     <Icon
-                      icon="solar:wallet-money-bold"
+                      icon="solar:wallet-money-linear"
                       className="text-primary mb-2"
                       width={24}
                     />
@@ -205,7 +214,7 @@ export default function EventModal({
                       <Chip
                         key={type}
                         color="primary"
-                        variant="flat"
+                        variant="bordered"
                         radius="sm"
                       >
                         {type}
@@ -239,7 +248,7 @@ export default function EventModal({
             variant="light"
             radius="full"
             onPress={onClose}
-            startContent={<Icon icon="solar:close-circle-linear" width={18} />}
+            startContent={<Icon icon="mingcute:close-line" width={18} />}
           >
             Chiudi
           </Button>
@@ -247,7 +256,7 @@ export default function EventModal({
             color="primary"
             radius="full"
             as="a"
-            href={`/customers/view-customer-data/${event.policyId}`}
+            href={`/customers/view-customer-data/${event.clientId}`}
             startContent={<Icon icon="solar:user-circle-linear" width={18} />}
           >
             Vai al profilo cliente

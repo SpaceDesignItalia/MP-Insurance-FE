@@ -37,9 +37,9 @@ const statusColorMap: Record<string, any> = {
   "In scadenza": "warning",
   "In Scadenza": "warning",
   "In Scadenza 6 mesi": "warning",
-  "Terminata 6 mesi": "danger",
+  "Scaduta 6 mesi": "danger",
   Sospesa: "warning",
-  Terminata: "danger",
+  Scaduta: "danger",
   Pagato: "success",
   "Non Pagato": "danger",
   Rate: "primary",
@@ -72,11 +72,11 @@ export default function VehiecleCard({
       case 2:
         return "In Scadenza";
       case 3:
-        return "Terminata";
+        return "Scaduta";
       case 4:
         return "In Scadenza 6 mesi";
       case 5:
-        return "Terminata 6 mesi";
+        return "Scaduta 6 mesi";
       case 6:
         return "Sospesa";
       default:
@@ -114,7 +114,7 @@ export default function VehiecleCard({
         onPress={() => !isDisabled && onSelect(VehiecleCardProps.vehicleId)}
         disableRipple={isDisabled}
       >
-        <CardHeader className="flex justify-between p-4 bg-gradient-to-r from-primary-600 to-primary-800 text-white overflow-hidden">
+        <CardHeader className="flex justify-between p-4 bg-gradient-to-r from-zinc-600 to-zinc-800 text-white overflow-hidden">
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-bold text-left">
               {VehiecleCardProps.brand} {VehiecleCardProps.model}

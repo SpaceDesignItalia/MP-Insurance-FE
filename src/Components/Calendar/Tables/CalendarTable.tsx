@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Divider, Tooltip } from "@heroui/react";
+import { Button, Card, Divider, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -12,7 +12,7 @@ export interface Policy {
   policyId: number;
   fullName: string;
   email: string;
-  typeId: string;
+  typeId: number;
   duration: number;
   amount: string;
   startDate: Date;
@@ -23,6 +23,7 @@ export interface Policy {
   paymentStatus: string;
   types: string[];
   note: string;
+  clientId: number;
 }
 
 const CustomCalendar: React.FC = () => {
@@ -67,53 +68,52 @@ const CustomCalendar: React.FC = () => {
             <li
               key={event.policyId}
               onClick={() => onEventClick(event)}
-              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 cursor-pointer transition-colors duration-150 text-sm"
+              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 cursor-pointer transition-colors duration-150 text-sm bg-gradient-to-r from-zinc-100 to-zinc-200 border border-zinc-300 shadow-sm"
             >
               <div className="flex flex-col">
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-gray-900 truncate max-w-[120px]">
                   {event.fullName}
                 </span>
-                <Badge
-                  content={event.status}
-                  color={getStatusColor(event.status)}
-                  placement="top-right"
-                >
-                  <span className="text-xs text-gray-500">
-                    {event.licensePlate}
-                  </span>
-                </Badge>
+                <div className="flex items-center text-xs text-gray-600">
+                  <Icon
+                    icon="solar:car-linear"
+                    width={12}
+                    className="text-primary"
+                  />
+                  <span className="font-medium">{event.licensePlate}</span>
+                </div>
+                <span className="text-xs text-primary-600 font-medium">
+                  {event.insuranceType}
+                </span>
               </div>
-              <Icon
-                icon="solar:arrow-right-linear"
-                className="text-primary"
-                width={16}
-              />
+              <div className="flex flex-col items-end">
+                <Icon
+                  icon="solar:arrow-right-linear"
+                  className="text-primary"
+                  width={16}
+                />
+              </div>
             </li>
           ))}
           {events.length > 2 && !showAll && (
             <li
-              className="text-primary text-xs cursor-pointer hover:underline font-medium px-1.5 py-1"
+              className="text-center text-primary text-xs cursor-pointer hover:bg-primary-50 font-medium px-1.5 py-1.5 rounded-lg border border-dashed border-primary-200 transition-colors"
               onClick={() => setShowAll(true)}
             >
               Mostra altri ({events.length - 2})
             </li>
           )}
+          {showAll && events.length > 2 && (
+            <li
+              className="text-center text-gray-600 text-xs cursor-pointer hover:bg-gray-50 font-medium px-1.5 py-1.5 rounded-lg border border-dashed border-gray-200 transition-colors"
+              onClick={() => setShowAll(false)}
+            >
+              Nascondi
+            </li>
+          )}
         </ul>
       </div>
     );
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Attiva":
-        return "success";
-      case "Sospesa":
-        return "warning";
-      case "Terminata":
-        return "danger";
-      default:
-        return "default";
-    }
   };
 
   const getEventsForDay = (day: dayjs.Dayjs) => {
@@ -255,7 +255,7 @@ const CustomCalendar: React.FC = () => {
         <div className="flex items-center justify-between px-6 py-4">
           <h1 className="text-xl font-semibold capitalize text-gray-900 flex items-center gap-2">
             <Icon
-              icon="solar:calendar-bold"
+              icon="solar:calendar-linear"
               className="text-primary"
               width={24}
             />
@@ -266,7 +266,7 @@ const CustomCalendar: React.FC = () => {
             <Tooltip content="Mese precedente">
               <Button
                 isIconOnly
-                variant="flat"
+                variant="ghost"
                 radius="full"
                 color="primary"
                 onClick={handlePreviousMonth}
@@ -277,7 +277,7 @@ const CustomCalendar: React.FC = () => {
             </Tooltip>
 
             <Button
-              variant="flat"
+              variant="solid"
               radius="full"
               color="primary"
               onClick={handleToday}
@@ -289,7 +289,7 @@ const CustomCalendar: React.FC = () => {
             <Tooltip content="Mese successivo">
               <Button
                 isIconOnly
-                variant="flat"
+                variant="ghost"
                 radius="full"
                 color="primary"
                 onClick={handleNextMonth}
