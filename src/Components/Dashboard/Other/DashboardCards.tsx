@@ -1,8 +1,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-
 import { Card, cn } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 
 export default function DashboardCards() {
   const [stats, setStats] = useState([
@@ -11,36 +11,42 @@ export default function DashboardCards() {
       name: "Polizze attive",
       stat: "",
       icon: "solar:document-medicine-linear",
+      trend: 0,
     },
     {
       id: 2,
       name: "Polizze in scadenza (-10g)",
       stat: "",
       icon: "solar:document-text-linear",
+      trend: 0,
     },
     {
       id: 3,
       name: "Polizze sospese",
       stat: "",
       icon: "solar:pause-circle-linear",
+      trend: 0,
     },
     {
       id: 4,
       name: "Clienti registrati",
       stat: "",
       icon: "solar:users-group-two-rounded-linear",
+      trend: 0,
     },
     {
       id: 5,
       name: "Veicoli registrati",
       stat: "",
       icon: "mingcute:car-3-line",
+      trend: 0,
     },
     {
       id: 6,
       name: "Premi incassati / Da incassare",
       stat: "",
       icon: "solar:euro-linear",
+      trend: 0,
     },
   ]);
 
@@ -147,34 +153,53 @@ export default function DashboardCards() {
   }, []);
 
   return (
-    <div>
-      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((item) => (
-          <Card
-            key={item.id}
-            className="border border-transparent dark:border-default-100"
-          >
-            <div className="flex p-4">
-              <div
-                className={cn(
-                  "mt-1 flex h-8 w-8 items-center justify-center rounded-md bg-primary"
-                )}
-              >
-                <Icon className="text-white" icon={item.icon} width={20} />
+    <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {stats.map((item, index) => (
+        <motion.div
+          key={item.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.1 }}
+        >
+          <Card className="border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-lg bg-white">
+            <div className="flex p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                <Icon className="text-slate-700" icon={item.icon} width={24} />
               </div>
 
-              <div className="flex flex-col gap-y-2">
-                <dt className="mx-4 text-small font-medium text-default-500">
+              <div className="ml-4 flex flex-col">
+                <dt className="text-sm font-medium text-slate-500 truncate">
                   {item.name}
                 </dt>
-                <dd className="px-4 text-2xl font-semibold text-default-700">
+                <dd className="mt-1 text-2xl font-semibold text-slate-900">
                   {item.stat}
                 </dd>
+                {item.trend !== 0 && (
+                  <div className="mt-1 flex items-center text-sm">
+                    <span className="flex items-center text-slate-700">
+                      {item.trend > 0 ? (
+                        <Icon
+                          icon="heroicons:arrow-trending-up"
+                          className="h-4 w-4 mr-1"
+                        />
+                      ) : (
+                        <Icon
+                          icon="heroicons:arrow-trending-down"
+                          className="h-4 w-4 mr-1"
+                        />
+                      )}
+                      {Math.abs(item.trend)}%
+                    </span>
+                    <span className="text-slate-500 ml-1">
+                      rispetto al mese scorso
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
-        ))}
-      </dl>
-    </div>
+        </motion.div>
+      ))}
+    </dl>
   );
 }
