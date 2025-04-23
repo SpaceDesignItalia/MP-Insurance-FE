@@ -19,6 +19,7 @@ interface CustomerDataProps {
   lastName: string;
   email: string;
   phoneNumber: string;
+  address: string;
 }
 
 interface VehicleDataProps {
@@ -49,6 +50,7 @@ export default function AddCustomerModel() {
     lastName: "",
     email: "",
     phoneNumber: "",
+    address: "",
   });
   const [vehicleData, setVehicleData] = useState<VehicleDataProps>({
     veichleTypeId: 0,
@@ -360,6 +362,35 @@ export default function AddCustomerModel() {
                     }}
                   />
                 </div>
+
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="address"
+                    className="block text-sm font-medium leading-6 text-gray-900 mb-2"
+                  >
+                    Indirizzo
+                  </label>
+                  <Input
+                    name="address"
+                    variant="bordered"
+                    aria-labelledby="address"
+                    radius="sm"
+                    placeholder="Via Roma, 123"
+                    startContent={
+                      <Icon
+                        icon="solar:map-point-wave-linear"
+                        width={18}
+                        className="text-gray-400"
+                      />
+                    }
+                    onChange={(e) => handleCustomerInputChange(e.target)}
+                    value={customerData.address}
+                    classNames={{
+                      inputWrapper: "shadow-sm border-gray-300",
+                      input: "placeholder:text-gray-400",
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -524,7 +555,7 @@ export default function AddCustomerModel() {
                         <div className="flex justify-between mt-1">
                           <span className="text-xs text-gray-500">
                             Formato:{" "}
-                            {vehicleData.veichleTypeId === 1
+                            {vehicleData.veichleTypeId === 2
                               ? "AA000AA"
                               : "AA00000"}
                           </span>

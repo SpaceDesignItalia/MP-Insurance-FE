@@ -153,7 +153,9 @@ export default function VehiecleCard({
                         <Image
                           radius="sm"
                           className="h-full w-full object-contain scale-150 -pt-1"
-                          src={`${API_URL_IMG}/CompanyLogo/${VehiecleCardProps.companyName}Logo.png`}
+                          src={`${API_URL_IMG}/CompanyLogo/${
+                            VehiecleCardProps.companyName.split(" ")[0]
+                          }Logo.png`}
                           alt={VehiecleCardProps.companyName}
                         />
                       </div>

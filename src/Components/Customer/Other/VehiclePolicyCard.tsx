@@ -525,7 +525,7 @@ export default function VehiclePolicyCard({
             <span className="text-xl">€ {PolicyData.amount}</span>
           </div>
 
-          {PolicyData.status !== "Scaduta" && (
+          {PolicyData.status !== "Terminata" && (
             <div>
               {PolicyData.status === "Sospesa" ? (
                 <Button

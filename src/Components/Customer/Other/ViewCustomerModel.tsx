@@ -12,6 +12,8 @@ import {
   Avatar,
   Tabs,
   Tab,
+  Accordion,
+  AccordionItem,
 } from "@heroui/react";
 import VehiecleCard from "./VehiecleCard";
 import { useParams } from "react-router-dom";
@@ -106,11 +108,13 @@ export default function ViewCustomerModel() {
     useState<CustomerDataProps>(CUSTOMERDEFAULTVALUE);
   const [loadedAllData, setLoadedAllData] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState("vehicles");
+  const [historyData, setHistoryData] = useState<PolicyDataProps[]>([]);
 
   const [vehicleData, setVehicleData] = useState<VehicleDataProps[]>([]);
 
   useEffect(() => {
     fetchCustomerData();
+    fetchHistoryData();
   }, []);
 
   async function fetchCustomerData() {
@@ -130,7 +134,17 @@ export default function ViewCustomerModel() {
         });
 
         if (res2.status == 200) {
-          setVehicleData(res2.data);
+          setVehicleData(
+            res2.data.filter(
+              (
+                vehicle: VehicleDataProps,
+                index: number,
+                self: VehicleDataProps[]
+              ) =>
+                index ===
+                self.findIndex((v) => v.licensePlate === vehicle.licensePlate)
+            )
+          );
           setLoadedAllData(true);
         }
       }
@@ -146,10 +160,28 @@ export default function ViewCustomerModel() {
         withCredentials: true,
       });
 
+      console.log(res.data);
+
       if (res.status == 200) {
         setPolicyData(res.data);
         setShowPolicy(true);
         setActiveTab("policy");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function fetchHistoryData() {
+    try {
+      const res = await axios.get("/Policy/GET/GetPolicyHistoryByClientId", {
+        params: { clientId: clientId },
+        withCredentials: true,
+      });
+      console.log(res.data);
+      if (res.status == 200) {
+        console.log(res.data);
+        setHistoryData(res.data);
       }
     } catch (error) {
       console.error(error);
@@ -247,6 +279,8 @@ export default function ViewCustomerModel() {
       0
     )}`;
   };
+
+  console.log(policyData);
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -548,42 +582,148 @@ export default function ViewCustomerModel() {
                 </div>
               </Tab>
 
-              <Tab
-                key="policy"
-                title={
-                  <div className="flex items-center gap-2">
-                    <Icon icon="solar:shield-check-outline" width={18} />
-                    <span>Polizza</span>
+              {historyData.length !== 0 && (
+                <Tab
+                  key="policy"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <Icon icon="solar:shield-check-outline" width={18} />
+                      <span>
+                        {historyData.length === 1 ? "Polizza" : "Polizze"}
+                      </span>
+                      <Chip
+                        size="sm"
+                        variant="bordered"
+                        color={activeTab === "policy" ? "secondary" : "default"}
+                      >
+                        {historyData.length}
+                      </Chip>
+                    </div>
+                  }
+                  isDisabled={historyData.length === 0}
+                >
+                  <div className="flex flex-col gap-4 p-6 border-t">
+                    {historyData.length !== 0 ? (
+                      <>
+                        {/* Show first policy in full */}
+                        <VehiclePolicyCard
+                          key={Number(policyData.policyId)}
+                          PolicyData={{
+                            policyId: Number(policyData.policyId),
+                            fullName: policyData.fullName,
+                            email: policyData.email,
+                            typeId: Number(policyData.typeId),
+                            duration: Number(policyData.duration),
+                            amount: Number(policyData.amount),
+                            startDate: policyData.startDate,
+                            endDate: policyData.endDate,
+                            brand: policyData.brand,
+                            model: policyData.model,
+                            licensePlate: policyData.licensePlate,
+                            status: policyData.status,
+                            paymentStatus: policyData.paymentStatus,
+                            companyName: policyData.companyName,
+                            companyLogo: policyData.companyLogo,
+                            types: policyData.types,
+                            note: policyData.note,
+                            startSuspensionDate: policyData.startSuspensionDate,
+                          }}
+                          isVisible={showPolicy}
+                        />
+
+                        {historyData.length > 1 &&
+                          historyData
+                            .slice(selectedVehicleId ? 1 : 0)
+                            .filter((policy: PolicyDataProps) =>
+                              selectedVehicleId
+                                ? policy.licensePlate ===
+                                  vehicleData.find(
+                                    (v) => v.vehicleId == selectedVehicleId
+                                  )?.licensePlate
+                                : true
+                            ).length > 0 && (
+                            <Accordion variant="bordered" className="mt-4">
+                              {historyData
+                                .filter((policy: PolicyDataProps) =>
+                                  selectedVehicleId
+                                    ? policy.licensePlate ===
+                                      vehicleData.find(
+                                        (v) => v.vehicleId == selectedVehicleId
+                                      )?.licensePlate
+                                    : true
+                                )
+                                .slice(selectedVehicleId ? 1 : 0)
+
+                                .map((policy: PolicyDataProps) => (
+                                  <AccordionItem
+                                    key={policy.policyId}
+                                    title={
+                                      !selectedVehicleId
+                                        ? policy.brand +
+                                          " " +
+                                          policy.model +
+                                          " - " +
+                                          policy.licensePlate
+                                        : policy.companyName
+                                    }
+                                    subtitle={
+                                      <div className="flex items-center gap-4 text-default-500">
+                                        <span>
+                                          {new Date(
+                                            policy.startDate
+                                          ).toLocaleDateString()}{" "}
+                                          -{" "}
+                                          {new Date(
+                                            policy.endDate
+                                          ).toLocaleDateString()}
+                                        </span>
+                                        <Chip
+                                          color="primary"
+                                          variant="bordered"
+                                          radius="sm"
+                                        >
+                                          {policy.amount} €
+                                        </Chip>
+                                      </div>
+                                    }
+                                  >
+                                    <VehiclePolicyCard
+                                      PolicyData={{
+                                        policyId: Number(policy.policyId),
+                                        fullName: policy.fullName,
+                                        email: policy.email,
+                                        typeId: Number(policy.typeId),
+                                        duration: Number(policy.duration),
+                                        amount: Number(policy.amount),
+                                        startDate: policy.startDate,
+                                        endDate: policy.endDate,
+                                        brand: policy.brand,
+                                        model: policy.model,
+                                        licensePlate: policy.licensePlate,
+                                        status: policy.status,
+                                        paymentStatus: policy.paymentStatus,
+                                        companyName: policy.companyName,
+                                        companyLogo: policy.companyLogo,
+                                        types: policy.types,
+                                        note: policy.note,
+                                        startSuspensionDate:
+                                          policy.startSuspensionDate,
+                                      }}
+                                      isVisible={true}
+                                    />
+                                  </AccordionItem>
+                                ))}
+                            </Accordion>
+                          )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center py-12 px-4 bg-default-50 rounded-lg">
+                        <Icon icon="mingcute:car-3-line" width={64} />
+                      </div>
+                    )}
                   </div>
-                }
-                isDisabled={!showPolicy}
-              >
-                <div className="p-6 border-t">
-                  <VehiclePolicyCard
-                    PolicyData={{
-                      policyId: Number(policyData.policyId),
-                      fullName: policyData.fullName,
-                      email: policyData.email,
-                      typeId: Number(policyData.typeId),
-                      duration: Number(policyData.duration),
-                      amount: Number(policyData.amount),
-                      startDate: policyData.startDate,
-                      endDate: policyData.endDate,
-                      brand: policyData.brand,
-                      model: policyData.model,
-                      licensePlate: policyData.licensePlate,
-                      status: policyData.status,
-                      paymentStatus: policyData.paymentStatus,
-                      companyName: policyData.companyName,
-                      companyLogo: policyData.companyLogo,
-                      types: policyData.types,
-                      note: policyData.note,
-                      startSuspensionDate: policyData.startSuspensionDate,
-                    }}
-                    isVisible={showPolicy}
-                  />
-                </div>
-              </Tab>
+                </Tab>
+              )}
             </Tabs>
           </CardBody>
         </Card>
