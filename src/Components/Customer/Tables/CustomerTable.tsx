@@ -29,6 +29,7 @@ interface CustomerProps {
   lastName: string;
   email: string;
   phoneNumber: string;
+  address: string;
 }
 
 interface DeleteModalData {
@@ -63,6 +64,7 @@ export default function CustomerTable() {
       const response = await axios.get("/Customer/GET/GetAllCustomers", {
         withCredentials: true,
       });
+      console.log(response.data);
       setCustomer(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);

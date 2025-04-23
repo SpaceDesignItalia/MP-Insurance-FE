@@ -38,7 +38,7 @@ export default function DashboardCards() {
     },
     {
       id: 6,
-      name: "Premi incassati",
+      name: "Premi incassati / Da incassare",
       stat: "",
       icon: "solar:euro-linear",
     },
@@ -110,10 +110,26 @@ export default function DashboardCards() {
                 stat:
                   res.data
                     .reduce(
-                      (acc: number, curr: any) => acc + Number(curr.amount),
+                      (acc: number, curr: any) =>
+                        curr.paymentStatus === "Pagato" ||
+                        curr.paymentStatus === "Rate"
+                          ? acc + Number(curr.amount)
+                          : acc,
                       0
                     )
-                    .toString() + " €",
+                    .toString() +
+                  " € / " +
+                  res.data
+                    .reduce(
+                      (acc: number, curr: any) =>
+                        curr.paymentStatus !== "Pagato" &&
+                        curr.paymentStatus !== "Rate"
+                          ? acc + Number(curr.amount)
+                          : acc,
+                      0
+                    )
+                    .toString() +
+                  " €",
               };
             }
             if (item.id === 3) {

@@ -448,7 +448,12 @@ export default function VehiclePolicyCard({
                     <h3 className="text-medium font-semibold">Coperture</h3>
                     <div className="flex flex-wrap gap-2">
                       {PolicyData.types.map((type, index) => (
-                        <Chip key={index} color="secondary" variant="flat">
+                        <Chip
+                          key={index}
+                          color="primary"
+                          variant="bordered"
+                          radius="sm"
+                        >
                           {type}
                         </Chip>
                       ))}

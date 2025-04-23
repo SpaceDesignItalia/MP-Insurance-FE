@@ -25,6 +25,7 @@ interface CustomerDataProps {
   lastName: string;
   email: string;
   phoneNumber: string;
+  address: string;
 }
 
 interface VehicleDataProps {
@@ -89,6 +90,7 @@ const CUSTOMERDEFAULTVALUE: CustomerDataProps = {
   lastName: "",
   email: "",
   phoneNumber: "",
+  address: "",
 };
 
 export default function ViewCustomerModel() {
@@ -211,7 +213,8 @@ export default function ViewCustomerModel() {
       editingData.firstName !== customerData.firstName ||
       editingData.lastName !== customerData.lastName ||
       editingData.email !== customerData.email ||
-      editingData.phoneNumber !== customerData.phoneNumber
+      editingData.phoneNumber !== customerData.phoneNumber ||
+      editingData.address !== customerData.address
     );
   };
 
@@ -328,6 +331,21 @@ export default function ViewCustomerModel() {
                       />
                     }
                   />
+                  <Input
+                    label="Indirizzo"
+                    name="address"
+                    variant="bordered"
+                    radius="sm"
+                    value={editingData.address}
+                    onChange={(e) => handleEditCustomerData(e.target)}
+                    startContent={
+                      <Icon
+                        icon="solar:map-point-wave-linear"
+                        width={16}
+                        className="text-default-400"
+                      />
+                    }
+                  />
                 </div>
               ) : (
                 <div className="flex flex-col">
@@ -350,11 +368,20 @@ export default function ViewCustomerModel() {
                   </Skeleton>
                   <Skeleton
                     isLoaded={loadedAllData}
-                    className="h-5 w-full rounded-lg"
+                    className="h-5 w-full rounded-lg mb-1"
                   >
                     <div className="flex items-center gap-2 text-default-500">
                       <Icon icon="solar:smartphone-2-linear" width={16} />
                       <span>{customerData.phoneNumber}</span>
+                    </div>
+                  </Skeleton>
+                  <Skeleton
+                    isLoaded={loadedAllData}
+                    className="h-5 w-full rounded-lg"
+                  >
+                    <div className="flex items-center gap-2 text-default-500">
+                      <Icon icon="solar:map-point-wave-linear" width={16} />
+                      <span>{customerData.address}</span>
                     </div>
                   </Skeleton>
                 </div>
