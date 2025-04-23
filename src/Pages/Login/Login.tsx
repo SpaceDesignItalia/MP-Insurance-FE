@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Button, Checkbox, Input } from "@heroui/react";
+import { Button, Checkbox, Input, Card, CardBody } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Icon } from "@iconify/react";
 import axios from "axios";
 import logo from "../../assets/MpLogo.png";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -33,7 +34,8 @@ export default function Login() {
     return loginData.email === "" || loginData.password === "";
   };
 
-  async function handleLogin() {
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
     try {
       setIsLogging(true);
       const res = await axios.post(
@@ -60,76 +62,65 @@ export default function Login() {
           <LoginAlert onClose={() => setIsAlertVisible(false)} />
         )}
       </AnimatePresence>
-      <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <img
-            alt="MP Insurance Logo"
-            src={logo}
-            className="mx-auto h-24 w-auto"
-          />
-          <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Accedi al portale
-          </h2>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardBody className="p-6">
+            <div className="text-center mb-6">
+              <img
+                alt="MP Insurance Logo"
+                src={logo}
+                className="mx-auto h-16 w-auto mb-4"
+              />
+              <h2 className="text-xl font-semibold">Accedi al portale</h2>
+              <p className="text-gray-500 text-sm mt-2">
+                Inserisci le tue credenziali per accedere
+              </p>
+            </div>
 
-        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
-          <div className="bg-white px-6 py-12 border-2 shadow-xl sm:rounded-xl sm:px-12">
-            <form action="#" method="POST" className="space-y-6">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Email
-                </label>
-                <div className="mt-2">
-                  <Input
-                    isRequired
-                    name="email"
-                    type="email"
-                    variant="bordered"
-                    radius="sm"
-                    placeholder="example@gmail.com"
-                    isInvalid={isAlertVisible}
-                    onChange={(e) => handleInputChange(e.target)}
-                  />
-                </div>
-              </div>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <Input
+                isRequired
+                name="email"
+                type="email"
+                label="Email"
+                variant="bordered"
+                radius="sm"
+                placeholder="example@gmail.com"
+                isInvalid={isAlertVisible}
+                onChange={(e) => handleInputChange(e.target)}
+                startContent={
+                  <Icon icon="solar:user-linear" className="text-gray-400" />
+                }
+              />
 
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Password
-                </label>
-                <div className="mt-2">
-                  <Input
-                    isRequired
-                    name="password"
-                    type={isPasswordVisible ? "text" : "password"}
-                    variant="bordered"
-                    radius="sm"
-                    placeholder="Inserisci la password"
-                    isInvalid={isAlertVisible}
-                    onChange={(e) => handleInputChange(e.target)}
-                    endContent={
-                      <button
-                        className="focus:outline-none"
-                        type="button"
-                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                        aria-label="visibility password"
-                      >
-                        {isPasswordVisible ? (
-                          <VisibilityOffOutlinedIcon className="text-2xl text-default-400 pointer-events-none" />
-                        ) : (
-                          <VisibilityOutlinedIcon className="text-2xl text-default-400 pointer-events-none" />
-                        )}
-                      </button>
-                    }
-                  />
-                </div>
-              </div>
+              <Input
+                isRequired
+                name="password"
+                type={isPasswordVisible ? "text" : "password"}
+                label="Password"
+                variant="bordered"
+                radius="sm"
+                placeholder="Inserisci la password"
+                isInvalid={isAlertVisible}
+                onChange={(e) => handleInputChange(e.target)}
+                startContent={
+                  <Icon icon="solar:lock-linear" className="text-gray-400" />
+                }
+                endContent={
+                  <button
+                    className="focus:outline-none"
+                    type="button"
+                    onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                    aria-label="visibility password"
+                  >
+                    {isPasswordVisible ? (
+                      <VisibilityOffOutlinedIcon className="text-2xl text-default-400 pointer-events-none" />
+                    ) : (
+                      <VisibilityOutlinedIcon className="text-2xl text-default-400 pointer-events-none" />
+                    )}
+                  </button>
+                }
+              />
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -158,32 +149,29 @@ export default function Login() {
                 </div>
               </div>
 
-              <div>
-                <Button
-                  radius="sm"
-                  color="primary"
-                  type="submit"
-                  isLoading={isLogging}
-                  isDisabled={checkDataCompleted()}
-                  onClick={handleLogin}
-                  fullWidth
-                >
-                  {isLogging ? "Accesso in corso..." : "Accedi"}
-                </Button>
-              </div>
+              <Button
+                radius="sm"
+                color="primary"
+                type="submit"
+                isLoading={isLogging}
+                isDisabled={checkDataCompleted()}
+                fullWidth
+              >
+                {isLogging ? "Accesso in corso..." : "Accedi"}
+              </Button>
             </form>
-          </div>
 
-          <p className="mt-10 text-center text-sm text-gray-500">
-            Powered By {""}
-            <a
-              href="https://www.spacedesign-italia.it"
-              className="font-semibold leading-6 text-red-600 hover:text-red-400"
-            >
-              Space Design Italia 🚀
-            </a>
-          </p>
-        </div>
+            <p className="mt-6 text-center text-sm text-gray-500">
+              Powered By {""}
+              <a
+                href="https://www.spacedesign-italia.it"
+                className="font-semibold leading-6 text-red-600 hover:text-red-400"
+              >
+                Space Design Italia 🚀
+              </a>
+            </p>
+          </CardBody>
+        </Card>
       </div>
     </>
   );

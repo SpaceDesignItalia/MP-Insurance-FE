@@ -1,52 +1,30 @@
 import {
+  Autocomplete,
+  AutocompleteItem,
   Button,
+  Card,
+  CardBody,
+  Chip,
+  DatePicker,
+  DateValue,
+  Divider,
   Input,
   Select,
   SelectItem,
-  Autocomplete,
-  AutocompleteItem,
-  DatePicker,
   User,
-  DateValue,
 } from "@heroui/react";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { API_URL_IMG } from "../../../API/API";
+import { Icon } from "@iconify/react";
 import { getLocalTimeZone } from "@internationalized/date";
+import axios from "axios";
 import dayjs from "dayjs";
-import AlertCard from "../../Layout/AlertCard";
+import { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { API_URL_IMG } from "../../../API/API";
+import AlertCard from "../../Layout/AlertCard";
 
-interface Customer {
-  clientId: number;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-}
-
-interface Vehicle {
-  vehicleId: number;
-  licensePlate: string;
-  brand: string;
-  model: string;
-  typeId: number;
-}
-
-interface Company {
-  companyId: number;
-  companyName: string;
-  companyLogo: string;
-}
-
-interface InsuranceType {
-  insuranceTypeId: number;
-  name: string;
-  description: string;
-}
-
-interface SelectedData {
+interface FormData {
+  step: number;
   clientId: number | null;
   vehicleId: number | null;
   companyId: number | null;
@@ -54,21 +32,26 @@ interface SelectedData {
   startDate: DateValue | string | null;
   duration: number | null;
   amount: number | null;
+  note: string;
 }
 
-interface AlertCardProps {
-  isOpen: boolean;
-  type: string;
-  title: string;
-  description: string;
+interface FormState {
+  customers: any[];
+  vehicles: any[];
+  companies: any[];
+  insuranceTypes: any[];
+  isSaving: boolean;
+  alertCard: {
+    isOpen: boolean;
+    type: string;
+    title: string;
+    description: string;
+  };
 }
 
 export default function AddPolicyModel() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [insuranceTypes, setInsuranceTypes] = useState<InsuranceType[]>([]);
-  const [selectedData, setSelectedData] = useState<SelectedData>({
+  const [formData, setFormData] = useState<FormData>({
+    step: 1,
     clientId: null,
     vehicleId: null,
     companyId: null,
@@ -76,17 +59,22 @@ export default function AddPolicyModel() {
     startDate: null,
     duration: null,
     amount: null,
-  });
-  const [note, setNote] = useState("");
-
-  const [alertCardProps, setAlertCardProps] = useState<AlertCardProps>({
-    isOpen: false,
-    type: "",
-    title: "",
-    description: "",
+    note: "",
   });
 
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [formState, setFormState] = useState<FormState>({
+    customers: [],
+    vehicles: [],
+    companies: [],
+    insuranceTypes: [],
+    isSaving: false,
+    alertCard: {
+      isOpen: false,
+      type: "",
+      title: "",
+      description: "",
+    },
+  });
 
   const dateFormatter = (date: DateValue | string | null): string => {
     if (date instanceof Object && "toDate" in date) {
@@ -98,188 +86,263 @@ export default function AddPolicyModel() {
     }
   };
 
-  const handleChange = (field: keyof SelectedData, value: any) => {
-    setSelectedData((prevData) => ({
-      ...prevData,
+  const handleChange = (field: keyof FormData, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
       [field]: value,
     }));
+  };
+
+  const handleStepChange = (direction: "next" | "prev") => {
+    setFormData((prev) => ({
+      ...prev,
+      step: direction === "next" ? prev.step + 1 : prev.step - 1,
+    }));
+  };
+
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return Boolean(
+          formData.clientId && formData.vehicleId && formData.companyId
+        );
+      case 2:
+        return Boolean(
+          formData.insuranceTypeIds?.length &&
+            formData.startDate &&
+            formData.duration &&
+            formData.amount
+        );
+      default:
+        return true;
+    }
   };
 
   useEffect(() => {
     axios
       .get("/Customer/GET/GetAllCustomers", { withCredentials: true })
       .then((res) => {
-        setCustomers(res.data);
+        setFormState((prev) => ({ ...prev, customers: res.data }));
       });
 
     axios
       .get("/Company/GET/GetAllCompanies", { withCredentials: true })
       .then((res) => {
-        setCompanies(res.data);
+        setFormState((prev) => ({ ...prev, companies: res.data }));
       });
 
     axios
       .get("/Company/GET/GetAllInsuranceTypes", { withCredentials: true })
       .then((res) => {
-        setInsuranceTypes(res.data);
+        setFormState((prev) => ({ ...prev, insuranceTypes: res.data }));
       });
   }, []);
 
   useEffect(() => {
-    if (selectedData.clientId) {
+    if (formData.clientId) {
       axios
         .get("/Vehicle/GET/GetClientVehiclesUninsured", {
           params: {
-            clientId: selectedData.clientId,
+            clientId: formData.clientId,
           },
           withCredentials: true,
         })
         .then((res) => {
-          setVehicles(res.data);
+          setFormState((prev) => ({ ...prev, vehicles: res.data }));
         });
     }
-  }, [selectedData.clientId]);
+  }, [formData.clientId]);
 
-  async function handleCreateNewPolicy() {
+  const handleCreateNewPolicy = async () => {
     try {
-      setIsSaving(true);
-      const formattedStartDate = dateFormatter(selectedData.startDate || null);
-      const { duration } = selectedData;
-
-      let endDate = null;
-      if (formattedStartDate && duration) {
-        endDate = dayjs(formattedStartDate)
-          .add(12, "month")
-          .format("YYYY-MM-DD");
-      }
+      setFormState((prev) => ({ ...prev, isSaving: true }));
+      const formattedStartDate = dateFormatter(formData.startDate);
+      const endDate =
+        formattedStartDate && formData.duration
+          ? dayjs(formattedStartDate)
+              .add(formData.duration, "month")
+              .format("YYYY-MM-DD")
+          : null;
 
       const policyData = {
-        ...selectedData,
+        ...formData,
         startDate: formattedStartDate,
-        endDate: endDate,
-        note: note,
+        endDate,
       };
 
       const res = await axios.post(
         "/Policy/POST/AddPolicy",
-        { policyData: policyData },
-        {
-          withCredentials: true,
-        }
+        { policyData },
+        { withCredentials: true }
       );
 
-      if (res.status == 200) {
-        setAlertCardProps({
-          ...alertCardProps,
-          isOpen: true,
-          type: "success",
-          title: "Polizza aggiunta con successo!",
-          description: "<p>La polizza è stata creata correttamente!</p>",
-        });
-
-        setTimeout((window.location.href = "/"));
+      if (res.status === 200) {
+        setFormState((prev) => ({
+          ...prev,
+          alertCard: {
+            isOpen: true,
+            type: "success",
+            title: "Polizza aggiunta con successo!",
+            description: "<p>La polizza è stata creata correttamente!</p>",
+          },
+        }));
+        setTimeout(() => (window.location.href = "/"), 1500);
       }
     } catch (error) {
       console.error("Errore durante la creazione della polizza:", error);
-      setAlertCardProps({
-        ...alertCardProps,
-        isOpen: true,
-        type: "error",
-        title: "Errore nella creazione della polizza",
-        description:
-          "<p>C'è stato un problema nella creazione della polizza, riprova più tardi!</p>",
-      });
-      setIsSaving(false);
+      setFormState((prev) => ({
+        ...prev,
+        alertCard: {
+          isOpen: true,
+          type: "error",
+          title: "Errore nella creazione della polizza",
+          description:
+            "<p>C'è stato un problema nella creazione della polizza, riprova più tardi!</p>",
+        },
+        isSaving: false,
+      }));
     }
-  }
+  };
 
-  console.log(selectedData.duration?.toString());
+  const getSelectedData = () => {
+    const customer = formState.customers.find(
+      (c) => c.clientId == formData.clientId
+    );
+    const vehicle = formState.vehicles.find(
+      (v) => v.vehicleId == formData.vehicleId
+    );
+    const selectedTypes = formState.insuranceTypes.filter((t) =>
+      formData.insuranceTypeIds?.includes(Number(t.insuranceTypeId))
+    );
+    const endDate =
+      formData.startDate && formData.duration
+        ? dayjs(dateFormatter(formData.startDate))
+            .add(formData.duration, "month")
+            .format("DD/MM/YYYY")
+        : null;
 
-  return (
-    <>
-      <AlertCard AlertCardProps={alertCardProps} />
-      <div className="space-y-12">
-        <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
-          <div>
-            <h2 className="text-base font-semibold leading-7 text-gray-900">
-              Polizza
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-gray-600">
-              Inserisci tutte le informazioni necessarie per la polizza.
-            </p>
+    return { customer, vehicle, selectedTypes, endDate };
+  };
+
+  const renderRequiredLabel = (label: string) => (
+    <div className="flex items-center gap-1">
+      <span className="block text-sm font-medium text-gray-900">{label}</span>
+      <span className="text-danger">*</span>
+    </div>
+  );
+
+  const renderStepContent = () => {
+    const { customer, vehicle, selectedTypes, endDate } = getSelectedData();
+
+    const stepContents = {
+      1: (
+        <div className="space-y-8">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
+            <div className="rounded-full bg-primary/10 p-3 text-primary">
+              <Icon icon="solar:users-group-rounded-linear" width={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                Informazioni di Base
+              </h3>
+              <p className="text-sm leading-5 text-gray-600">
+                Seleziona il cliente, il veicolo e la compagnia assicurativa
+              </p>
+            </div>
           </div>
 
-          <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
-            {/* Sezione per Cliente */}
-            <div className="sm:col-span-full">
-              <label
-                htmlFor="client"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Cliente
-              </label>
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+            <div>
+              {renderRequiredLabel("Cliente")}
               <div className="mt-2">
                 <Autocomplete
                   variant="bordered"
                   radius="sm"
                   placeholder="Cerca per email..."
-                  defaultItems={customers}
-                  selectedKey={selectedData.clientId}
-                  onSelectionChange={(value) =>
-                    handleChange("clientId", value as number)
+                  defaultItems={formState.customers}
+                  selectedKey={formData.clientId?.toString()}
+                  defaultSelectedKey={formData.clientId?.toString()}
+                  onSelectionChange={(value) => {
+                    handleChange("clientId", Number(value));
+                    handleChange("vehicleId", null);
+                  }}
+                  startContent={
+                    <div className="bg-primary/10 p-1 rounded">
+                      <Icon
+                        icon="solar:user-linear"
+                        className="text-primary"
+                        width={18}
+                      />
+                    </div>
                   }
+                  classNames={{
+                    base: "shadow-sm border-gray-300",
+                  }}
+                  className="w-full"
                 >
                   {(customer) => (
                     <AutocompleteItem
-                      key={customer.clientId}
-                      textValue={customer.email}
-                      value={customer.clientId}
+                      key={customer.clientId.toString()}
+                      textValue={`${customer.firstName} ${customer.lastName} - ${customer.email}`}
+                      className="data-[selected=true]:bg-primary/10"
                     >
-                      <div className="flex flex-col gap-2">
-                        <span className="font-semibold">
-                          {customer.firstName + " " + customer.lastName}
-                        </span>
-                        <span>{customer.email}</span>
-                      </div>
+                      <User
+                        name={`${customer.firstName} ${customer.lastName}`}
+                        description={customer.email}
+                        avatarProps={{
+                          src: `https://api.dicebear.com/6.x/initials/svg?seed=${customer.firstName} ${customer.lastName}`,
+                          className: "bg-primary text-white",
+                        }}
+                      />
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
               </div>
             </div>
 
-            {/* Sezione per Veicolo */}
-            <div className="col-span-full">
-              <label
-                htmlFor="vehicle"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Veicolo
-              </label>
+            <div>
+              {renderRequiredLabel("Veicolo")}
               <div className="mt-2">
                 <Autocomplete
                   variant="bordered"
                   radius="sm"
                   placeholder="Cerca per targa..."
-                  defaultItems={vehicles}
-                  selectedKey={selectedData.vehicleId}
+                  defaultItems={formState.vehicles}
+                  selectedKey={formData.vehicleId?.toString()}
+                  defaultSelectedKey={formData.vehicleId?.toString()}
                   onSelectionChange={(value) =>
-                    handleChange("vehicleId", value as number)
+                    handleChange("vehicleId", Number(value))
+                  }
+                  startContent={
+                    <div className="bg-primary/10 p-1 rounded">
+                      <Icon
+                        icon="mingcute:car-3-line"
+                        className="text-primary"
+                        width={18}
+                      />
+                    </div>
                   }
                   listboxProps={{
                     emptyContent: "Nessun veicolo trovato",
                   }}
+                  classNames={{
+                    base: "shadow-sm border-gray-300",
+                  }}
+                  className="w-full"
                 >
                   {(vehicle) => (
                     <AutocompleteItem
-                      key={vehicle.vehicleId}
-                      textValue={vehicle.licensePlate}
-                      value={vehicle.vehicleId}
+                      key={vehicle.vehicleId.toString()}
+                      textValue={`${vehicle.brand} ${vehicle.model} - ${vehicle.licensePlate}`}
+                      className="data-[selected=true]:bg-primary/10"
                     >
-                      <div className="flex flex-col gap-2">
-                        <span className="font-semibold">
-                          {vehicle.brand + " " + vehicle.model}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {vehicle.brand} {vehicle.model}
                         </span>
-                        <span>Targa: {vehicle.licensePlate}</span>
+                        <span className="text-xs text-default-500">
+                          Targa: {vehicle.licensePlate}
+                        </span>
                       </div>
                     </AutocompleteItem>
                   )}
@@ -287,199 +350,447 @@ export default function AddPolicyModel() {
               </div>
             </div>
 
-            {/* Sezione per Compagnia */}
-            <div className="col-span-full">
-              <label
-                htmlFor="company"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Compagnia
-              </label>
-              <div className="mt-2 flex items-center gap-x-3">
+            <div>
+              {renderRequiredLabel("Compagnia")}
+              <div className="mt-2">
                 <Autocomplete
                   variant="bordered"
                   radius="sm"
                   placeholder="Cerca compagnia..."
-                  defaultItems={companies}
-                  selectedKey={selectedData.companyId}
+                  defaultItems={formState.companies}
+                  selectedKey={formData.companyId?.toString()}
+                  defaultSelectedKey={formData.companyId?.toString()}
                   onSelectionChange={(value) =>
-                    handleChange("companyId", value as number)
+                    handleChange("companyId", Number(value))
                   }
+                  startContent={
+                    <div className="bg-primary/10 p-1 rounded">
+                      <Icon
+                        icon="solar:buildings-3-linear"
+                        className="text-primary"
+                        width={18}
+                      />
+                    </div>
+                  }
+                  classNames={{
+                    base: "shadow-sm border-gray-300",
+                  }}
+                  className="w-full"
                 >
                   {(company) => (
                     <AutocompleteItem
-                      key={company.companyId}
+                      key={company.companyId.toString()}
                       textValue={company.companyName}
-                      value={company.companyId}
+                      className="data-[selected=true]:bg-primary/10"
                     >
-                      <div className="p-3">
-                        <User
-                          name={company.companyName}
-                          avatarProps={{
-                            src:
-                              company.companyLogo &&
-                              API_URL_IMG +
-                                "/CompanyLogo/" +
-                                company.companyLogo,
-                            isBordered: true,
-                          }}
-                        />
-                      </div>
+                      <User
+                        name={company.companyName}
+                        avatarProps={{
+                          src:
+                            company.companyLogo &&
+                            API_URL_IMG + "/CompanyLogo/" + company.companyLogo,
+                          isBordered: true,
+                          className: "bg-white",
+                        }}
+                      />
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
               </div>
             </div>
+          </div>
+        </div>
+      ),
+      2: (
+        <div className="space-y-8">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
+            <div className="rounded-full bg-primary/10 p-3 text-primary">
+              <Icon icon="solar:shield-keyhole-linear" width={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                Dettagli Polizza
+              </h3>
+              <p className="text-sm leading-5 text-gray-600">
+                Inserisci i dettagli della polizza assicurativa
+              </p>
+            </div>
+          </div>
 
-            {/* Sezione per Garanzie Assicurative */}
-            <div className="col-span-full">
-              <label
-                htmlFor="insuranceTypes"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Garanzie assicurative
-              </label>
-              <div className="mt-2 flex items-center gap-x-3">
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+            <div>
+              {renderRequiredLabel("Garanzie assicurative")}
+              <div className="mt-2">
                 <Select
                   placeholder="Seleziona le garanzie assicurative"
                   variant="bordered"
                   radius="sm"
                   selectionMode="multiple"
-                  selectedKeys={
-                    selectedData.insuranceTypeIds?.map(String) ?? []
-                  }
+                  selectedKeys={formData.insuranceTypeIds?.map(String) ?? []}
                   onSelectionChange={(value) =>
                     handleChange("insuranceTypeIds", [...value].map(Number))
                   }
+                  startContent={
+                    <div className="bg-primary/10 p-1 rounded">
+                      <Icon
+                        icon="solar:shield-keyhole-linear"
+                        className="text-primary"
+                        width={18}
+                      />
+                    </div>
+                  }
+                  classNames={{
+                    base: "shadow-sm border-gray-300",
+                  }}
                 >
-                  {insuranceTypes.map((insuranceType) => (
-                    <SelectItem
-                      key={insuranceType.insuranceTypeId}
-                      value={insuranceType.insuranceTypeId.toString()}
-                    >
-                      {insuranceType.name}
+                  {formState.insuranceTypes.map((type) => (
+                    <SelectItem key={type.insuranceTypeId.toString()}>
+                      {type.name}
                     </SelectItem>
                   ))}
                 </Select>
               </div>
             </div>
 
-            {/* Sezione per Data di Inizio */}
-            <div className="col-span-full">
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Data di inizio della polizza
-              </label>
-              <div className="mt-2 flex items-center gap-x-3">
-                <DatePicker
-                  variant="bordered"
-                  radius="sm"
-                  onChange={(date: DateValue) =>
-                    handleChange("startDate", date)
-                  }
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                {renderRequiredLabel("Data di inizio")}
+                <div className="mt-2">
+                  <DatePicker
+                    variant="bordered"
+                    radius="sm"
+                    value={formData.startDate as DateValue}
+                    onChange={(date) => handleChange("startDate", date)}
+                    classNames={{
+                      base: "shadow-sm border-gray-300",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                {renderRequiredLabel("Frazionamento")}
+                <div className="mt-2">
+                  <Select
+                    placeholder="Seleziona"
+                    variant="bordered"
+                    radius="sm"
+                    selectedKeys={
+                      formData.duration ? [formData.duration.toString()] : []
+                    }
+                    onSelectionChange={(value) =>
+                      handleChange("duration", Number([...value][0]))
+                    }
+                    startContent={
+                      <div className="bg-primary/10 p-1 rounded">
+                        <Icon
+                          icon="solar:calendar-linear"
+                          className="text-primary"
+                          width={18}
+                        />
+                      </div>
+                    }
+                    classNames={{
+                      base: "shadow-sm border-gray-300",
+                    }}
+                  >
+                    <SelectItem key="6">6 mesi</SelectItem>
+                    <SelectItem key="12">12 mesi</SelectItem>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {/* Sezione per Durata */}
-            <div className="col-span-full">
-              <label
-                htmlFor="duration"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Frazionamento (mesi)
-              </label>
-              <div className="mt-2 flex items-center gap-x-3">
-                <Select
-                  placeholder="Seleziona il frazionamento"
-                  variant="bordered"
-                  radius="sm"
-                  selectedKeys={
-                    selectedData.duration?.toString()
-                      ? [selectedData.duration.toString()]
-                      : []
-                  }
-                  onSelectionChange={(value) =>
-                    handleChange(
-                      "duration",
-                      Math.min(Math.max(Number([...value].map(Number)), 1), 12)
-                    )
-                  }
-                >
-                  <SelectItem key={"6"} value={"6"}>
-                    6 mesi
-                  </SelectItem>
-                  <SelectItem key={"12"} value={"6"}>
-                    12 mesi
-                  </SelectItem>
-                </Select>
-              </div>
-            </div>
-
-            {/* Sezione per Importo */}
-            <div className="col-span-full">
-              <label
-                htmlFor="amount"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Importo
-              </label>
-              <div className="mt-2 flex items-center gap-x-3">
+            <div>
+              {renderRequiredLabel("Importo")}
+              <div className="mt-2">
                 <Input
-                  placeholder="Es. 500"
                   type="number"
                   variant="bordered"
                   radius="sm"
-                  value={selectedData.amount?.toString() || ""}
+                  placeholder="Es. 500"
+                  value={formData.amount?.toString() || ""}
                   onChange={(event) =>
                     handleChange(
                       "amount",
                       Math.max(Number(event.target.value), 0)
                     )
                   }
+                  startContent={
+                    <div className="bg-primary/10 p-1 rounded">
+                      <Icon
+                        icon="solar:wallet-money-linear"
+                        className="text-primary"
+                        width={18}
+                      />
+                    </div>
+                  }
                   endContent={
                     <div className="pointer-events-none flex items-center">
                       <span className="text-default-400 text-small">€</span>
                     </div>
                   }
+                  classNames={{
+                    base: "shadow-sm border-gray-300",
+                  }}
                 />
               </div>
             </div>
 
-            {/* Sezione per Note */}
-            <div className="col-span-full">
-              <label
-                htmlFor="note"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Note
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Note (opzionale)
               </label>
-              <div className="mt-2 flex items-center gap-x-3 ">
-                <ReactQuill
-                  theme="snow"
-                  value={note}
-                  onChange={setNote}
-                  className="w-full"
-                />
-              </div>
+              <Card className="border border-gray-200">
+                <CardBody>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.note}
+                    onChange={(value) => handleChange("note", value)}
+                    className="min-h-[200px]"
+                  />
+                </CardBody>
+              </Card>
             </div>
+          </div>
+        </div>
+      ),
+      3: (
+        <div className="space-y-8">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-primary-50 border border-primary-100">
+            <div className="rounded-full bg-primary/10 p-3 text-primary">
+              <Icon icon="solar:eye-linear" width={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                Anteprima Polizza
+              </h3>
+              <p className="text-sm leading-5 text-gray-600">
+                Verifica i dettagli prima di salvare
+              </p>
+            </div>
+          </div>
+
+          {customer && (
+            <div className="bg-zinc-100 rounded-xl p-4">
+              <User
+                name={`${customer.firstName} ${customer.lastName}`}
+                description={customer.email}
+                avatarProps={{
+                  radius: "lg",
+                  src: `https://api.dicebear.com/6.x/initials/svg?seed=${customer.firstName} ${customer.lastName}`,
+                  className: "bg-primary text-white",
+                }}
+                className="justify-start"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card shadow="sm" className="border border-gray-200">
+              <CardBody className="p-4">
+                <div className="flex flex-col items-center text-center">
+                  <div className="bg-primary/10 p-3 rounded-full mb-2">
+                    <Icon
+                      icon="solar:calendar-linear"
+                      className="text-primary"
+                      width={24}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500">Scadenza</p>
+                  <p className="text-lg font-semibold">{endDate}</p>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card shadow="sm" className="border border-gray-200">
+              <CardBody className="p-4">
+                <div className="flex flex-col items-center text-center">
+                  <div className="bg-primary/10 p-3 rounded-full mb-2">
+                    <Icon
+                      icon="mingcute:car-3-line"
+                      className="text-primary"
+                      width={24}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500">Veicolo</p>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold">
+                      {vehicle?.licensePlate}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {vehicle?.brand} {vehicle?.model}
+                    </p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card shadow="sm" className="border border-gray-200">
+              <CardBody className="p-4">
+                <div className="flex flex-col items-center text-center">
+                  <div className="bg-primary/10 p-3 rounded-full mb-2">
+                    <Icon
+                      icon="solar:wallet-money-linear"
+                      className="text-primary"
+                      width={24}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500">Importo</p>
+                  <p className="text-lg font-semibold">{formData.amount} €</p>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+
+          <Card className="border border-gray-200">
+            <CardBody className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-4">Dettagli Polizza</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Durata</p>
+                    <p className="font-medium">{formData.duration} mesi</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Data Inizio</p>
+                    <p className="font-medium">
+                      {dayjs(dateFormatter(formData.startDate)).format(
+                        "DD/MM/YYYY"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Data Fine</p>
+                    <p className="font-medium">{endDate}</p>
+                  </div>
+                </div>
+              </div>
+
+              <Divider />
+
+              <div>
+                <p className="text-sm text-gray-500 mb-2">
+                  Garanzie Assicurative
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTypes.map((type) => (
+                    <Chip
+                      key={type.insuranceTypeId}
+                      color="primary"
+                      variant="bordered"
+                      radius="sm"
+                    >
+                      {type.name}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+
+              {formData.note && (
+                <>
+                  <Divider />
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">Note</p>
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <ReactQuill
+                        value={formData.note}
+                        readOnly={true}
+                        theme="bubble"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+      ),
+    };
+
+    return stepContents[formData.step as keyof typeof stepContents];
+  };
+
+  return (
+    <div className="p-6">
+      <AlertCard AlertCardProps={formState.alertCard} />
+
+      <div className="flex justify-center mb-8">
+        <div className="flex items-center">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              formData.step >= 1 ? "bg-primary text-white" : "bg-gray-200"
+            }`}
+          >
+            1
+          </div>
+          <div
+            className={`w-16 h-1 ${
+              formData.step >= 2 ? "bg-primary" : "bg-gray-200"
+            }`}
+          />
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              formData.step >= 2 ? "bg-primary text-white" : "bg-gray-200"
+            }`}
+          >
+            2
+          </div>
+          <div
+            className={`w-16 h-1 ${
+              formData.step >= 3 ? "bg-primary" : "bg-gray-200"
+            }`}
+          />
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              formData.step >= 3 ? "bg-primary text-white" : "bg-gray-200"
+            }`}
+          >
+            3
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Button
-          radius="sm"
-          type="submit"
-          color="primary"
-          onClick={handleCreateNewPolicy}
-          isLoading={isSaving}
-        >
-          Salva
-        </Button>
+      {renderStepContent()}
+
+      <Divider className="my-6" />
+
+      <div className="flex justify-between gap-3">
+        {formData.step > 1 && (
+          <Button
+            variant="light"
+            radius="full"
+            startContent={<Icon icon="solar:arrow-left-linear" width={18} />}
+            onPress={() => handleStepChange("prev")}
+          >
+            Indietro
+          </Button>
+        )}
+
+        {formData.step < 3 && (
+          <Button
+            color="primary"
+            radius="full"
+            endContent={<Icon icon="solar:arrow-right-linear" width={18} />}
+            isDisabled={!validateStep(formData.step)}
+            onPress={() => handleStepChange("next")}
+          >
+            Avanti
+          </Button>
+        )}
+
+        {formData.step === 3 && (
+          <Button
+            color="primary"
+            radius="full"
+            endContent={<Icon icon="solar:shield-keyhole-bold" width={18} />}
+            isLoading={formState.isSaving}
+            onPress={handleCreateNewPolicy}
+          >
+            {formState.isSaving ? "Salvataggio..." : "Salva Polizza"}
+          </Button>
+        )}
       </div>
-    </>
+    </div>
   );
 }

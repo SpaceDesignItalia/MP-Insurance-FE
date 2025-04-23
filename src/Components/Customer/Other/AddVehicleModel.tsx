@@ -114,7 +114,7 @@ export default function AddVehicleModel() {
       <AlertCard AlertCardProps={alertCardProps} />
 
       <Card className="shadow-md border border-gray-200 max-w-4xl mx-auto overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary to-success text-white">
+        <CardHeader className="bg-gradient-to-r from-zinc-600 to-zinc-800 text-white">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Icon icon="mingcute:car-3-line" width={24} />
@@ -329,12 +329,12 @@ export default function AddVehicleModel() {
                     <div className="flex justify-between mt-2">
                       <span className="text-xs text-gray-500">
                         Formato:{" "}
-                        {vehicleData.veichleTypeId === 1
+                        {vehicleData.veichleTypeId === 2
                           ? "AA000AA"
                           : "AA00000"}
                       </span>
                       <span
-                        className={`text-xs font-medium ${
+                        className={`text-xs font-medium flex items-center ${
                           vehicleData.licensePlate.length === 7
                             ? "text-success"
                             : "text-gray-500"
@@ -401,14 +401,14 @@ export default function AddVehicleModel() {
               </CardHeader>
               <CardBody className="py-4">
                 <div className="flex items-center gap-4">
-                  <div className="bg-primary/10 p-4 rounded-full">
+                  <div className="bg-primary/10 p-3 rounded-full">
                     <Icon
                       icon={
                         vehicleData.veichleTypeId === 1
-                          ? "solar:motorbike-bold"
-                          : "solar:car-bold"
+                          ? "mingcute:ebike-line"
+                          : "mingcute:car-3-line"
                       }
-                      width={36}
+                      width={30}
                       className="text-primary"
                     />
                   </div>
@@ -420,8 +420,6 @@ export default function AddVehicleModel() {
                       {vehicleData.licensePlate.length === 7
                         ? vehicleData.licensePlate
                         : "Targa non completa"}
-                      <span className="mx-2">•</span>
-                      {vehicleData.veichleTypeId === 1 ? "Moto" : "Auto"}
                     </p>
                   </div>
                 </div>

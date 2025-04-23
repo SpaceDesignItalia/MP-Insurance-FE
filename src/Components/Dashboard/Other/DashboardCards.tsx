@@ -20,15 +20,27 @@ export default function DashboardCards() {
     },
     {
       id: 3,
+      name: "Polizze sospese",
+      stat: "",
+      icon: "solar:pause-circle-linear",
+    },
+    {
+      id: 4,
       name: "Clienti registrati",
       stat: "",
       icon: "solar:users-group-two-rounded-linear",
     },
     {
-      id: 4,
+      id: 5,
       name: "Veicoli registrati",
       stat: "",
       icon: "mingcute:car-3-line",
+    },
+    {
+      id: 6,
+      name: "Premi incassati",
+      stat: "",
+      icon: "solar:euro-linear",
     },
   ]);
 
@@ -64,7 +76,7 @@ export default function DashboardCards() {
       .then((res) => {
         setStats((prev) => {
           return prev.map((item) => {
-            if (item.id === 3) {
+            if (item.id === 4) {
               return { ...item, stat: res.data.length };
             }
             return item;
@@ -78,8 +90,39 @@ export default function DashboardCards() {
         console.log(res.data);
         setStats((prev) => {
           return prev.map((item) => {
-            if (item.id === 4) {
+            if (item.id === 5) {
               return { ...item, stat: res.data.length };
+            }
+            return item;
+          });
+        });
+      });
+
+    axios
+      .get("/Policy/GET/GetAllPolicies", { withCredentials: true })
+      .then((res) => {
+        console.log(res.data);
+        setStats((prev) => {
+          return prev.map((item) => {
+            if (item.id === 6) {
+              return {
+                ...item,
+                stat:
+                  res.data
+                    .reduce(
+                      (acc: number, curr: any) => acc + Number(curr.amount),
+                      0
+                    )
+                    .toString() + " €",
+              };
+            }
+            if (item.id === 3) {
+              return {
+                ...item,
+                stat: res.data.filter(
+                  (policy: any) => policy.status === "Sospesa"
+                ).length,
+              };
             }
             return item;
           });
@@ -89,7 +132,7 @@ export default function DashboardCards() {
 
   return (
     <div>
-      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((item) => (
           <Card
             key={item.id}
@@ -98,15 +141,10 @@ export default function DashboardCards() {
             <div className="flex p-4">
               <div
                 className={cn(
-                  "mt-1 flex h-8 w-8 items-center justify-center rounded-md",
-                  {
-                    "bg-success-50": item.id === 1,
-                    "bg-warning-50": item.id === 2,
-                    "bg-primary-50": item.id === 3 || item.id === 4,
-                  }
+                  "mt-1 flex h-8 w-8 items-center justify-center rounded-md bg-primary"
                 )}
               >
-                <Icon className="text-primary" icon={item.icon} width={20} />
+                <Icon className="text-white" icon={item.icon} width={20} />
               </div>
 
               <div className="flex flex-col gap-y-2">

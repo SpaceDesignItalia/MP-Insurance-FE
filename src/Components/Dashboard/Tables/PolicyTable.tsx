@@ -31,6 +31,7 @@ import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import DeletePolicyModal from "../Other/DeletePolicyModal";
 import RenewSixPolicyModal from "../Other/RenewSixPolicyModal";
 import ViewPolicyModal from "../Other/ViewPolicyModal";
+import { useNavigate } from "react-router-dom";
 
 interface Policy {
   policyId: number;
@@ -97,6 +98,7 @@ const statusColorMap: Record<
 };
 
 export default function PolicyTable() {
+  const navigate = useNavigate();
   const columns = [
     { name: "CLIENTE", uid: "fullName" },
     { name: "VEICOLO", uid: "vehicle" },
@@ -452,16 +454,15 @@ export default function PolicyTable() {
                 </div>
               </PopoverContent>
             </Popover>
+
             <Button
               color="primary"
               radius="full"
               variant="solid"
-              startContent={
-                <Icon icon="solar:file-download-outline" width={16} />
-              }
-              onPress={downloadExcel}
+              startContent={<Icon icon="mingcute:add-line" width={16} />}
+              onPress={() => navigate("/policy/add-policy")}
             >
-              Esporta
+              Crea Polizza
             </Button>
           </div>
         </div>
@@ -514,6 +515,15 @@ export default function PolicyTable() {
           onChange={setPage}
           radius="full"
         />
+        <Button
+          color="primary"
+          radius="full"
+          variant="solid"
+          startContent={<Icon icon="solar:file-download-outline" width={16} />}
+          onPress={downloadExcel}
+        >
+          Esporta
+        </Button>
       </div>
     );
   }, [page, pages, filteredPolicies.length]);
