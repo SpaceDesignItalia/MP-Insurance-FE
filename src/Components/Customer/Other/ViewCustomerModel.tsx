@@ -596,7 +596,16 @@ export default function ViewCustomerModel() {
                         variant="bordered"
                         color={activeTab === "policy" ? "secondary" : "default"}
                       >
-                        {historyData.length}
+                        {
+                          historyData.filter((policy: PolicyDataProps) =>
+                            selectedVehicleId
+                              ? policy.licensePlate ===
+                                vehicleData.find(
+                                  (v) => v.vehicleId == selectedVehicleId
+                                )?.licensePlate
+                              : true
+                          ).length
+                        }
                       </Chip>
                     </div>
                   }
@@ -631,7 +640,7 @@ export default function ViewCustomerModel() {
                           isVisible={showPolicy}
                         />
 
-                        {historyData.length > 1 &&
+                        {historyData.length > 0 &&
                           historyData
                             .slice(selectedVehicleId ? 1 : 0)
                             .filter((policy: PolicyDataProps) =>

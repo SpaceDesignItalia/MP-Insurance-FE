@@ -55,6 +55,8 @@ export default function ViewPolicyModal({
         return "warning";
       case "Scaduta":
         return "danger";
+      case "Terminata":
+        return "danger";
       default:
         return "default";
     }
@@ -203,7 +205,7 @@ export default function ViewPolicyModal({
                           color={getStatusColor(PolicyData.status) as any}
                           variant="flat"
                         >
-                          {PolicyData.status}
+                          {PolicyData.status.replace("Terminata", "Scaduta")}
                         </Chip>
                       </div>
 

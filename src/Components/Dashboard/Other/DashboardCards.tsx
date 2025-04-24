@@ -1,8 +1,8 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Card, cn } from "@heroui/react";
+import { Card } from "@heroui/react";
 import { Icon } from "@iconify/react";
+import axios from "axios";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export default function DashboardCards() {
   const [stats, setStats] = useState([
@@ -93,7 +93,6 @@ export default function DashboardCards() {
     axios
       .get("/Vehicle/GET/GetAllVehicles", { withCredentials: true })
       .then((res) => {
-        console.log(res.data);
         setStats((prev) => {
           return prev.map((item) => {
             if (item.id === 5) {
@@ -107,7 +106,6 @@ export default function DashboardCards() {
     axios
       .get("/Policy/GET/GetAllPolicies", { withCredentials: true })
       .then((res) => {
-        console.log(res.data);
         setStats((prev) => {
           return prev.map((item) => {
             if (item.id === 6) {

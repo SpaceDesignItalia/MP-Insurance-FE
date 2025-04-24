@@ -1,6 +1,6 @@
 import DashboardCards from "../../Components/Dashboard/Other/DashboardCards";
+import RecentActivites from "../../Components/Dashboard/Other/RecentActivites";
 import PolicyTable from "../../Components/Dashboard/Tables/PolicyTable";
-import { DocumentCheckIcon } from "@heroicons/react/24/outline";
 
 export default function Dashboard() {
   document.title = "Dashboard | MP Insurance";
@@ -37,35 +37,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 hover:shadow-lg transition-shadow duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-black">
-                  Attività Recenti
-                </h2>
-                <button className="text-sm text-slate-700 hover:text-black font-medium transition-colors duration-200">
-                  Vedi tutte
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-3 hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-transparent hover:border-slate-200">
-                  <div className="flex-shrink-0">
-                    <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center ring-2 ring-emerald-100">
-                      <DocumentCheckIcon className="h-5 w-5 text-emerald-600" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-black">
-                      Nuova polizza stipulata
-                    </p>
-                    <p className="text-sm text-slate-600">Auto - Mario Rossi</p>
-                  </div>
-                  <div className="ml-auto">
-                    <p className="text-sm text-slate-500">2h fa</p>
-                  </div>
-                </div>
-                {/* Altri elementi attività... */}
-              </div>
-            </div>
+            <RecentActivites />
           </div>
 
           {/* Tabella Polizze */}
