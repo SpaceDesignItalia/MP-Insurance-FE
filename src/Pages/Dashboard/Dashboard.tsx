@@ -1,4 +1,5 @@
 import DashboardCards from "../../Components/Dashboard/Other/DashboardCards";
+import DataGraph from "../../Components/Dashboard/Other/DataGraph";
 import RecentActivites from "../../Components/Dashboard/Other/RecentActivites";
 import PolicyTable from "../../Components/Dashboard/Tables/PolicyTable";
 
@@ -24,18 +25,7 @@ export default function Dashboard() {
 
           {/* Grafico e Attività Recenti */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 hover:shadow-lg transition-shadow duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-black">
-                  Performance Mensile
-                </h2>
-              </div>
-              <div className="h-64 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-200">
-                <p className="text-slate-600 font-medium">
-                  Grafico Performance
-                </p>
-              </div>
-            </div>
+            <DataGraph />
 
             <RecentActivites />
           </div>

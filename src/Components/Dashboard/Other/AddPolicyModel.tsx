@@ -755,7 +755,11 @@ export default function AddPolicyModel() {
 
       <Divider className="my-6" />
 
-      <div className="flex justify-between gap-3">
+      <div
+        className={`flex gap-3 ${
+          formData.step === 1 ? "justify-end" : "justify-between"
+        }`}
+      >
         {formData.step > 1 && (
           <Button
             variant="light"

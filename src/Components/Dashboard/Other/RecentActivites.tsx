@@ -93,7 +93,7 @@ export default function RecentActivites() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-black">Attività Recenti</h2>
       </div>
-      <div className="flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-2">
+      <div className="flex flex-col gap-4 overflow-y-auto max-h-[400px] pr-2">
         {activities.map((activity) => (
           <div
             key={Math.random()}
@@ -164,6 +164,9 @@ export default function RecentActivites() {
                 {new Date(activity.createdAt).toLocaleString("it-IT", {
                   hour: "2-digit",
                   minute: "2-digit",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
                 })}
               </p>
             </div>
