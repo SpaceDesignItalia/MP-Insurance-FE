@@ -62,7 +62,7 @@ export default function Login() {
           <LoginAlert onClose={() => setIsAlertVisible(false)} />
         )}
       </AnimatePresence>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardBody className="p-6">
             <div className="text-center mb-6">
@@ -72,7 +72,7 @@ export default function Login() {
                 className="mx-auto h-16 w-auto mb-4"
               />
               <h2 className="text-xl font-semibold">Accedi al portale</h2>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-foreground/40 text-sm mt-2">
                 Inserisci le tue credenziali per accedere
               </p>
             </div>
@@ -89,7 +89,10 @@ export default function Login() {
                 isInvalid={isAlertVisible}
                 onChange={(e) => handleInputChange(e.target)}
                 startContent={
-                  <Icon icon="solar:user-linear" className="text-gray-400" />
+                  <Icon
+                    icon="solar:user-linear"
+                    className="text-foreground/40"
+                  />
                 }
               />
 
@@ -104,7 +107,10 @@ export default function Login() {
                 isInvalid={isAlertVisible}
                 onChange={(e) => handleInputChange(e.target)}
                 startContent={
-                  <Icon icon="solar:lock-linear" className="text-gray-400" />
+                  <Icon
+                    icon="solar:lock-linear"
+                    className="text-foreground/40"
+                  />
                 }
                 endContent={
                   <button
@@ -142,7 +148,7 @@ export default function Login() {
                 <div className="text-sm leading-6">
                   <a
                     href="/forgot-password"
-                    className="font-semibold text-primary hover:text-primary-500"
+                    className="font-semibold text-foreground hover:text-foreground/80"
                   >
                     Password dimenticata?
                   </a>
@@ -151,17 +157,17 @@ export default function Login() {
 
               <Button
                 radius="sm"
-                color="primary"
                 type="submit"
                 isLoading={isLogging}
                 isDisabled={checkDataCompleted()}
                 fullWidth
+                className="bg-foreground text-background hover:bg-foreground/80"
               >
                 {isLogging ? "Accesso in corso..." : "Accedi"}
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-gray-500">
+            <p className="mt-6 text-center text-sm text-foreground/40">
               Powered By {""}
               <a
                 href="https://www.spacedesign-italia.it"

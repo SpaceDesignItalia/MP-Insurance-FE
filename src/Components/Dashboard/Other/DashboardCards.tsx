@@ -153,70 +153,36 @@ export default function DashboardCards() {
   }, []);
 
   return (
-    <>
-      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((item, index) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <Card 
-              className="border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-lg bg-white cursor-pointer active:bg-slate-100"
-              onClick={() => item.id === 2 && setIsModalOpen(true)}
-            >
-              <div className="flex p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                  <Icon className="text-slate-700" icon={item.icon} width={24} />
-                </div>
-
-                <div className="ml-4 flex flex-col">
-                  <dt className="text-sm font-medium text-slate-500 truncate">
-                    {item.name}
-                  </dt>
-                  <dd className="mt-1 text-2xl font-semibold text-slate-900">
-                    {item.stat}
-                  </dd>
-                  {item.trend !== 0 && (
-                    <div className="mt-1 flex items-center text-sm">
-                      <span className="flex items-center text-slate-700">
-                        {item.trend > 0 ? (
-                          <Icon
-                            icon="heroicons:arrow-trending-up"
-                            className="h-4 w-4 mr-1"
-                          />
-                        ) : (
-                          <Icon
-                            icon="heroicons:arrow-trending-down"
-                            className="h-4 w-4 mr-1"
-                          />
-                        )}
-                        {Math.abs(item.trend)}%
-                      </span>
-                      <span className="text-slate-500 ml-1">
-                        rispetto al mese scorso
-                      </span>
-                    </div>
-                  )}
-                </div>
+    <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {stats.map((item, index) => (
+        <motion.div
+          key={item.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.1 }}
+        >
+          <Card className="border border-foreground/5 transition-all duration-200 hover:shadow-lg">
+            <div className="flex p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground/10">
+                <Icon
+                  className="text-foreground/70"
+                  icon={item.icon}
+                  width={24}
+                />
               </div>
             </Card>
           </motion.div>
         ))}
       </dl>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Polizze in scadenza</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <Icon icon="heroicons:x-mark" className="w-6 h-6" />
-              </button>
+              <div className="ml-4 flex flex-col">
+                <dt className="text-sm font-medium text-foreground/70 truncate">
+                  {item.name}
+                </dt>
+                <dd className="mt-1 text-2xl font-semibold text-foreground">
+                  {item.stat}
+                </dd>
+              </div>
             </div>
             <PolicyTable />
           </div>

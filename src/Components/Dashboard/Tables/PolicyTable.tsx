@@ -32,6 +32,7 @@ import DeletePolicyModal from "../Other/DeletePolicyModal";
 import RenewSixPolicyModal from "../Other/RenewSixPolicyModal";
 import ViewPolicyModal from "../Other/ViewPolicyModal";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 interface Policy {
   policyId: number;
@@ -95,10 +96,12 @@ const statusColorMap: Record<
   Pagato: "success",
   "Non Pagato": "danger",
   Rate: "primary",
+  "Terminata 6 mesi": "danger",
 };
 
 export default function PolicyTable() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const columns = [
     { name: "CLIENTE", uid: "fullName" },
     { name: "VEICOLO", uid: "vehicle" },
@@ -330,7 +333,17 @@ export default function PolicyTable() {
               placement="bottom-end"
               offset={10}
               showArrow
-              backdrop="transparent"
+              classNames={{
+                base: isDarkMode ? "dark" : "light",
+                content: [
+                  "py-2 px-2",
+                  "bg-background",
+                  "border-small border-default-200",
+                  "dark:bg-default-100",
+                  "backdrop-blur-md backdrop-saturate-150",
+                  "shadow-medium",
+                ],
+              }}
             >
               <PopoverTrigger>
                 <Button
@@ -343,8 +356,8 @@ export default function PolicyTable() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full">
-                <div className="py-2">
-                  <div className="text-small font-bold mb-2">
+                <div className="py-2 ">
+                  <div className="text-small font-bold mb-2 text-foreground-900">
                     Filtri avanzati
                   </div>
                   <div className="grid grid-cols-1 gap-4">
@@ -361,7 +374,9 @@ export default function PolicyTable() {
                       }
                       className="w-full"
                     >
-                      <SelectItem key="0">Tutte</SelectItem>
+                      <SelectItem key="0" className="">
+                        Tutte
+                      </SelectItem>
                       <SelectItem key="1">Moto</SelectItem>
                       <SelectItem key="2">Auto</SelectItem>
                     </Select>
@@ -377,7 +392,10 @@ export default function PolicyTable() {
                       className="w-full"
                     >
                       {policyTypeFilter.map((type) => (
-                        <SelectItem key={String(type.insuranceTypeId)}>
+                        <SelectItem
+                          key={String(type.insuranceTypeId)}
+                          className=""
+                        >
                           {type.name}
                         </SelectItem>
                       ))}
@@ -393,9 +411,15 @@ export default function PolicyTable() {
                       }
                       className="w-full"
                     >
-                      <SelectItem key="0">Tutte</SelectItem>
-                      <SelectItem key="6">6 mesi</SelectItem>
-                      <SelectItem key="12">12 mesi</SelectItem>
+                      <SelectItem key="0" className="">
+                        Tutte
+                      </SelectItem>
+                      <SelectItem key="6" className="">
+                        6 mesi
+                      </SelectItem>
+                      <SelectItem key="12" className="">
+                        12 mesi
+                      </SelectItem>
                     </Select>
 
                     <Select
@@ -408,13 +432,27 @@ export default function PolicyTable() {
                       }
                       className="w-full"
                     >
-                      <SelectItem key="0">Tutte</SelectItem>
-                      <SelectItem key="1">Attiva</SelectItem>
-                      <SelectItem key="2">In Scadenza</SelectItem>
-                      <SelectItem key="3">Scaduta</SelectItem>
-                      <SelectItem key="4">In Scadenza 6 mesi</SelectItem>
-                      <SelectItem key="5">Scaduta 6 mesi</SelectItem>
-                      <SelectItem key="6">Sospesa</SelectItem>
+                      <SelectItem key="0" className="">
+                        Tutte
+                      </SelectItem>
+                      <SelectItem key="1" className="">
+                        Attiva
+                      </SelectItem>
+                      <SelectItem key="2" className="">
+                        In Scadenza
+                      </SelectItem>
+                      <SelectItem key="3" className="">
+                        Scaduta
+                      </SelectItem>
+                      <SelectItem key="4" className="">
+                        In Scadenza 6 mesi
+                      </SelectItem>
+                      <SelectItem key="5" className="">
+                        Scaduta 6 mesi
+                      </SelectItem>
+                      <SelectItem key="6" className="">
+                        Sospesa
+                      </SelectItem>
                     </Select>
 
                     <Select
@@ -430,10 +468,18 @@ export default function PolicyTable() {
                       }
                       className="w-full"
                     >
-                      <SelectItem key="0">Tutte</SelectItem>
-                      <SelectItem key="1">Pagato</SelectItem>
-                      <SelectItem key="2">Non Pagato</SelectItem>
-                      <SelectItem key="3">Rate</SelectItem>
+                      <SelectItem key="0" className="">
+                        Tutte
+                      </SelectItem>
+                      <SelectItem key="1" className="">
+                        Pagato
+                      </SelectItem>
+                      <SelectItem key="2" className="">
+                        Non Pagato
+                      </SelectItem>
+                      <SelectItem key="3" className="">
+                        Rate
+                      </SelectItem>
                     </Select>
                   </div>
                   <div className="flex justify-end gap-2 mt-4">
@@ -447,7 +493,11 @@ export default function PolicyTable() {
                     >
                       Reset
                     </Button>
-                    <Button color="primary" onPress={handleApplyFilters}>
+                    <Button
+                      color="default"
+                      onPress={handleApplyFilters}
+                      className="bg-foreground text-background hover:bg-foreground/80"
+                    >
                       Applica
                     </Button>
                   </div>
@@ -497,6 +547,7 @@ export default function PolicyTable() {
     rowsPerPage,
     tempFilters,
     isPopoverOpen,
+    isDarkMode,
   ]);
 
   const bottomContent = useMemo(() => {
@@ -636,7 +687,7 @@ export default function PolicyTable() {
       case "actions":
         return (
           <div className="relative flex justify-end items-center gap-2">
-            <Dropdown>
+            <Dropdown className={isDarkMode ? "dark" : ""}>
               <DropdownTrigger>
                 <Button isIconOnly radius="full" size="sm" variant="light">
                   <Icon icon="solar:menu-dots-bold" width={16} />
@@ -644,6 +695,7 @@ export default function PolicyTable() {
               </DropdownTrigger>
               <DropdownMenu aria-label="Policy Actions">
                 <DropdownItem
+                  className="text-foreground-800"
                   key="view"
                   startContent={<Icon icon="solar:eye-linear" width={16} />}
                   onPress={() =>
@@ -658,6 +710,7 @@ export default function PolicyTable() {
                 </DropdownItem>
                 {Number(policy.duration) === 6 ? (
                   <DropdownItem
+                    className="text-foreground-800"
                     key="renew"
                     startContent={
                       <Icon icon="solar:restart-linear" width={16} />

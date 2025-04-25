@@ -3,10 +3,10 @@ import CustomerTable from "../../Components/Customer/Tables/CustomerTable";
 export default function CustomerDashboard() {
   document.title = "Clienti | MP Insurance";
   return (
-    <div className="py-10">
+    <div className="py-10 h-screen">
       <header>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground">
             Clienti
           </h1>
         </div>

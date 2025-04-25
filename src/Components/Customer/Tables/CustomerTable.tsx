@@ -17,6 +17,8 @@ import {
   TableHeader,
   TableRow,
   Avatar,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import axios from "axios";
@@ -180,14 +182,11 @@ export default function CustomerTable() {
           </span>
           <label className="flex items-center text-default-400 text-small">
             Righe per pagina:
-            <select
-              className="bg-transparent outline-none text-default-400 text-small ml-2"
-              onChange={() => setPage(1)}
-            >
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
+            <Select className="max-w-xs" defaultSelectedKeys={["10"]}>
+              <SelectItem key={10}>10</SelectItem>
+              <SelectItem key={20}>20</SelectItem>
+              <SelectItem key={50}>50</SelectItem>
+            </Select>
           </label>
         </div>
       </div>
@@ -329,7 +328,7 @@ export default function CustomerTable() {
   );
 
   return (
-    <Card shadow="sm" className="border-none">
+    <Card shadow="sm" className="border border-foreground/5">
       <CardBody className="p-0">
         <DeleteCustomerModal
           isOpen={deleteModalData.open}

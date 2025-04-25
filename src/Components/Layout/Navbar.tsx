@@ -1,6 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import {
   Avatar,
+  Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -17,6 +18,7 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import { useState } from "react";
 import Logo from "../../assets/MpLogo.png";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface NavigationItem {
   name: string;
@@ -29,6 +31,7 @@ interface NavigationItem {
 export default function NavbarComponent() {
   const currentUrl = window.location.pathname;
   const [isOpen, setIsOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
 
   function isSubRoute({
     currentUrl,
@@ -149,6 +152,21 @@ export default function NavbarComponent() {
             </Link>
           </NavbarItem>
         ))}
+
+        <NavbarItem className="!flex">
+          <Button
+            isIconOnly
+            radius="full"
+            size="sm"
+            variant="light"
+            onPress={toggleTheme}
+          >
+            <Icon
+              fontSize={23}
+              icon={isDarkMode ? "solar:sun-2-linear" : "solar:moon-linear"}
+            />
+          </Button>
+        </NavbarItem>
 
         {/* Profile dropdown */}
         <NavbarItem className="ml-2 !flex">

@@ -237,9 +237,11 @@ export default function VehiecleCard({
               <Icon
                 icon="solar:shield-warning-linear"
                 width={20}
-                className="text-warning"
+                className="text-orange-600"
               />
-              <p className="text-medium text-warning">Veicolo non assicurato</p>
+              <p className="text-medium text-orange-600">
+                Veicolo non assicurato
+              </p>
             </div>
           )}
         </CardBody>
