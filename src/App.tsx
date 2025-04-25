@@ -7,6 +7,7 @@ import Navbar from "./Components/Layout/Navbar";
 
 import Login from "./Pages/Login/Login";
 import Dashboard from "./Pages/Dashboard/Dashboard";
+import Accident from "./Pages/Accident/Accident";
 import CustomerDashboard from "./Pages/Customer/CustomerDashboard";
 import AddCustomerPage from "./Pages/Customer/AddCustomerPage";
 import ViewCustomerPage from "./Pages/Customer/ViewCustomerPage";
@@ -78,6 +79,7 @@ const EmployeeProtectedRoutes: React.FC = () => {
     <Routes>
       <Route element={<Outlet />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/accident" element={<Accident />} />
         <Route path="/customers" element={<CustomerDashboard />} />
         <Route path="/customers/add-customer" element={<AddCustomerPage />} />
         <Route
