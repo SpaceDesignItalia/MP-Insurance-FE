@@ -3,7 +3,6 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import PolicyTable from "../Tables/PolicyTable";
 
 export default function DashboardCards() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -153,7 +152,7 @@ export default function DashboardCards() {
   }, []);
 
   return (
-    <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {stats.map((item, index) => (
         <motion.div
           key={item.id}
@@ -170,11 +169,6 @@ export default function DashboardCards() {
                   width={24}
                 />
               </div>
-            </Card>
-          </motion.div>
-        ))}
-      </dl>
-
               <div className="ml-4 flex flex-col">
                 <dt className="text-sm font-medium text-foreground/70 truncate">
                   {item.name}
@@ -184,10 +178,9 @@ export default function DashboardCards() {
                 </dd>
               </div>
             </div>
-            <PolicyTable />
-          </div>
-        </div>
-      )}
-    </>
+          </Card>
+        </motion.div>
+      ))}
+    </div>
   );
 }
