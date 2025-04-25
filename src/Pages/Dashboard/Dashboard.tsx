@@ -7,11 +7,11 @@ export default function Dashboard() {
   document.title = "Dashboard | MP Insurance";
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 shadow-sm">
+    <div className="min-h-screen">
+      <header className="border-b border-foreground/10 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-black">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           </div>
         </div>
       </header>

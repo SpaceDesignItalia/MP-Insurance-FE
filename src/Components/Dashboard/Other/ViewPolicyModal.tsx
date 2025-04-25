@@ -17,7 +17,7 @@ import {
 import { Icon } from "@iconify/react";
 import dayjs from "dayjs";
 import ReactQuill from "react-quill";
-
+import { useTheme } from "../../../contexts/ThemeContext";
 interface Policy {
   policyId: number;
   fullName: string;
@@ -47,6 +47,7 @@ export default function ViewPolicyModal({
   isClosed,
   PolicyData,
 }: ViewPolicyModalProps) {
+  const { isDarkMode } = useTheme();
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Attiva":
@@ -87,13 +88,13 @@ export default function ViewPolicyModal({
       placement="center"
       backdrop="blur"
     >
-      <ModalContent>
+      <ModalContent className={isDarkMode ? "dark text-foreground" : ""}>
         {(onClose) => (
           <>
             <ModalHeader className="flex gap-2 items-center">
               <Icon
                 icon="solar:shield-keyhole-bold"
-                className="text-primary"
+                className="text-foreground/50"
                 width={24}
               />
               Dettagli Polizza
@@ -104,7 +105,7 @@ export default function ViewPolicyModal({
             <ModalBody className="p-6">
               <div className="flex flex-col space-y-6">
                 {/* Client Info */}
-                <div className="bg-zinc-100 rounded-xl p-4">
+                <div className="bg-foreground/5 rounded-xl p-4">
                   <User
                     name={PolicyData.fullName}
                     description={PolicyData.email}
@@ -119,15 +120,18 @@ export default function ViewPolicyModal({
 
                 {/* Policy Status Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card shadow="sm" className="border border-gray-200">
+                  <Card
+                    shadow="sm"
+                    className="border border-foreground/5 bg-foreground/20"
+                  >
                     <CardBody className="p-4">
                       <div className="flex flex-col items-center text-center">
                         <Icon
                           icon="solar:calendar-linear"
-                          className="text-primary mb-2"
+                          className="text-foreground/50 mb-2"
                           width={24}
                         />
-                        <p className="text-sm text-gray-500">Scadenza</p>
+                        <p className="text-sm text-foreground/60">Scadenza</p>
                         <p className="text-lg font-semibold">
                           {dayjs(PolicyData.endDate).format("DD/MM/YYYY")}
                         </p>
@@ -135,23 +139,26 @@ export default function ViewPolicyModal({
                     </CardBody>
                   </Card>
 
-                  <Card shadow="sm" className="border border-gray-200">
+                  <Card
+                    shadow="sm"
+                    className="border border-foreground/5 bg-foreground/20"
+                  >
                     <CardBody className="p-4">
                       <div className="flex flex-col items-center text-center">
                         {PolicyData.typeId == "2" ? (
                           <Icon
                             icon="mingcute:car-3-line"
-                            className="text-primary mb-2"
+                            className="text-foreground/50 mb-2"
                             width={24}
                           />
                         ) : (
                           <Icon
                             icon="mingcute:ebike-line"
-                            className="text-primary mb-2"
+                            className="text-foreground/50 mb-2"
                             width={24}
                           />
                         )}
-                        <p className="text-sm text-gray-500">Veicolo</p>
+                        <p className="text-sm text-foreground/60">Veicolo</p>
                         <p className="text-lg font-semibold">
                           {PolicyData.licensePlate}
                         </p>
@@ -159,15 +166,18 @@ export default function ViewPolicyModal({
                     </CardBody>
                   </Card>
 
-                  <Card shadow="sm" className="border border-gray-200">
+                  <Card
+                    shadow="sm"
+                    className="border border-foreground/5 bg-foreground/20"
+                  >
                     <CardBody className="p-4">
                       <div className="flex flex-col items-center text-center">
                         <Icon
                           icon="solar:wallet-money-linear"
-                          className="text-primary mb-2"
+                          className="text-foreground/50 mb-2"
                           width={24}
                         />
-                        <p className="text-sm text-gray-500">Importo</p>
+                        <p className="text-sm text-foreground/60">Importo</p>
                         <p className="text-lg font-semibold">
                           {PolicyData.amount} €
                         </p>
@@ -179,12 +189,12 @@ export default function ViewPolicyModal({
                 {/* Policy Details */}
                 <Tabs
                   aria-label="Policy details"
-                  color="primary"
+                  color="default"
                   variant="solid"
                   classNames={{
                     tab: "px-4 py-2",
                     tabList: "gap-6",
-                    cursor: "w-full bg-primary",
+                    cursor: "w-full",
                   }}
                 >
                   <Tab
@@ -275,12 +285,7 @@ export default function ViewPolicyModal({
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {PolicyData.types.map((type) => (
-                            <Chip
-                              key={type}
-                              color="primary"
-                              variant="bordered"
-                              radius="sm"
-                            >
+                            <Chip key={type} variant="bordered" radius="sm">
                               {type}
                             </Chip>
                           ))}
@@ -300,7 +305,7 @@ export default function ViewPolicyModal({
                   >
                     <div className="py-4">
                       {PolicyData.note ? (
-                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="border border-foreground/5 rounded-lg p-4 bg-foreground/20">
                           <ReactQuill
                             value={PolicyData.note}
                             readOnly={true}
@@ -308,7 +313,7 @@ export default function ViewPolicyModal({
                           />
                         </div>
                       ) : (
-                        <div className="text-center py-10 text-gray-500">
+                        <div className="text-center py-10 text-foreground/60">
                           <Icon
                             icon="solar:notes-broken"
                             className="mx-auto mb-2"
@@ -336,7 +341,7 @@ export default function ViewPolicyModal({
                 Chiudi
               </Button>
               <Button
-                color="primary"
+                color="default"
                 radius="full"
                 as="a"
                 href={`/customers/view-customer-data/${PolicyData.clientId}`}

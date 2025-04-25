@@ -68,13 +68,13 @@ const CustomCalendar: React.FC = () => {
             <li
               key={event.policyId}
               onClick={() => onEventClick(event)}
-              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 cursor-pointer transition-colors duration-150 text-sm bg-gradient-to-r from-zinc-100 to-zinc-200 border border-zinc-300 shadow-sm"
+              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 cursor-pointer transition-colors duration-150 text-sm bg-gradient-to-r from-red-500 to-danger border border-zinc-300 shadow-sm"
             >
               <div className="flex flex-col">
-                <span className="font-medium text-gray-900 truncate max-w-[120px]">
+                <span className="font-medium text-white truncate max-w-[120px]">
                   {event.fullName}
                 </span>
-                <div className="flex items-center text-xs text-gray-600">
+                <div className="flex items-center text-xs text-gray-200">
                   <Icon
                     icon="solar:car-linear"
                     width={12}
@@ -89,7 +89,7 @@ const CustomCalendar: React.FC = () => {
               <div className="flex flex-col items-end">
                 <Icon
                   icon="solar:arrow-right-linear"
-                  className="text-primary"
+                  className="text-white"
                   width={16}
                 />
               </div>

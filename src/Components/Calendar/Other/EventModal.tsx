@@ -52,7 +52,9 @@ export default function EventModal({
         return "success";
       case "Sospesa":
         return "warning";
-      case "Scaduta":
+      case "Terminata":
+        return "danger";
+      case "Terminata 6 mesi":
         return "danger";
       default:
         return "default";
@@ -171,7 +173,7 @@ export default function EventModal({
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Dettagli Polizza</h3>
                 <Chip color={getStatusColor(event.status)} variant="flat">
-                  {event.status}
+                  {event.status.replace("Terminata", "Scaduta")}
                 </Chip>
               </div>
 

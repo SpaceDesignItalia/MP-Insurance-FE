@@ -73,11 +73,11 @@ export default function ForgotPassword() {
             <div className="text-center mb-6">
               <Icon
                 icon="solar:letter-linear"
-                className="text-primary mx-auto mb-2"
+                className="text-foreground mx-auto mb-2"
                 width={40}
               />
               <h2 className="text-xl font-semibold">Recupera Password</h2>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-foreground/40 text-sm mt-2">
                 Inserisci la tua email per ricevere il codice di recupero
               </p>
             </div>
@@ -90,15 +90,15 @@ export default function ForgotPassword() {
               variant="bordered"
               radius="sm"
               startContent={
-                <Icon icon="solar:user-linear" className="text-gray-400" />
+                <Icon icon="solar:user-linear" className="text-foreground/40" />
               }
               isRequired
             />
 
             <Button
               type="submit"
-              color="primary"
-              className="w-full"
+              color="default"
+              className="w-full bg-foreground text-background hover:bg-foreground/80"
               radius="sm"
               isLoading={loading}
             >
@@ -113,11 +113,11 @@ export default function ForgotPassword() {
             <div className="text-center mb-6">
               <Icon
                 icon="solar:shield-keyhole-linear"
-                className="text-primary mx-auto mb-2"
+                className="text-foreground mx-auto mb-2"
                 width={40}
               />
               <h2 className="text-xl font-semibold">Verifica Codice</h2>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-foreground/40 text-sm mt-2">
                 Inserisci il codice di verifica ricevuto via email
               </p>
             </div>
@@ -145,9 +145,10 @@ export default function ForgotPassword() {
               </Button>
               <Button
                 type="submit"
-                color="primary"
+                color="default"
                 radius="sm"
                 isLoading={loading}
+                className="bg-foreground text-background hover:bg-foreground/80"
               >
                 Verifica
               </Button>
@@ -161,11 +162,11 @@ export default function ForgotPassword() {
             <div className="text-center mb-6">
               <Icon
                 icon="solar:lock-password-linear"
-                className="text-primary mx-auto mb-2"
+                className="text-foreground mx-auto mb-2"
                 width={40}
               />
               <h2 className="text-xl font-semibold">Nuova Password</h2>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-foreground/40 text-sm mt-2">
                 Inserisci la tua nuova password
               </p>
             </div>
@@ -178,7 +179,7 @@ export default function ForgotPassword() {
               variant="bordered"
               radius="sm"
               startContent={
-                <Icon icon="solar:lock-linear" className="text-gray-400" />
+                <Icon icon="solar:lock-linear" className="text-foreground/40" />
               }
               isRequired
             />
@@ -191,7 +192,7 @@ export default function ForgotPassword() {
               variant="bordered"
               radius="sm"
               startContent={
-                <Icon icon="solar:lock-linear" className="text-gray-400" />
+                <Icon icon="solar:lock-linear" className="text-foreground/40" />
               }
               isRequired
             />
@@ -201,14 +202,16 @@ export default function ForgotPassword() {
                 radius="sm"
                 startContent={<Icon icon="solar:arrow-left-linear" />}
                 onPress={() => setStep(2)}
+                className="bg-foreground text-background hover:bg-foreground/80"
               >
                 Indietro
               </Button>
               <Button
                 type="submit"
-                color="primary"
+                color="default"
                 radius="sm"
                 isLoading={loading}
+                className="bg-foreground text-background hover:bg-foreground/80"
               >
                 Conferma
               </Button>
@@ -219,7 +222,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardBody className="p-6">
           {error && (

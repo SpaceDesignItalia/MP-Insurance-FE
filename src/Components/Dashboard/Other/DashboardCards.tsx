@@ -159,40 +159,23 @@ export default function DashboardCards() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
-          <Card className="border border-slate-200 hover:border-slate-300 transition-all duration-200 hover:shadow-lg bg-white">
+          <Card className="border border-foreground/5 transition-all duration-200 hover:shadow-lg">
             <div className="flex p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                <Icon className="text-slate-700" icon={item.icon} width={24} />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground/10">
+                <Icon
+                  className="text-foreground/70"
+                  icon={item.icon}
+                  width={24}
+                />
               </div>
 
               <div className="ml-4 flex flex-col">
-                <dt className="text-sm font-medium text-slate-500 truncate">
+                <dt className="text-sm font-medium text-foreground/70 truncate">
                   {item.name}
                 </dt>
-                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                <dd className="mt-1 text-2xl font-semibold text-foreground">
                   {item.stat}
                 </dd>
-                {item.trend !== 0 && (
-                  <div className="mt-1 flex items-center text-sm">
-                    <span className="flex items-center text-slate-700">
-                      {item.trend > 0 ? (
-                        <Icon
-                          icon="heroicons:arrow-trending-up"
-                          className="h-4 w-4 mr-1"
-                        />
-                      ) : (
-                        <Icon
-                          icon="heroicons:arrow-trending-down"
-                          className="h-4 w-4 mr-1"
-                        />
-                      )}
-                      {Math.abs(item.trend)}%
-                    </span>
-                    <span className="text-slate-500 ml-1">
-                      rispetto al mese scorso
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </Card>
