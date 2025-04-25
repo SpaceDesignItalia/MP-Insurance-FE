@@ -16,6 +16,7 @@ import AddPolicyPage from "./Pages/Policy/AddPolicyPage";
 import AddVehiclePage from "./Pages/Customer/AddVehiclePage";
 import EditCustomerVehicles from "./Pages/Customer/EditCustomerVehicles";
 import ForgotPassword from "./Pages/Login/ForgotPassword";
+import AddAccidentPage from "./Pages/Accident/AddAccidentPage";
 
 const App: React.FC = () => {
   axios.defaults.baseURL = API_URL;
@@ -80,6 +81,7 @@ const EmployeeProtectedRoutes: React.FC = () => {
       <Route element={<Outlet />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/accident" element={<Accident />} />
+        <Route path="/accident/add-accident" element={<AddAccidentPage />} />
         <Route path="/customers" element={<CustomerDashboard />} />
         <Route path="/customers/add-customer" element={<AddCustomerPage />} />
         <Route

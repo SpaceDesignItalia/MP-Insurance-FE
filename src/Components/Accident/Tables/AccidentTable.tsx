@@ -147,7 +147,7 @@ export default function AccidentTable() {
           <div className="flex gap-3">
             <Button
               as={Link}
-              href="./accidents/add-accident"
+              href="./accident/add-accident"
               color="primary"
               radius="full"
               variant="solid"
