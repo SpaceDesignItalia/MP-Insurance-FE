@@ -60,6 +60,16 @@ export default function NavbarComponent() {
       }),
     },
     {
+      name: "Sinistri",
+      href: "/accident",
+      icon: <Icon fontSize={23} icon="hugeicons:accident" />,
+      requiredCondition: true,
+      current: isSubRoute({
+        currentUrl,
+        parentRoute: { href: "/lefts", subRoutes: ["/policy/add-policy"] },
+      }),
+    },
+    {
       name: "Clienti",
       href: "/customers",
       icon: <Icon fontSize={23} icon="solar:users-group-two-rounded-linear" />,
