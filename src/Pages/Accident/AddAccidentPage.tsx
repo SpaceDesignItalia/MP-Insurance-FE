@@ -1,3 +1,11 @@
+// Aggiungo l'interfaccia per Google Maps per TypeScript
+declare global {
+  interface Window {
+    google: any;
+    initMap: () => void;
+  }
+}
+
 import {
   Button,
   Card,
@@ -21,7 +29,12 @@ import {
   Tabs,
   Textarea,
   Tooltip,
-  useDisclosure
+  useDisclosure,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Calendar,
+  DateValue
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
@@ -42,6 +55,16 @@ interface Vehicle {
   model: string;
 }
 
+interface Document {
+  type: string;
+  file: File | null;
+}
+
+const API_KEYS = {
+  googleMaps: "AIzaSyB41DRubKWUHP7tGOqRZv2aLaF2UqHj0ag", // Chiave di sviluppo temporanea
+  openAI: "INSERISCI_QUI_LA_TUA_API_KEY_OPENAI"
+};
+
 export default function AddAccidentPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -54,6 +77,7 @@ export default function AddAccidentPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [generalData, setGeneralData] = useState({
     date: "",
@@ -89,7 +113,7 @@ export default function AddAccidentPage() {
     }
   ]);
 
-  const [documentsData, setDocumentsData] = useState([
+  const [documentsData, setDocumentsData] = useState<Document[]>([
     {
       type: "Foto",
       file: null
@@ -105,20 +129,20 @@ export default function AddAccidentPage() {
   });
 
   const weatherOptions = [
-    { value: "Soleggiato", icon: "solar:sun-bold" },
-    { value: "Nuvoloso", icon: "solar:cloud-bold" },
-    { value: "Pioggia", icon: "solar:cloud-rain-bold" },
-    { value: "Nebbia", icon: "solar:fog-bold" },
-    { value: "Neve", icon: "solar:snowflake-bold" },
-    { value: "Grandine", icon: "solar:cloud-snow-bold" }
+    { value: "Soleggiato", icon: "heroicons:sun" },
+    { value: "Nuvoloso", icon: "heroicons:cloud" },
+    { value: "Pioggia", icon: "heroicons:cloud-rain" },
+    { value: "Nebbia", icon: "heroicons:beaker" },
+    { value: "Neve", icon: "heroicons:swatch" },
+    { value: "Grandine", icon: "heroicons:bolt" }
   ];
 
-  const roadConditions = [
-    { value: "Asciutto", color: "success" },
-    { value: "Bagnato", color: "primary" },
-    { value: "Ghiacciato", color: "danger" },
-    { value: "Neve", color: "default" },
-    { value: "Dissestato", color: "warning" }
+  const roadConditionsArray = [
+    { value: "Asciutto", color: "success" as const },
+    { value: "Bagnato", color: "primary" as const },
+    { value: "Ghiacciato", color: "danger" as const },
+    { value: "Neve", color: "default" as const },
+    { value: "Dissestato", color: "warning" as const }
   ];
 
   useEffect(() => {
@@ -126,22 +150,106 @@ export default function AddAccidentPage() {
     fetchVehicles();
     calculateCompletion();
     
-    // Simula inizializzazione della mappa
-    if (mapRef.current) {
-      setTimeout(() => {
-        const mapElement = mapRef.current;
-        if (mapElement) {
-          mapElement.classList.add('map-loaded');
-        }
-      }, 500);
+    // Inizializzazione Google Maps
+    if (mapRef.current && API_KEYS.googleMaps !== "AIzaSyB41DRubKWUHP7tGOqRZv2aLaF2UqHj0ag") {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEYS.googleMaps}&libraries=places&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      
+      // Aggiungi la funzione initMap come callback globale
+      window.initMap = initMap;
+      
+      document.head.appendChild(script);
+      
+      return () => {
+        document.head.removeChild(script);
+        delete window.initMap;
+      };
     }
   }, []);
+  
+  const initMap = () => {
+    if (!mapRef.current || !window.google || !window.google.maps) {
+      console.error('Google Maps non è stato caricato correttamente');
+      return;
+    }
+
+    try {
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: { lat: 45.4642, lng: 9.1900 }, // Milano di default
+        zoom: 12,
+        mapTypeControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+      });
+      
+      const marker = new window.google.maps.Marker({
+        position: { lat: 45.4642, lng: 9.1900 },
+        map: map,
+        draggable: true,
+        title: 'Posizione incidente'
+      });
+      
+      marker.addListener('dragend', () => {
+        const position = marker.getPosition();
+        if (position) {
+          setGeneralData(prev => ({
+            ...prev,
+            coordinates: {
+              lat: position.lat(),
+              lng: position.lng()
+            }
+          }));
+        }
+      });
+
+      // Aggiungi il listener per il click sulla mappa
+      map.addListener('click', (event: any) => {
+        const newPosition = event.latLng;
+        marker.setPosition(newPosition);
+        setGeneralData(prev => ({
+          ...prev,
+          coordinates: {
+            lat: newPosition.lat(),
+            lng: newPosition.lng()
+          }
+        }));
+      });
+
+    } catch (error) {
+      console.error('Errore durante l\'inizializzazione della mappa:', error);
+    }
+  };
 
   useEffect(() => {
     if (formTouched) {
       calculateCompletion();
     }
   }, [generalData, partecipantsData, witnessesData, documentsData, liquidationData, formTouched]);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('drag-over');
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over');
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over');
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      handleDocumentChange(index, 'file', file);
+    }
+  };
 
   const calculateCompletion = () => {
     let totalScore = 0;
@@ -221,6 +329,15 @@ export default function AddAccidentPage() {
     }));
   };
 
+  const handleDateSelect = (date: DateValue) => {
+    setFormTouched(true);
+    const jsDate = new Date(date.toString());
+    setGeneralData(prev => ({
+      ...prev,
+      date: jsDate.toISOString().substring(0, 10)
+    }));
+  };
+
   const handlePartecipantChange = (index: number, field: string, value: any) => {
     setFormTouched(true);
     setPartecipantsData(prev => {
@@ -247,24 +364,34 @@ export default function AddAccidentPage() {
 
   const handleDocumentChange = (index: number, field: string, value: any) => {
     setFormTouched(true);
-    setDocumentsData(prev => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        [field]: value
-      };
-      return updated;
-    });
-
-    // Anteprima se è un file
+    
     if (field === 'file' && value instanceof File) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newDocuments = [...documentsData];
-        newDocuments[index].file = value;
-        setDocumentsData(newDocuments);
+      const newDocuments = [...documentsData];
+      newDocuments[index] = {
+        ...newDocuments[index],
+        file: value
       };
-      reader.readAsDataURL(value);
+      setDocumentsData(newDocuments);
+      
+      // Anteprima se è un'immagine
+      if (value.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            // Solo per visualizzare l'anteprima, non cambia lo stato
+          }
+        };
+        reader.readAsDataURL(value);
+      }
+    } else {
+      setDocumentsData(prev => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          [field]: value
+        };
+        return updated;
+      });
     }
   };
 
@@ -276,6 +403,15 @@ export default function AddAccidentPage() {
     setLiquidationData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleLiquidationDateSelect = (date: DateValue) => {
+    setFormTouched(true);
+    const jsDate = new Date(date.toString());
+    setLiquidationData(prev => ({
+      ...prev,
+      liquidationDate: jsDate.toISOString().substring(0, 10)
     }));
   };
 
@@ -356,7 +492,11 @@ export default function AddAccidentPage() {
           vehicleId: Number(p.vehicleId)
         })),
         witnesses: witnessesData,
-        documents: documentsData,
+        documents: documentsData.map(doc => ({
+          type: doc.type,
+          fileName: doc.file ? doc.file.name : null
+          // In produzione, qui caricheresti il file su un server e salveresti il percorso
+        })),
         liquidation: {
           ...liquidationData,
           estimatedAmount: Number(liquidationData.estimatedAmount),
@@ -365,9 +505,6 @@ export default function AddAccidentPage() {
           responsibilityPercentage: Number(liquidationData.responsibilityPercentage)
         }
       };
-
-      // Simulazione caricamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Chiamata API per salvare l'incidente
       await axios.post(
@@ -403,12 +540,109 @@ export default function AddAccidentPage() {
     return true;
   };
 
-  const generateWithAI = () => {
+  const generateWithAI = async () => {
+    // Verifica che la chiave API sia stata impostata
+    if (API_KEYS.openAI === "INSERISCI_QUI_LA_TUA_API_KEY_OPENAI") {
+      alert("Per utilizzare questa funzionalità, è necessario configurare una chiave API di OpenAI.");
+      return;
+    }
+  
     setAiGenerating(true);
     
-    // Simula l'elaborazione AI
-    setTimeout(() => {
-      // Aggiunge una descrizione generata dall'AI
+    try {
+      // Prepara il prompt per ChatGPT con tutte le informazioni disponibili
+      let prompt = "Genera una descrizione dettagliata di un incidente stradale con le seguenti caratteristiche:\n\n";
+      
+      if (generalData.date) prompt += `Data: ${generalData.date}\n`;
+      if (generalData.time) prompt += `Ora: ${generalData.time}\n`;
+      if (generalData.location) prompt += `Luogo: ${generalData.location}\n`;
+      if (generalData.weather) prompt += `Condizioni meteo: ${generalData.weather}\n`;
+      if (generalData.roadConditions) prompt += `Condizioni stradali: ${generalData.roadConditions}\n`;
+      
+      prompt += "\nVeicoli coinvolti:\n";
+      partecipantsData.forEach((p, i) => {
+        const vehicle = vehicles.find(v => v.id.toString() === p.vehicleId);
+        if (vehicle) {
+          prompt += `Veicolo ${i+1}: ${vehicle.brand} ${vehicle.model} (Targa: ${vehicle.plate}), Ruolo: ${p.role}\n`;
+          if (p.damages) prompt += `Danni: ${p.damages}\n`;
+          prompt += `Feriti: ${p.injured ? 'Sì' : 'No'}\n`;
+        }
+      });
+      
+      // Chiamata a ChatGPT API (implementazione reale)
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: "Sei un assistente specializzato nella descrizione di incidenti stradali per compagnie assicurative. Scrivi in italiano."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEYS.openAI}`
+          }
+        }
+      );
+      
+      // Estrarre la risposta generata
+      const generatedDescription = response.data.choices[0].message.content;
+      setGeneralData(prev => ({...prev, description: generatedDescription}));
+      
+      // Se ci sono veicoli senza descrizione dei danni, genera anche quelli
+      const updatedParticipants = [...partecipantsData];
+      let hasUpdated = false;
+      
+      for (let i = 0; i < updatedParticipants.length; i++) {
+        if (!updatedParticipants[i].damages && updatedParticipants[i].vehicleId) {
+          // Genera descrizione danni per questo veicolo
+          const damagePrompt = `Descrivi i danni riportati da un veicolo ${updatedParticipants[i].role.toLowerCase()} in un incidente stradale. Elenca solo i danni, in modo conciso.`;
+          
+          const damageResponse = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              model: "gpt-3.5-turbo",
+              messages: [
+                {
+                  role: "system",
+                  content: "Sei un perito assicurativo. Rispondi in modo conciso."
+                },
+                {
+                  role: "user",
+                  content: damagePrompt
+                }
+              ],
+              temperature: 0.7,
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${API_KEYS.openAI}`
+              }
+            }
+          );
+          
+          updatedParticipants[i].damages = damageResponse.data.choices[0].message.content;
+          hasUpdated = true;
+        }
+      }
+      
+      if (hasUpdated) {
+        setPartecipantsData(updatedParticipants);
+      }
+      
+    } catch (error) {
+      console.error("Errore nella generazione con AI:", error);
+      // Fallback per demo
       const aiDescriptions = [
         "Incidente avvenuto all'incrocio tra via Roma e corso Italia. Il veicolo A procedeva da nord verso sud quando, giunto all'incrocio, impattava con il veicolo B che proveniva da ovest. Entrambi i conducenti dichiarano di aver rispettato il semaforo verde. Danni riportati: veicolo A, danneggiamento della parte anteriore destra; veicolo B, danneggiamento della parte anteriore sinistra.",
         "Sinistro verificatosi sulla strada statale 106 in direzione nord. Il veicolo assicurato procedeva nella propria corsia quando, a causa dell'asfalto bagnato, perdeva il controllo slittando e urtando il guardrail sul lato destro. Non si segnalano altri veicoli coinvolti. Danni riportati: fiancata destra, paraurti anteriore e cerchione anteriore destro.",
@@ -417,55 +651,65 @@ export default function AddAccidentPage() {
       
       const randomDesc = aiDescriptions[Math.floor(Math.random() * aiDescriptions.length)];
       setGeneralData(prev => ({...prev, description: randomDesc}));
-      
-      // Aggiunge dettagli ai danni
-      if (partecipantsData.length > 0) {
-        const damageDescriptions = [
-          "Paraurti anteriore danneggiato, faro destro rotto, cofano ammaccato",
-          "Fiancata sinistra graffiata, specchietto retrovisore sinistro divelto",
-          "Paraurti posteriore ammaccato, portellone posteriore danneggiato"
-        ];
-        
-        setPartecipantsData(prev => {
-          return prev.map((p, i) => ({
-            ...p, 
-            damages: damageDescriptions[i % damageDescriptions.length]
-          }));
-        });
-      }
-      
+    } finally {
       setAiGenerating(false);
       setFormTouched(true);
-    }, 2000);
+    }
   };
 
   const getWeatherByLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         try {
-          // In una vera implementazione, chiameresti un'API meteo
-          // Qui simulo una risposta casuale
-          const weatherTypes = weatherOptions.map(w => w.value);
-          const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
-          
+          // Aggiorna le coordinate
           setGeneralData(prev => ({
             ...prev, 
-            weather: randomWeather,
             coordinates: {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             }
           }));
           
-          // Simula l'aggiornamento della posizione sulla mappa
-          if (mapRef.current) {
-            const marker = document.createElement('div');
-            marker.className = 'map-marker';
-            marker.innerHTML = '<div class="marker-pin"></div>';
-            mapRef.current.appendChild(marker);
+          // Aggiorna la mappa
+          if (window.google && mapRef.current) {
+            const map = new window.google.maps.Map(mapRef.current, {
+              center: { 
+                lat: position.coords.latitude, 
+                lng: position.coords.longitude 
+              },
+              zoom: 14,
+            });
+            
+            const marker = new window.google.maps.Marker({
+              position: { 
+                lat: position.coords.latitude, 
+                lng: position.coords.longitude 
+              },
+              map: map,
+              draggable: true
+            });
+            
+            // Ottieni indirizzo dalla posizione e aggiorna il campo location
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ location: { 
+              lat: position.coords.latitude, 
+              lng: position.coords.longitude 
+            }}, (results: any, status: string) => {
+              if (status === 'OK' && results && results[0]) {
+                setGeneralData(prev => ({
+                  ...prev,
+                  location: results[0].formatted_address
+                }));
+              }
+            });
+            
+            // Simula dati meteo (in produzione usare un'API meteo reale)
+            const weatherTypes = weatherOptions.map(w => w.value);
+            const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+            setGeneralData(prev => ({...prev, weather: randomWeather}));
           }
         } catch (error) {
-          console.error("Errore nel recupero delle informazioni meteo:", error);
+          console.error("Errore nel recupero della posizione:", error);
         }
       });
     }
@@ -481,16 +725,6 @@ export default function AddAccidentPage() {
               <p className="text-slate-500 mt-1">Compila il form per registrare un nuovo incidente</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden sm:block">
-                <Progress 
-                  value={completionPercentage} 
-                  size="sm" 
-                  color={completionPercentage > 80 ? "success" : (completionPercentage > 40 ? "primary" : "warning")}
-                  className="max-w-md" 
-                  
-                  showValueLabel={true}
-                />
-              </div>
               <Button
                 variant="light"
                 onPress={() => navigate("/accident")}
@@ -518,7 +752,7 @@ export default function AddAccidentPage() {
                   key="general" 
                   title={
                     <div className="flex items-center gap-2">
-                      <Icon icon="solar:info-circle-linear" className="w-4 h-4" />
+                      <Icon icon="heroicons:information-circle" className="w-4 h-4" />
                       <span>Generale</span>
                     </div>
                   }
@@ -527,15 +761,26 @@ export default function AddAccidentPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Data *</label>
-                        <Input
-                          type="date"
-                          name="date"
-                          value={generalData.date}
-                          onChange={handleGeneralChange}
-                          required
-                          variant="bordered"
-                          className="max-w-full"
-                        />
+                        <Popover placement="bottom">
+                          <PopoverTrigger>
+                            <Input
+                              type="text"
+                              name="date"
+                              value={generalData.date ? new Date(generalData.date).toLocaleDateString() : ""}
+                              placeholder="Seleziona una data"
+                              className="cursor-pointer"
+                              readOnly
+                              variant="bordered"
+                              startContent={<Icon icon="heroicons:calendar" className="text-slate-400" />}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <Calendar
+                              color="primary"
+                              onChange={handleDateSelect}
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Ora *</label>
@@ -568,7 +813,7 @@ export default function AddAccidentPage() {
                               onClick={getWeatherByLocation}
                               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-primary-500"
                             >
-                              <Icon icon="solar:map-point-linear" className="w-5 h-5" />
+                              <Icon icon="heroicons:map-pin" className="w-5 h-5" />
                             </button>
                           </Tooltip>
                         </div>
@@ -616,7 +861,7 @@ export default function AddAccidentPage() {
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Condizioni stradali</label>
                         <div className="flex flex-wrap gap-2">
-                          {roadConditions.map((condition) => (
+                          {roadConditionsArray.map((condition) => (
                             <Chip
                               key={condition.value}
                               variant={generalData.roadConditions === condition.value ? "solid" : "bordered"}
@@ -652,7 +897,7 @@ export default function AddAccidentPage() {
                             size="sm"
                             variant="flat"
                             color="primary"
-                            startContent={<Icon icon="solar:magic-stick-linear" className="w-4 h-4" />}
+                            startContent={<Icon icon="heroicons:sparkles" className="w-4 h-4" />}
                             isLoading={aiGenerating}
                             onPress={generateWithAI}
                           >
@@ -672,19 +917,14 @@ export default function AddAccidentPage() {
                       <div className="md:col-span-2">
                         <div className="border border-dashed border-slate-300 rounded-lg p-3 bg-slate-50">
                           <div className="flex items-center space-x-2 text-sm text-slate-600 mb-2">
-                            <Icon icon="solar:map-linear" className="w-5 h-5 text-primary-500" />
+                            <Icon icon="heroicons:map" className="w-5 h-5 text-primary-500" />
                             <span className="font-medium">Posizione dell'incidente</span>
                           </div>
                           <div 
                             ref={mapRef} 
                             className="w-full h-48 bg-slate-100 rounded-lg relative overflow-hidden map-container"
                           >
-                            <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                              <p>Mappa interattiva</p>
-                              <div className="map-loading absolute inset-0 bg-slate-100 flex items-center justify-center">
-                                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                              </div>
-                            </div>
+                            {/* Google Maps verrà caricato qui */}
                           </div>
                         </div>
                       </div>
@@ -696,7 +936,7 @@ export default function AddAccidentPage() {
                   key="partecipants" 
                   title={
                     <div className="flex items-center gap-2">
-                      <Icon icon="solar:car-linear" className="w-4 h-4" />
+                      <Icon icon="heroicons:truck" className="w-4 h-4" />
                       <span>Partecipanti</span>
                     </div>
                   }
@@ -713,7 +953,7 @@ export default function AddAccidentPage() {
                               color="danger"
                               onPress={() => removePartecipant(index)}
                             >
-                              <Icon icon="solar:trash-bin-trash-linear" className="w-4 h-4" />
+                              <Icon icon="heroicons:trash" className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
@@ -778,7 +1018,7 @@ export default function AddAccidentPage() {
                         variant="flat"
                         color="primary"
                         onPress={addPartecipant}
-                        startContent={<Icon icon="solar:add-circle-linear" className="w-4 h-4" />}
+                        startContent={<Icon icon="heroicons:plus-circle" className="w-4 h-4" />}
                       >
                         Aggiungi veicolo
                       </Button>
@@ -790,7 +1030,7 @@ export default function AddAccidentPage() {
                   key="witnesses" 
                   title={
                     <div className="flex items-center gap-2">
-                      <Icon icon="solar:users-group-rounded-linear" className="w-4 h-4" />
+                      <Icon icon="heroicons:user-group" className="w-4 h-4" />
                       <span>Testimoni</span>
                     </div>
                   }
@@ -807,7 +1047,7 @@ export default function AddAccidentPage() {
                               color="danger"
                               onPress={() => removeWitness(index)}
                             >
-                              <Icon icon="solar:trash-bin-trash-linear" className="w-4 h-4" />
+                              <Icon icon="heroicons:trash" className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
@@ -864,7 +1104,7 @@ export default function AddAccidentPage() {
                         variant="flat"
                         color="primary"
                         onPress={addWitness}
-                        startContent={<Icon icon="solar:add-circle-linear" className="w-4 h-4" />}
+                        startContent={<Icon icon="heroicons:plus-circle" className="w-4 h-4" />}
                       >
                         Aggiungi testimone
                       </Button>
@@ -876,7 +1116,7 @@ export default function AddAccidentPage() {
                   key="documents" 
                   title={
                     <div className="flex items-center gap-2">
-                      <Icon icon="solar:document-linear" className="w-4 h-4" />
+                      <Icon icon="heroicons:document" className="w-4 h-4" />
                       <span>Documenti</span>
                     </div>
                   }
@@ -893,7 +1133,7 @@ export default function AddAccidentPage() {
                               color="danger"
                               onPress={() => removeDocument(index)}
                             >
-                              <Icon icon="solar:trash-bin-trash-linear" className="w-4 h-4" />
+                              <Icon icon="heroicons:trash" className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
@@ -914,7 +1154,14 @@ export default function AddAccidentPage() {
                           </div>
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-700">File</label>
-                            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
+                            <div
+                              className={`border-2 border-dashed border-slate-300 rounded-lg p-4 text-center 
+                              transition-colors duration-200 
+                              ${document.file ? 'bg-green-50 border-green-300' : 'hover:bg-slate-50 hover:border-primary-300'}`}
+                              onDragOver={e => handleDragOver(e)}
+                              onDragLeave={e => handleDragLeave(e)}
+                              onDrop={e => handleDrop(e, index)}
+                            >
                               <Input
                                 type="file"
                                 onChange={(e) => {
@@ -924,22 +1171,34 @@ export default function AddAccidentPage() {
                                 }}
                                 className="hidden"
                                 id={`file-upload-${index}`}
+                                ref={fileInputRef}
                               />
                               <label 
                                 htmlFor={`file-upload-${index}`} 
                                 className="cursor-pointer flex flex-col items-center justify-center"
                               >
-                                <Icon icon="solar:upload-linear" className="w-6 h-6 text-slate-400" />
-                                <p className="mt-2 text-sm text-slate-500">
-                                  {document.file ? (document.file as File).name : "Clicca per caricare un file"}
-                                </p>
-                                {document.file && document.type === "Foto" && (
+                                {document.file ? (
+                                  <>
+                                    <Icon icon="heroicons:document-check" className="w-6 h-6 text-green-500" />
+                                    <p className="mt-2 text-sm text-green-700">
+                                      {document.file.name}
+                                    </p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Icon icon="heroicons:arrow-up-tray" className="w-6 h-6 text-slate-400" />
+                                    <p className="mt-2 text-sm text-slate-500">
+                                      Clicca o trascina qui per caricare un file
+                                    </p>
+                                  </>
+                                )}
+                                {document.file && document.type === "Foto" && document.file.type.startsWith('image/') && (
                                   <Button
                                     size="sm"
                                     variant="flat"
                                     color="primary"
                                     className="mt-2"
-                                    onPress={() => openImagePreview(document.file as File)}
+                                    onPress={() => document.file && openImagePreview(document.file)}
                                   >
                                     Anteprima
                                   </Button>
@@ -955,7 +1214,7 @@ export default function AddAccidentPage() {
                         variant="flat"
                         color="primary"
                         onPress={addDocument}
-                        startContent={<Icon icon="solar:add-circle-linear" className="w-4 h-4" />}
+                        startContent={<Icon icon="heroicons:plus-circle" className="w-4 h-4" />}
                       >
                         Aggiungi documento
                       </Button>
@@ -967,7 +1226,7 @@ export default function AddAccidentPage() {
                   key="liquidation" 
                   title={
                     <div className="flex items-center gap-2">
-                      <Icon icon="solar:euro-linear" className="w-4 h-4" />
+                      <Icon icon="heroicons:banknotes" className="w-4 h-4" />
                       <span>Liquidazione</span>
                     </div>
                   }
@@ -1005,14 +1264,25 @@ export default function AddAccidentPage() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Data liquidazione</label>
-                        <Input
-                          type="date"
-                          name="liquidationDate"
-                          value={liquidationData.liquidationDate}
-                          onChange={handleLiquidationChange}
-                          variant="bordered"
-                          className="max-w-full"
-                        />
+                        <Popover placement="bottom">
+                          <PopoverTrigger>
+                            <Input
+                              type="text"
+                              value={liquidationData.liquidationDate ? new Date(liquidationData.liquidationDate).toLocaleDateString() : ""}
+                              placeholder="Seleziona una data"
+                              className="cursor-pointer"
+                              readOnly
+                              variant="bordered"
+                              startContent={<Icon icon="heroicons:calendar" className="text-slate-400" />}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <Calendar
+                              color="primary"
+                              onChange={handleLiquidationDateSelect}
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">Franchigia</label>
@@ -1064,7 +1334,7 @@ export default function AddAccidentPage() {
                   type="submit"
                   isLoading={loading}
                   isDisabled={!isFormValid()}
-                  startContent={<Icon icon="solar:check-circle-linear" className="w-4 h-4" />}
+                  startContent={<Icon icon="heroicons:check-circle" className="w-4 h-4" />}
                 >
                   Salva
                 </Button>
@@ -1092,47 +1362,17 @@ export default function AddAccidentPage() {
         </ModalContent>
       </Modal>
 
-      <style jsx>{`
-        .map-container {
-          position: relative;
-        }
-        .map-loading {
-          opacity: 1;
-          transition: opacity 0.3s ease-in-out;
-        }
-        .map-loaded .map-loading {
-          opacity: 0;
-        }
-        .map-marker {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 32px;
-          height: 32px;
-          z-index: 2;
-        }
-        .marker-pin {
-          width: 20px;
-          height: 20px;
-          border-radius: 50% 50% 50% 0;
-          background: #4f46e5;
-          position: absolute;
-          transform: rotate(-45deg);
-          left: 50%;
-          top: 50%;
-          margin: -15px 0 0 -10px;
-        }
-        .marker-pin::after {
-          content: '';
-          width: 10px;
-          height: 10px;
-          margin: 5px 0 0 5px;
-          background: white;
-          position: absolute;
-          border-radius: 50%;
-        }
-      `}</style>
+      <style>
+        {`
+          .map-container {
+            position: relative;
+          }
+          .drag-over {
+            background-color: rgba(79, 70, 229, 0.1);
+            border-color: #4f46e5;
+          }
+        `}
+      </style>
     </div>
   );
 } 
