@@ -1909,12 +1909,14 @@ export default function AddAccidentPage() {
                               File
                             </label>
                             <div
-                              className={`border-2 border-dashed border-slate-300 rounded-lg p-4 text-center 
+                              className={`border-2 border-dashed rounded-lg p-4 text-center 
                               transition-colors duration-200 
                               ${
                                 document.file
                                   ? "bg-green-50 border-green-300"
-                                  : "hover:bg-slate-50 hover:border-primary-300"
+                                  : isDarkMode
+                                  ? "border-foreground/10 hover:border-foreground/20 hover:bg-foreground/5"
+                                  : "border-slate-300 hover:bg-slate-50 hover:border-primary-300"
                               }`}
                               onDragOver={(e) => handleDragOver(e)}
                               onDragLeave={(e) => handleDragLeave(e)}
@@ -2216,8 +2218,11 @@ export default function AddAccidentPage() {
       position: relative;
     }
     .drag-over {
-      background-color: rgba(79, 70, 229, 0.1);
-      border-color: #4f46e5;
+      ${
+        isDarkMode
+          ? "background-color: rgba(99, 102, 241, 0.1) !important; border-color: rgba(99, 102, 241, 0.5) !important;"
+          : "background-color: rgba(79, 70, 229, 0.1); border-color: #4f46e5;"
+      }
     }
     
     /* Fix per i radio button solo in dark mode */
