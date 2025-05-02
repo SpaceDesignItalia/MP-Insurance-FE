@@ -1394,7 +1394,11 @@ export default function AddAccidentPage() {
                         className="border border-foreground/5 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-white">
+                          <h3
+                            className={`text-lg font-medium ${
+                              isDarkMode ? "text-white" : "text-black"
+                            }`}
+                          >
                             Veicolo {index + 1}
                           </h3>
                           {partecipantsData.length > 1 && (
@@ -1628,7 +1632,11 @@ export default function AddAccidentPage() {
                         className="border border-foreground/5 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-white">
+                          <h3
+                            className={`text-lg font-medium ${
+                              isDarkMode ? "text-white" : "text-black"
+                            }`}
+                          >
                             Testimone {index + 1}
                           </h3>
                           {witnessesData.length > 1 && (
@@ -1799,7 +1807,11 @@ export default function AddAccidentPage() {
                         className="border border-foreground/5 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-white">
+                          <h3
+                            className={`text-lg font-medium ${
+                              isDarkMode ? "text-white" : "text-black"
+                            }`}
+                          >
                             Documento {index + 1}
                           </h3>
                           {documentsData.length > 1 && (
