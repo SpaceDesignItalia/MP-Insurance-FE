@@ -16,7 +16,7 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Logo from "../../assets/MpLogo.png";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -32,6 +32,34 @@ export default function NavbarComponent() {
   const currentUrl = window.location.pathname;
   const [isOpen, setIsOpen] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [dropdownAnimation, setDropdownAnimation] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showUserMenu) {
+      setDropdownAnimation("animate-dropdown-open");
+    } else {
+      setDropdownAnimation("");
+    }
+  }, [showUserMenu]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowUserMenu(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   function isSubRoute({
     currentUrl,
@@ -168,33 +196,77 @@ export default function NavbarComponent() {
           </Button>
         </NavbarItem>
 
-        {/* Profile dropdown */}
+        {/* Custom Profile dropdown */}
         <NavbarItem className="ml-2 !flex">
-          <Dropdown placement="bottom-start" radius="sm">
-            <DropdownTrigger>
-              <div className="-m-1.5 flex items-center p-1.5 cursor-pointer">
-                <Avatar
-                  className="h-8 w-8 rounded-full bg-gray-100"
-                  alt=""
-                  src={Logo}
+          <div
+            className="relative flex items-center justify-center"
+            ref={dropdownRef}
+          >
+            <div
+              className="-m-1.5 flex items-center p-1.5 cursor-pointer"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+            >
+              <Avatar
+                className="h-8 w-8 rounded-full bg-gray-100"
+                alt=""
+                src={Logo}
+              />
+              <span className="hidden lg:flex lg:items-center">
+                <ChevronDownIcon
+                  className={`ml-2 h-5 w-5 text-gray-400 transition-transform duration-200 ${
+                    showUserMenu ? "rotate-180" : ""
+                  }`}
+                  aria-hidden="true"
                 />
-                <span className="hidden lg:flex lg:items-center">
-                  <ChevronDownIcon
-                    className="ml-2 h-5 w-5 text-gray-400"
-                    aria-hidden="true"
+              </span>
+            </div>
+
+            {showUserMenu && (
+              <div
+                className={`absolute w-48 rounded-md shadow-lg py-1 z-50 ${
+                  isDarkMode ? "bg-gray-800" : "bg-white"
+                } ring-1 ring-black ring-opacity-5 ${dropdownAnimation}`}
+                style={{
+                  top: "100%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  marginTop: "0.5rem",
+                  opacity: 0,
+                  animation: "dropdownFade 0.3s ease forwards",
+                }}
+              >
+                <style>
+                  {`
+                  @keyframes dropdownFade {
+                    from {
+                      opacity: 0;
+                      transform: translateY(-10px) translateX(-50%);
+                    }
+                    to {
+                      opacity: 1;
+                      transform: translateY(0) translateX(-50%);
+                    }
+                  }
+                  `}
+                </style>
+                <button
+                  onClick={logout}
+                  className={`flex w-full items-center px-4 py-2 text-sm ${
+                    isDarkMode
+                      ? "text-red-400 hover:bg-gray-700"
+                      : "text-red-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon
+                    fontSize={23}
+                    icon="solar:logout-linear"
+                    className="mr-2"
                   />
-                </span>
-              </div>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="User Actions" variant="flat">
-              <DropdownItem key="logout" color="danger" onPress={logout}>
-                <div className="flex flex-row gap-2 ">
-                  <Icon fontSize={23} icon="solar:logout-linear" />
                   Logout
-                </div>
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+                </button>
+              </div>
+            )}
+          </div>
         </NavbarItem>
       </NavbarContent>
 
