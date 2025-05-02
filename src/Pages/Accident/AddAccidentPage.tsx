@@ -179,6 +179,14 @@ export default function AddAccidentPage() {
     }
   }, []);
 
+  // Aggiungiamo un nuovo useEffect che reinizializza la mappa quando cambia la modalità dark
+  useEffect(() => {
+    // Se la mappa è già stata caricata, reinizializzala con i nuovi stili basati sulla modalità dark
+    if (window.google && window.google.maps && mapRef.current) {
+      initMap();
+    }
+  }, [isDarkMode]);
+
   const initMap = () => {
     if (!mapRef.current || !window.google || !window.google.maps) {
       console.error("Google Maps non è stato caricato correttamente");
@@ -186,85 +194,85 @@ export default function AddAccidentPage() {
     }
 
     try {
-      // Stili per la mappa in modalità scura
+      // Stili per la mappa in modalità scura - più scuri e con maggiore contrasto
       const darkModeMapStyles = [
-        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        { elementType: "geometry", stylers: [{ color: "#1a202c" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#1a202c" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#a0aec0" }] },
         {
           featureType: "administrative.locality",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#d59563" }],
+          stylers: [{ color: "#d69e2e" }],
         },
         {
           featureType: "poi",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#d59563" }],
+          stylers: [{ color: "#d69e2e" }],
         },
         {
           featureType: "poi.park",
           elementType: "geometry",
-          stylers: [{ color: "#263c3f" }],
+          stylers: [{ color: "#1e293b" }],
         },
         {
           featureType: "poi.park",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#6b9a76" }],
+          stylers: [{ color: "#68d391" }],
         },
         {
           featureType: "road",
           elementType: "geometry",
-          stylers: [{ color: "#38414e" }],
+          stylers: [{ color: "#2d3748" }],
         },
         {
           featureType: "road",
           elementType: "geometry.stroke",
-          stylers: [{ color: "#212a37" }],
+          stylers: [{ color: "#1a202c" }],
         },
         {
           featureType: "road",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#9ca5b3" }],
+          stylers: [{ color: "#a0aec0" }],
         },
         {
           featureType: "road.highway",
           elementType: "geometry",
-          stylers: [{ color: "#746855" }],
+          stylers: [{ color: "#4a5568" }],
         },
         {
           featureType: "road.highway",
           elementType: "geometry.stroke",
-          stylers: [{ color: "#1f2835" }],
+          stylers: [{ color: "#1a202c" }],
         },
         {
           featureType: "road.highway",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#f3d19c" }],
+          stylers: [{ color: "#f6e05e" }],
         },
         {
           featureType: "transit",
           elementType: "geometry",
-          stylers: [{ color: "#2f3948" }],
+          stylers: [{ color: "#2d3748" }],
         },
         {
           featureType: "transit.station",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#d59563" }],
+          stylers: [{ color: "#d69e2e" }],
         },
         {
           featureType: "water",
           elementType: "geometry",
-          stylers: [{ color: "#17263c" }],
+          stylers: [{ color: "#0c1220" }],
         },
         {
           featureType: "water",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#515c6d" }],
+          stylers: [{ color: "#4a5568" }],
         },
         {
           featureType: "water",
           elementType: "labels.text.stroke",
-          stylers: [{ color: "#17263c" }],
+          stylers: [{ color: "#0c1220" }],
         },
       ];
 
@@ -448,7 +456,17 @@ export default function AddAccidentPage() {
       const res = await axios.get("/Vehicle/GET/GetAllVehicles", {
         withCredentials: true,
       });
-      setVehicles(res.data);
+
+      // Aggiorna il formato dei dati dei veicoli per uso futuro
+      if (res.data && res.data.length > 0) {
+        const formattedVehicles = res.data.map((vehicle: any) => ({
+          ...vehicle,
+          displayInfo: `${vehicle.licensePlate} - ${vehicle.brand} ${vehicle.model}`,
+        }));
+        setVehicles(formattedVehicles);
+      } else {
+        setVehicles(res.data);
+      }
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
@@ -930,11 +948,11 @@ export default function AddAccidentPage() {
                 selectedKey={selectedTab}
                 onSelectionChange={(key) => setSelectedTab(key as string)}
                 aria-label="Accident form tabs"
-                color="primary"
+                color={isDarkMode ? "default" : "primary"}
                 variant="underlined"
                 classNames={{
                   tabList: "gap-6",
-                  cursor: "bg-primary-500",
+                  cursor: isDarkMode ? "bg-white" : "bg-primary-500",
                   tab: isDarkMode
                     ? "text-gray-400 data-[selected=true]:text-white data-[selected=true]:font-medium"
                     : "data-[selected=true]:text-primary-600 data-[selected=true]:font-medium",
@@ -976,37 +994,16 @@ export default function AddAccidentPage() {
                                   : ""
                               }
                               placeholder="Seleziona una data"
+                              description="Clicca per aprire il calendario"
                               className="cursor-pointer"
                               readOnly
                               variant="bordered"
-                              startContent={
-                                <Icon
-                                  icon="heroicons:calendar"
-                                  className="text-slate-400"
-                                />
-                              }
                             />
                           </PopoverTrigger>
-                          <PopoverContent
-                            className={
-                              isDarkMode
-                                ? "bg-gray-800 border border-gray-700"
-                                : ""
-                            }
-                          >
+                          <PopoverContent>
                             <Calendar
                               color="primary"
                               onChange={handleDateSelect}
-                              classNames={{
-                                base: isDarkMode
-                                  ? "bg-gray-800 text-white"
-                                  : "",
-                                headerWrapper: isDarkMode ? "text-white" : "",
-                                gridHeader: isDarkMode ? "text-gray-400" : "",
-                                cell: isDarkMode
-                                  ? "[&:not([data-outside-month])]:text-white [&[data-outside-month]]:text-gray-600 [&[data-outside-month]]:opacity-70 data-[selected=true]:bg-primary-500 data-[selected=true]:text-white hover:bg-gray-700"
-                                  : "[&:not([data-outside-month])]:text-gray-900 [&[data-outside-month]]:text-gray-400 [&[data-outside-month]]:opacity-70",
-                              }}
                             />
                           </PopoverContent>
                         </Popover>
@@ -1325,24 +1322,50 @@ export default function AddAccidentPage() {
                           variant="bordered"
                           placeholder="Descrivi cosa è successo..."
                           minRows={3}
+                          classNames={{
+                            input: isDarkMode ? "bg-[#171a23] text-white" : "",
+                            inputWrapper: isDarkMode
+                              ? "bg-[#171a23] border-[#2d3748]"
+                              : "",
+                          }}
                         />
                       </div>
 
                       <div className="md:col-span-2">
-                        <div className="border border-dashed border-slate-300 rounded-lg p-3 bg-slate-50">
-                          <div className="flex items-center space-x-2 text-sm text-slate-600 mb-2">
+                        <div
+                          className={`border border-dashed ${
+                            isDarkMode
+                              ? "border-[#2d3748] bg-[#171a23]"
+                              : "border-slate-300 bg-slate-50"
+                          } rounded-lg p-3`}
+                        >
+                          <div
+                            className={`flex items-center space-x-2 text-sm ${
+                              isDarkMode ? "text-gray-300" : "text-slate-600"
+                            } mb-2`}
+                          >
                             <Icon
                               icon="heroicons:map"
                               className="w-5 h-5 text-primary-500"
                             />
-                            <span className="font-medium">
+                            <span
+                              className={`font-medium ${
+                                isDarkMode ? "text-white" : ""
+                              }`}
+                            >
                               Posizione dell'incidente
                             </span>
                           </div>
                           <div
                             ref={mapRef}
-                            className="w-full h-48 bg-slate-100 rounded-lg relative overflow-hidden map-container"
+                            className={`w-full h-48 rounded-lg relative overflow-hidden map-container ${
+                              isDarkMode ? "bg-[#171a23]" : "bg-slate-100"
+                            }`}
                           >
+                            {/* Overlay scuro per la mappa in dark mode */}
+                            {isDarkMode && (
+                              <div className="absolute inset-0 bg-black opacity-30 pointer-events-none z-10" />
+                            )}
                             {/* Google Maps verrà caricato qui */}
                           </div>
                         </div>
@@ -1364,10 +1387,10 @@ export default function AddAccidentPage() {
                     {partecipantsData.map((partecipant, index) => (
                       <div
                         key={index}
-                        className="border border-slate-200 rounded-lg p-4 space-y-4"
+                        className="border border-gray-700 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-slate-900">
+                          <h3 className="text-lg font-medium text-white">
                             Veicolo {index + 1}
                           </h3>
                           {partecipantsData.length > 1 && (
@@ -1417,6 +1440,18 @@ export default function AddAccidentPage() {
                                     : "",
                                 })),
                               ]}
+                              classNames={{
+                                trigger: isDarkMode
+                                  ? "bg-[#171a23] text-white border-[#2d3748]"
+                                  : "",
+                                base: isDarkMode ? "bg-[#171a23]" : "",
+                                popoverContent: isDarkMode
+                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  : "",
+                                listbox: isDarkMode
+                                  ? "bg-[#171a23] text-white"
+                                  : "",
+                              }}
                             >
                               {(item) => (
                                 <SelectItem
@@ -1446,10 +1481,67 @@ export default function AddAccidentPage() {
                                 handlePartecipantChange(index, "role", value)
                               }
                               orientation="horizontal"
+                              classNames={{
+                                wrapper: "gap-4",
+                                label: isDarkMode ? "text-white" : "",
+                              }}
                             >
-                              <Radio value="Responsabile">Responsabile</Radio>
-                              <Radio value="Danneggiato">Danneggiato</Radio>
-                              <Radio value="Terzo">Terzo</Radio>
+                              <Radio
+                                value="Responsabile"
+                                color={isDarkMode ? "default" : "primary"}
+                                classNames={{
+                                  base:
+                                    isDarkMode &&
+                                    partecipant.role === "Responsabile"
+                                      ? "border-white"
+                                      : "",
+                                  label: isDarkMode
+                                    ? partecipant.role === "Responsabile"
+                                      ? "text-white font-medium"
+                                      : "text-gray-300"
+                                    : "",
+                                  control: isDarkMode ? "bg-white" : "",
+                                }}
+                              >
+                                Responsabile
+                              </Radio>
+                              <Radio
+                                value="Danneggiato"
+                                color={isDarkMode ? "default" : "primary"}
+                                classNames={{
+                                  base:
+                                    isDarkMode &&
+                                    partecipant.role === "Danneggiato"
+                                      ? "border-white"
+                                      : "",
+                                  label: isDarkMode
+                                    ? partecipant.role === "Danneggiato"
+                                      ? "text-white font-medium"
+                                      : "text-gray-300"
+                                    : "",
+                                  control: isDarkMode ? "bg-white" : "",
+                                }}
+                              >
+                                Danneggiato
+                              </Radio>
+                              <Radio
+                                value="Terzo"
+                                color={isDarkMode ? "default" : "primary"}
+                                classNames={{
+                                  base:
+                                    isDarkMode && partecipant.role === "Terzo"
+                                      ? "border-white"
+                                      : "",
+                                  label: isDarkMode
+                                    ? partecipant.role === "Terzo"
+                                      ? "text-white font-medium"
+                                      : "text-gray-300"
+                                    : "",
+                                  control: isDarkMode ? "bg-white" : "",
+                                }}
+                              >
+                                Terzo
+                              </Radio>
                             </RadioGroup>
                           </div>
                           <div className="space-y-2 md:col-span-2">
@@ -1484,6 +1576,15 @@ export default function AddAccidentPage() {
                                   checked
                                 )
                               }
+                              color={isDarkMode ? "default" : "primary"}
+                              classNames={{
+                                base: "",
+                                label: isDarkMode ? "text-white" : "",
+                                wrapper:
+                                  isDarkMode && partecipant.injured
+                                    ? "after:bg-[#94a3b8] after:border-[#94a3b8]"
+                                    : "",
+                              }}
                             >
                               Presenza di feriti
                             </Checkbox>
@@ -1522,10 +1623,10 @@ export default function AddAccidentPage() {
                     {witnessesData.map((witness, index) => (
                       <div
                         key={index}
-                        className="border border-slate-200 rounded-lg p-4 space-y-4"
+                        className="border border-gray-700 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-slate-900">
+                          <h3 className="text-lg font-medium text-white">
                             Testimone {index + 1}
                           </h3>
                           {witnessesData.length > 1 && (
@@ -1564,6 +1665,14 @@ export default function AddAccidentPage() {
                               variant="bordered"
                               placeholder="Nome"
                               className="max-w-full"
+                              classNames={{
+                                input: isDarkMode
+                                  ? "bg-[#171a23] text-white"
+                                  : "",
+                                inputWrapper: isDarkMode
+                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  : "",
+                              }}
                             />
                           </div>
                           <div className="space-y-2">
@@ -1587,6 +1696,14 @@ export default function AddAccidentPage() {
                               variant="bordered"
                               placeholder="Cognome"
                               className="max-w-full"
+                              classNames={{
+                                input: isDarkMode
+                                  ? "bg-[#171a23] text-white"
+                                  : "",
+                                inputWrapper: isDarkMode
+                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  : "",
+                              }}
                             />
                           </div>
                           <div className="space-y-2">
@@ -1610,6 +1727,14 @@ export default function AddAccidentPage() {
                               variant="bordered"
                               placeholder="+39 XXX XXXXXXX"
                               className="max-w-full"
+                              classNames={{
+                                input: isDarkMode
+                                  ? "bg-[#171a23] text-white"
+                                  : "",
+                                inputWrapper: isDarkMode
+                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  : "",
+                              }}
                             />
                           </div>
                           <div className="space-y-2">
@@ -1633,6 +1758,14 @@ export default function AddAccidentPage() {
                               variant="bordered"
                               placeholder="email@esempio.com"
                               className="max-w-full"
+                              classNames={{
+                                input: isDarkMode
+                                  ? "bg-[#171a23] text-white"
+                                  : "",
+                                inputWrapper: isDarkMode
+                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  : "",
+                              }}
                             />
                           </div>
                         </div>
@@ -1669,10 +1802,10 @@ export default function AddAccidentPage() {
                     {documentsData.map((document, index) => (
                       <div
                         key={index}
-                        className="border border-slate-200 rounded-lg p-4 space-y-4"
+                        className="border border-gray-700 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-slate-900">
+                          <h3 className="text-lg font-medium text-white">
                             Documento {index + 1}
                           </h3>
                           {documentsData.length > 1 && (
@@ -1927,6 +2060,12 @@ export default function AddAccidentPage() {
                           min="0"
                           step="0.01"
                           className="max-w-full"
+                          classNames={{
+                            input: isDarkMode ? "bg-[#171a23] text-white" : "",
+                            inputWrapper: isDarkMode
+                              ? "bg-[#171a23] border-[#2d3748]"
+                              : "",
+                          }}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1960,26 +2099,10 @@ export default function AddAccidentPage() {
                               }
                             />
                           </PopoverTrigger>
-                          <PopoverContent
-                            className={
-                              isDarkMode
-                                ? "bg-gray-800 border border-gray-700"
-                                : ""
-                            }
-                          >
+                          <PopoverContent>
                             <Calendar
                               color="primary"
                               onChange={handleLiquidationDateSelect}
-                              classNames={{
-                                base: isDarkMode
-                                  ? "bg-gray-800 text-white"
-                                  : "",
-                                headerWrapper: isDarkMode ? "text-white" : "",
-                                gridHeader: isDarkMode ? "text-gray-400" : "",
-                                cell: isDarkMode
-                                  ? "[&:not([data-outside-month])]:text-white [&[data-outside-month]]:text-gray-600 [&[data-outside-month]]:opacity-70 data-[selected=true]:bg-primary-500 data-[selected=true]:text-white hover:bg-gray-700"
-                                  : "[&:not([data-outside-month])]:text-gray-900 [&[data-outside-month]]:text-gray-400 [&[data-outside-month]]:opacity-70",
-                              }}
                             />
                           </PopoverContent>
                         </Popover>
@@ -2095,56 +2218,30 @@ export default function AddAccidentPage() {
 
       <style>
         {`
-          .map-container {
-            position: relative;
-          }
-          .drag-over {
-            background-color: ${
-              isDarkMode ? "rgba(79, 70, 229, 0.2)" : "rgba(79, 70, 229, 0.1)"
-            };
-            border-color: #4f46e5;
-          }
-          /* Stili globali per select e date picker in dark mode */
-          .select-in-dark {
-            color: white;
-            background-color: #1f2937;
-          }
-          .select-in-dark [data-selected=true] {
-            background-color: #4f46e5 !important;
-            color: white !important;
-          }
-          .dark-calendar [data-selected=true] {
-            background-color: #4f46e5 !important;
-            color: white !important;
-          }
-          /* Uniformare il radius per tutti i select e normalizzare gli sfondi con gli altri input */
-          [data-hero] [data-slot=base][class*=select-] {
-            border-radius: 0.5rem;
-            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
-          }
-          /* Correggere lo stile per i trigger dei select per adattarsi agli altri input */
-          [data-hero] [data-slot=trigger] {
-            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
-            border-color: ${isDarkMode ? "#2d3748" : "#e2e8f0"} !important;
-            color: ${isDarkMode ? "#e2e8f0" : "#1a202c"} !important;
-          }
-          /* Input in modalità scura/chiara per avere la stessa apparenza dei select */
-          [data-hero] input[class*=input-], 
-          [data-hero] textarea[class*=textarea-] {
-            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
-            border-color: ${isDarkMode ? "#2d3748" : "#e2e8f0"} !important;
-            color: ${isDarkMode ? "#e2e8f0" : "#1a202c"} !important;
-          }
-          [data-hero] [data-slot=listbox] {
-            border-radius: 0.5rem;
-            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
-          }
-          /* Mantenere lo sfondo del popover */
-          [data-hero] [data-slot=popoverContent] {
-            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
-            border-color: ${isDarkMode ? "#2d3748" : "#e2e8f0"} !important;
-          }
-        `}
+    .map-container {
+      position: relative;
+    }
+    .drag-over {
+      background-color: rgba(79, 70, 229, 0.1);
+      border-color: #4f46e5;
+    }
+    
+    /* Fix per i radio button solo in dark mode */
+    body.dark [data-hero] [data-slot="point"] {
+      background-color: white !important;
+    }
+    
+    /* Fix per le checkbox selezionate in dark mode */
+    body.dark [data-hero] [data-slot="wrapper"][data-selected="true"]::after {
+      background-color: #94a3b8 !important;
+      border-color: #94a3b8 !important;
+    }
+    
+    /* Segno di spunta nero all'interno della checkbox in dark mode */
+    body.dark [data-hero] [data-slot="wrapper"][data-selected="true"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke-width='2.5' viewBox='0 0 24 24' stroke='black' aria-hidden='true'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M4.5 12.75l6 6 9-13.5'%3E%3C/path%3E%3C/svg%3E") !important;
+    }
+  `}
       </style>
     </div>
   );

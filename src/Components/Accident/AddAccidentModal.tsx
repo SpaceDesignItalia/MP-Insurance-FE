@@ -152,17 +152,13 @@ export default function AddAccidentModal({
                   required
                   items={[
                     { id: "empty", text: "Seleziona una polizza" },
-                    ...policies.map(policy => ({
+                    ...policies.map((policy) => ({
                       id: policy.id.toString(),
-                      text: `${policy.policyNumber} - ${policy.customerName} - ${policy.vehiclePlate}`
-                    }))
+                      text: `${policy.policyNumber} - ${policy.customerName} - ${policy.vehiclePlate}`,
+                    })),
                   ]}
                 >
-                  {(item) => (
-                    <SelectItem key={item.id}>
-                      {item.text}
-                    </SelectItem>
-                  )}
+                  {(item) => <SelectItem key={item.id}>{item.text}</SelectItem>}
                 </Select>
               </div>
               <div className="space-y-2">
@@ -233,4 +229,4 @@ export default function AddAccidentModal({
       </ModalContent>
     </Modal>
   );
-} 
+}
