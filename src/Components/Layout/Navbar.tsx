@@ -181,21 +181,6 @@ export default function NavbarComponent() {
           </NavbarItem>
         ))}
 
-        <NavbarItem className="!flex">
-          <Button
-            isIconOnly
-            radius="full"
-            size="sm"
-            variant="light"
-            onPress={toggleTheme}
-          >
-            <Icon
-              fontSize={23}
-              icon={isDarkMode ? "solar:sun-2-linear" : "solar:moon-linear"}
-            />
-          </Button>
-        </NavbarItem>
-
         {/* Custom Profile dropdown */}
         <NavbarItem className="ml-2 !flex">
           <div
@@ -223,9 +208,9 @@ export default function NavbarComponent() {
 
             {showUserMenu && (
               <div
-                className={`absolute w-48 rounded-md shadow-lg py-1 z-50 ${
+                className={`absolute w-56 rounded-xl overflow-hidden shadow-xl z-50 ${
                   isDarkMode ? "bg-gray-800" : "bg-white"
-                } ring-1 ring-black ring-opacity-5 ${dropdownAnimation}`}
+                } ${dropdownAnimation}`}
                 style={{
                   top: "100%",
                   left: "50%",
@@ -249,21 +234,44 @@ export default function NavbarComponent() {
                   }
                   `}
                 </style>
-                <button
-                  onClick={logout}
-                  className={`flex w-full items-center px-4 py-2 text-sm ${
-                    isDarkMode
-                      ? "text-red-400 hover:bg-gray-700"
-                      : "text-red-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <Icon
-                    fontSize={23}
-                    icon="solar:logout-linear"
-                    className="mr-2"
-                  />
-                  Logout
-                </button>
+
+                <div className="p-1">
+                  {/* Theme toggle button */}
+                  <button
+                    onClick={toggleTheme}
+                    className={`flex w-full items-center rounded-lg px-3 py-2 text-sm transition-colors ${
+                      isDarkMode
+                        ? "text-white hover:bg-gray-700"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon
+                      fontSize={20}
+                      icon={
+                        isDarkMode ? "solar:sun-2-linear" : "solar:moon-linear"
+                      }
+                      className="mr-2"
+                    />
+                    {isDarkMode ? "Modalità chiara" : "Modalità scura"}
+                  </button>
+
+                  {/* Logout button */}
+                  <button
+                    onClick={logout}
+                    className={`flex w-full items-center rounded-lg px-3 py-2 text-sm transition-colors ${
+                      isDarkMode
+                        ? "text-white hover:bg-gray-700"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon
+                      fontSize={20}
+                      icon="solar:logout-linear"
+                      className="mr-2"
+                    />
+                    Logout
+                  </button>
+                </div>
               </div>
             )}
           </div>
