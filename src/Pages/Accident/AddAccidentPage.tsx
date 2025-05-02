@@ -196,9 +196,9 @@ export default function AddAccidentPage() {
     try {
       // Stili per la mappa in modalità scura - più scuri e con maggiore contrasto
       const darkModeMapStyles = [
-        { elementType: "geometry", stylers: [{ color: "#1a202c" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#1a202c" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#a0aec0" }] },
+        { elementType: "geometry", stylers: [{ color: "#18181b" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#18181b" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
         {
           featureType: "administrative.locality",
           elementType: "labels.text.fill",
@@ -212,7 +212,7 @@ export default function AddAccidentPage() {
         {
           featureType: "poi.park",
           elementType: "geometry",
-          stylers: [{ color: "#1e293b" }],
+          stylers: [{ color: "#27272a" }],
         },
         {
           featureType: "poi.park",
@@ -222,27 +222,27 @@ export default function AddAccidentPage() {
         {
           featureType: "road",
           elementType: "geometry",
-          stylers: [{ color: "#2d3748" }],
+          stylers: [{ color: "#3f3f46" }],
         },
         {
           featureType: "road",
           elementType: "geometry.stroke",
-          stylers: [{ color: "#1a202c" }],
+          stylers: [{ color: "#27272a" }],
         },
         {
           featureType: "road",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#a0aec0" }],
+          stylers: [{ color: "#94a3b8" }],
         },
         {
           featureType: "road.highway",
           elementType: "geometry",
-          stylers: [{ color: "#4a5568" }],
+          stylers: [{ color: "#52525b" }],
         },
         {
           featureType: "road.highway",
           elementType: "geometry.stroke",
-          stylers: [{ color: "#1a202c" }],
+          stylers: [{ color: "#27272a" }],
         },
         {
           featureType: "road.highway",
@@ -252,7 +252,7 @@ export default function AddAccidentPage() {
         {
           featureType: "transit",
           elementType: "geometry",
-          stylers: [{ color: "#2d3748" }],
+          stylers: [{ color: "#3f3f46" }],
         },
         {
           featureType: "transit.station",
@@ -262,17 +262,17 @@ export default function AddAccidentPage() {
         {
           featureType: "water",
           elementType: "geometry",
-          stylers: [{ color: "#0c1220" }],
+          stylers: [{ color: "#171717" }],
         },
         {
           featureType: "water",
           elementType: "labels.text.fill",
-          stylers: [{ color: "#4a5568" }],
+          stylers: [{ color: "#52525b" }],
         },
         {
           featureType: "water",
           elementType: "labels.text.stroke",
-          stylers: [{ color: "#0c1220" }],
+          stylers: [{ color: "#171717" }],
         },
       ];
 
@@ -906,11 +906,15 @@ export default function AddAccidentPage() {
 
   return (
     <div
-      className={`min-h-screen ${isDarkMode ? "bg-black" : "bg-slate-50"} py-8`}
+      className={`min-h-screen ${
+        isDarkMode ? "bg-background" : "bg-slate-50"
+      } py-8`}
     >
       <div className="container mx-auto px-4">
         <Card
-          className={`mx-auto max-w-5xl ${isDarkMode ? "bg-gray-900" : ""}`}
+          className={`mx-auto max-w-5xl ${
+            isDarkMode ? "border border-foreground/5" : ""
+          }`}
         >
           <CardHeader className="flex justify-between items-center">
             <div>
@@ -1083,14 +1087,14 @@ export default function AddAccidentPage() {
                           placeholder="Seleziona una polizza"
                           classNames={{
                             trigger: isDarkMode
-                              ? "bg-[#171a23] text-white border-[#2d3748]"
+                              ? "text-white border-foreground/10"
                               : "",
-                            base: isDarkMode ? "bg-[#171a23]" : "",
+                            base: isDarkMode ? "" : "",
                             popoverContent: isDarkMode
-                              ? "bg-[#171a23] border-[#2d3748]"
+                              ? "bg-neutral-800 border-foreground/10"
                               : "",
                             listbox: isDarkMode
-                              ? "bg-[#171a23] text-white"
+                              ? "bg-neutral-800 text-white"
                               : "",
                           }}
                           items={(policies || []).map((policy) => {
@@ -1226,14 +1230,14 @@ export default function AddAccidentPage() {
                           variant="bordered"
                           classNames={{
                             trigger: isDarkMode
-                              ? "bg-[#171a23] text-white border-[#2d3748]"
+                              ? "text-white border-foreground/10"
                               : "",
-                            base: isDarkMode ? "bg-[#171a23]" : "",
+                            base: isDarkMode ? "" : "",
                             popoverContent: isDarkMode
-                              ? "bg-[#171a23] border-[#2d3748]"
+                              ? "bg-neutral-800 border-foreground/10"
                               : "",
                             listbox: isDarkMode
-                              ? "bg-[#171a23] text-white"
+                              ? "bg-neutral-800 text-white"
                               : "",
                           }}
                         >
@@ -1323,9 +1327,9 @@ export default function AddAccidentPage() {
                           placeholder="Descrivi cosa è successo..."
                           minRows={3}
                           classNames={{
-                            input: isDarkMode ? "bg-[#171a23] text-white" : "",
+                            input: isDarkMode ? "text-white" : "",
                             inputWrapper: isDarkMode
-                              ? "bg-[#171a23] border-[#2d3748]"
+                              ? "border-foreground/10"
                               : "",
                           }}
                         />
@@ -1335,7 +1339,7 @@ export default function AddAccidentPage() {
                         <div
                           className={`border border-dashed ${
                             isDarkMode
-                              ? "border-[#2d3748] bg-[#171a23]"
+                              ? "border-foreground/10 bg-foreground/5"
                               : "border-slate-300 bg-slate-50"
                           } rounded-lg p-3`}
                         >
@@ -1359,7 +1363,7 @@ export default function AddAccidentPage() {
                           <div
                             ref={mapRef}
                             className={`w-full h-48 rounded-lg relative overflow-hidden map-container ${
-                              isDarkMode ? "bg-[#171a23]" : "bg-slate-100"
+                              isDarkMode ? "bg-foreground/5" : "bg-slate-100"
                             }`}
                           >
                             {/* Overlay scuro per la mappa in dark mode */}
@@ -1387,7 +1391,7 @@ export default function AddAccidentPage() {
                     {partecipantsData.map((partecipant, index) => (
                       <div
                         key={index}
-                        className="border border-gray-700 rounded-lg p-4 space-y-4"
+                        className="border border-foreground/5 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
                           <h3 className="text-lg font-medium text-white">
@@ -1431,25 +1435,23 @@ export default function AddAccidentPage() {
                               }
                               required
                               variant="bordered"
-                              items={[
-                                { id: "", text: "Seleziona un veicolo" },
-                                ...(vehicles || []).map((vehicle) => ({
-                                  id: vehicle?.vehicleId?.toString() || "",
-                                  text: vehicle
-                                    ? `${vehicle.licensePlate} - ${vehicle.brand} ${vehicle.model}`
-                                    : "",
-                                })),
-                              ]}
+                              placeholder="Seleziona un veicolo"
+                              items={(vehicles || []).map((vehicle) => ({
+                                id: vehicle?.vehicleId?.toString() || "",
+                                text: vehicle
+                                  ? `${vehicle.licensePlate} - ${vehicle.brand} ${vehicle.model}`
+                                  : "",
+                              }))}
                               classNames={{
                                 trigger: isDarkMode
-                                  ? "bg-[#171a23] text-white border-[#2d3748]"
+                                  ? "text-white border-foreground/10"
                                   : "",
-                                base: isDarkMode ? "bg-[#171a23]" : "",
+                                base: isDarkMode ? "" : "",
                                 popoverContent: isDarkMode
-                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  ? "bg-neutral-800 border-foreground/10"
                                   : "",
                                 listbox: isDarkMode
-                                  ? "bg-[#171a23] text-white"
+                                  ? "bg-neutral-800 text-white"
                                   : "",
                               }}
                             >
@@ -1582,7 +1584,7 @@ export default function AddAccidentPage() {
                                 label: isDarkMode ? "text-white" : "",
                                 wrapper:
                                   isDarkMode && partecipant.injured
-                                    ? "after:bg-[#94a3b8] after:border-[#94a3b8]"
+                                    ? "after:bg-gray-400 after:border-gray-400"
                                     : "",
                               }}
                             >
@@ -1623,7 +1625,7 @@ export default function AddAccidentPage() {
                     {witnessesData.map((witness, index) => (
                       <div
                         key={index}
-                        className="border border-gray-700 rounded-lg p-4 space-y-4"
+                        className="border border-foreground/5 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
                           <h3 className="text-lg font-medium text-white">
@@ -1666,11 +1668,9 @@ export default function AddAccidentPage() {
                               placeholder="Nome"
                               className="max-w-full"
                               classNames={{
-                                input: isDarkMode
-                                  ? "bg-[#171a23] text-white"
-                                  : "",
+                                input: isDarkMode ? "text-white" : "",
                                 inputWrapper: isDarkMode
-                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  ? "border-foreground/10"
                                   : "",
                               }}
                             />
@@ -1697,11 +1697,9 @@ export default function AddAccidentPage() {
                               placeholder="Cognome"
                               className="max-w-full"
                               classNames={{
-                                input: isDarkMode
-                                  ? "bg-[#171a23] text-white"
-                                  : "",
+                                input: isDarkMode ? "text-white" : "",
                                 inputWrapper: isDarkMode
-                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  ? "border-foreground/10"
                                   : "",
                               }}
                             />
@@ -1728,11 +1726,9 @@ export default function AddAccidentPage() {
                               placeholder="+39 XXX XXXXXXX"
                               className="max-w-full"
                               classNames={{
-                                input: isDarkMode
-                                  ? "bg-[#171a23] text-white"
-                                  : "",
+                                input: isDarkMode ? "text-white" : "",
                                 inputWrapper: isDarkMode
-                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  ? "border-foreground/10"
                                   : "",
                               }}
                             />
@@ -1759,11 +1755,9 @@ export default function AddAccidentPage() {
                               placeholder="email@esempio.com"
                               className="max-w-full"
                               classNames={{
-                                input: isDarkMode
-                                  ? "bg-[#171a23] text-white"
-                                  : "",
+                                input: isDarkMode ? "text-white" : "",
                                 inputWrapper: isDarkMode
-                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  ? "border-foreground/10"
                                   : "",
                               }}
                             />
@@ -1802,7 +1796,7 @@ export default function AddAccidentPage() {
                     {documentsData.map((document, index) => (
                       <div
                         key={index}
-                        className="border border-gray-700 rounded-lg p-4 space-y-4"
+                        className="border border-foreground/5 rounded-lg p-4 space-y-4"
                       >
                         <div className="flex justify-between items-center">
                           <h3 className="text-lg font-medium text-white">
@@ -1843,14 +1837,14 @@ export default function AddAccidentPage() {
                               variant="bordered"
                               classNames={{
                                 trigger: isDarkMode
-                                  ? "bg-[#171a23] text-white border-[#2d3748]"
+                                  ? "text-white border-foreground/10"
                                   : "",
-                                base: isDarkMode ? "bg-[#171a23]" : "",
+                                base: isDarkMode ? "" : "",
                                 popoverContent: isDarkMode
-                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  ? "bg-neutral-800 border-foreground/10"
                                   : "",
                                 listbox: isDarkMode
-                                  ? "bg-[#171a23] text-white"
+                                  ? "bg-neutral-800 text-white"
                                   : "",
                               }}
                             >
@@ -2061,9 +2055,9 @@ export default function AddAccidentPage() {
                           step="0.01"
                           className="max-w-full"
                           classNames={{
-                            input: isDarkMode ? "bg-[#171a23] text-white" : "",
+                            input: isDarkMode ? "text-white" : "",
                             inputWrapper: isDarkMode
-                              ? "bg-[#171a23] border-[#2d3748]"
+                              ? "border-foreground/10"
                               : "",
                           }}
                         />
@@ -2233,8 +2227,8 @@ export default function AddAccidentPage() {
     
     /* Fix per le checkbox selezionate in dark mode */
     body.dark [data-hero] [data-slot="wrapper"][data-selected="true"]::after {
-      background-color: #94a3b8 !important;
-      border-color: #94a3b8 !important;
+      background-color: rgb(156 163 175) !important; /* gray-400 */
+      border-color: rgb(156 163 175) !important; /* gray-400 */
     }
     
     /* Segno di spunta nero all'interno della checkbox in dark mode */

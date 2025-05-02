@@ -13,6 +13,7 @@ import {
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Policy {
   id: number;
@@ -34,6 +35,7 @@ export default function AddAccidentModal({
 }: AddAccidentModalProps) {
   const [loading, setLoading] = useState(false);
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -105,51 +107,110 @@ export default function AddAccidentModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-      <ModalContent>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      className={isDarkMode ? "bg-gray-900" : ""}
+    >
+      <ModalContent className={isDarkMode ? "bg-gray-900 border-gray-700" : ""}>
         <form onSubmit={handleSubmit}>
-          <ModalHeader className="flex flex-col gap-1">
+          <ModalHeader
+            className={`flex flex-col gap-1 ${isDarkMode ? "text-white" : ""}`}
+          >
             Nuovo Incidente
           </ModalHeader>
           <ModalBody>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Data</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Data
+                </label>
                 <Input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
                   required
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Ora</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Ora
+                </label>
                 <Input
                   type="time"
                   name="time"
                   value={formData.time}
                   onChange={handleInputChange}
                   required
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Luogo</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Luogo
+                </label>
                 <Input
                   type="text"
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
                   required
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Polizza</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Polizza
+                </label>
                 <Select
                   name="policyId"
                   selectedKeys={[formData.policyId]}
                   onChange={handleSelectChange}
                   required
+                  classNames={{
+                    trigger: isDarkMode
+                      ? "bg-gray-900 text-white border-gray-700"
+                      : "",
+                    base: isDarkMode ? "bg-gray-900" : "",
+                    popoverContent: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                    listbox: isDarkMode ? "bg-gray-900 text-white" : "",
+                  }}
                   items={[
                     { id: "empty", text: "Seleziona una polizza" },
                     ...policies.map((policy) => ({
@@ -158,11 +219,28 @@ export default function AddAccidentModal({
                     })),
                   ]}
                 >
-                  {(item) => <SelectItem key={item.id}>{item.text}</SelectItem>}
+                  {(item) => (
+                    <SelectItem
+                      key={item.id}
+                      className={
+                        isDarkMode
+                          ? "text-white data-[selected=true]:bg-primary-600"
+                          : ""
+                      }
+                    >
+                      {item.text}
+                    </SelectItem>
+                  )}
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Importo Stimato</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Importo Stimato
+                </label>
                 <Input
                   type="number"
                   name="estimatedAmount"
@@ -171,10 +249,22 @@ export default function AddAccidentModal({
                   required
                   min="0"
                   step="0.01"
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Franchigia</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Franchigia
+                </label>
                 <Input
                   type="number"
                   name="deductible"
@@ -183,10 +273,20 @@ export default function AddAccidentModal({
                   required
                   min="0"
                   step="0.01"
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
                   Percentuale Responsabilità
                 </label>
                 <Input
@@ -198,22 +298,44 @@ export default function AddAccidentModal({
                   min="0"
                   max="100"
                   step="1"
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
               <div className="col-span-2 space-y-2">
-                <label className="text-sm font-medium">Descrizione</label>
+                <label
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-gray-300" : ""
+                  }`}
+                >
+                  Descrizione
+                </label>
                 <Textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   required
                   minRows={3}
+                  classNames={{
+                    input: isDarkMode ? "bg-gray-900 text-white" : "",
+                    inputWrapper: isDarkMode
+                      ? "bg-gray-900 border-gray-700"
+                      : "",
+                  }}
                 />
               </div>
             </div>
           </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={onClose}>
+          <ModalFooter className={isDarkMode ? "border-gray-700" : ""}>
+            <Button
+              variant="light"
+              onPress={onClose}
+              className={isDarkMode ? "text-gray-300" : ""}
+            >
               Annulla
             </Button>
             <Button
