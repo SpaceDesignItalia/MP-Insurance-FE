@@ -34,25 +34,31 @@ import {
   PopoverTrigger,
   PopoverContent,
   Calendar,
-  DateValue
+  DateValue,
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Policy {
   id: number;
   policyNumber: string;
   customerName: string;
   vehiclePlate: string;
+  vehicleId?: number;
+  vehicleDetails?: any;
 }
 
 interface Vehicle {
-  id: number;
-  plate: string;
+  vehicleId: number;
+  licensePlate: string;
   brand: string;
   model: string;
+  typeId: string;
+  clientId: string;
+  createdAt: string;
 }
 
 interface Document {
@@ -62,11 +68,12 @@ interface Document {
 
 const API_KEYS = {
   googleMaps: "AIzaSyB41DRubKWUHP7tGOqRZv2aLaF2UqHj0ag", // Chiave di sviluppo temporanea
-  openAI: "INSERISCI_QUI_LA_TUA_API_KEY_OPENAI"
+  openAI: "INSERISCI_QUI_LA_TUA_API_KEY_OPENAI",
 };
 
 export default function AddAccidentPage() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -78,7 +85,7 @@ export default function AddAccidentPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [generalData, setGeneralData] = useState({
     date: "",
     time: "",
@@ -91,8 +98,8 @@ export default function AddAccidentPage() {
     visibility: "Buona",
     coordinates: {
       lat: 0,
-      lng: 0
-    }
+      lng: 0,
+    },
   });
 
   const [partecipantsData, setPartecipantsData] = useState([
@@ -100,8 +107,8 @@ export default function AddAccidentPage() {
       vehicleId: "",
       role: "Responsabile",
       damages: "",
-      injured: false
-    }
+      injured: false,
+    },
   ]);
 
   const [witnessesData, setWitnessesData] = useState([
@@ -109,15 +116,15 @@ export default function AddAccidentPage() {
       firstName: "",
       lastName: "",
       phone: "",
-      email: ""
-    }
+      email: "",
+    },
   ]);
 
   const [documentsData, setDocumentsData] = useState<Document[]>([
     {
       type: "Foto",
-      file: null
-    }
+      file: null,
+    },
   ]);
 
   const [liquidationData, setLiquidationData] = useState({
@@ -125,7 +132,7 @@ export default function AddAccidentPage() {
     liquidatedAmount: "",
     liquidationDate: "",
     deductible: "",
-    responsibilityPercentage: "100"
+    responsibilityPercentage: "100",
   });
 
   const weatherOptions = [
@@ -134,7 +141,7 @@ export default function AddAccidentPage() {
     { value: "Pioggia", icon: "heroicons:cloud-rain" },
     { value: "Nebbia", icon: "heroicons:beaker" },
     { value: "Neve", icon: "heroicons:swatch" },
-    { value: "Grandine", icon: "heroicons:bolt" }
+    { value: "Grandine", icon: "heroicons:bolt" },
   ];
 
   const roadConditionsArray = [
@@ -142,83 +149,168 @@ export default function AddAccidentPage() {
     { value: "Bagnato", color: "primary" as const },
     { value: "Ghiacciato", color: "danger" as const },
     { value: "Neve", color: "default" as const },
-    { value: "Dissestato", color: "warning" as const }
+    { value: "Dissestato", color: "warning" as const },
   ];
 
   useEffect(() => {
     fetchPolicies();
     fetchVehicles();
     calculateCompletion();
-    
+
     // Inizializzazione Google Maps
-    if (mapRef.current && API_KEYS.googleMaps !== "AIzaSyB41DRubKWUHP7tGOqRZv2aLaF2UqHj0ag") {
-      const script = document.createElement('script');
+    if (
+      mapRef.current &&
+      API_KEYS.googleMaps !== "AIzaSyB41DRubKWUHP7tGOqRZv2aLaF2UqHj0ag"
+    ) {
+      const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEYS.googleMaps}&libraries=places&callback=initMap`;
       script.async = true;
       script.defer = true;
-      
+
       // Aggiungi la funzione initMap come callback globale
       window.initMap = initMap;
-      
+
       document.head.appendChild(script);
-      
+
       return () => {
         document.head.removeChild(script);
-        delete window.initMap;
+        window.initMap = () => {}; // Funzione vuota invece di undefined
       };
     }
   }, []);
-  
+
   const initMap = () => {
     if (!mapRef.current || !window.google || !window.google.maps) {
-      console.error('Google Maps non è stato caricato correttamente');
+      console.error("Google Maps non è stato caricato correttamente");
       return;
     }
 
     try {
+      // Stili per la mappa in modalità scura
+      const darkModeMapStyles = [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        {
+          featureType: "administrative.locality",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "geometry",
+          stylers: [{ color: "#263c3f" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#6b9a76" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#38414e" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#212a37" }],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9ca5b3" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#746855" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#1f2835" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#f3d19c" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "geometry",
+          stylers: [{ color: "#2f3948" }],
+        },
+        {
+          featureType: "transit.station",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#17263c" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#515c6d" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#17263c" }],
+        },
+      ];
+
       const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 45.4642, lng: 9.1900 }, // Milano di default
+        center: { lat: 45.4642, lng: 9.19 }, // Milano di default
         zoom: 12,
         mapTypeControl: true,
         streetViewControl: true,
         fullscreenControl: true,
+        styles: isDarkMode ? darkModeMapStyles : [], // Applica stili scuri se in modalità scura
       });
-      
+
       const marker = new window.google.maps.Marker({
-        position: { lat: 45.4642, lng: 9.1900 },
+        position: { lat: 45.4642, lng: 9.19 },
         map: map,
         draggable: true,
-        title: 'Posizione incidente'
+        title: "Posizione incidente",
       });
-      
-      marker.addListener('dragend', () => {
+
+      marker.addListener("dragend", () => {
         const position = marker.getPosition();
         if (position) {
-          setGeneralData(prev => ({
+          setGeneralData((prev) => ({
             ...prev,
             coordinates: {
               lat: position.lat(),
-              lng: position.lng()
-            }
+              lng: position.lng(),
+            },
           }));
         }
       });
 
       // Aggiungi il listener per il click sulla mappa
-      map.addListener('click', (event: any) => {
+      map.addListener("click", (event: any) => {
         const newPosition = event.latLng;
         marker.setPosition(newPosition);
-        setGeneralData(prev => ({
+        setGeneralData((prev) => ({
           ...prev,
           coordinates: {
             lat: newPosition.lat(),
-            lng: newPosition.lng()
-          }
+            lng: newPosition.lng(),
+          },
         }));
       });
-
     } catch (error) {
-      console.error('Errore durante l\'inizializzazione della mappa:', error);
+      console.error("Errore durante l'inizializzazione della mappa:", error);
     }
   };
 
@@ -226,35 +318,42 @@ export default function AddAccidentPage() {
     if (formTouched) {
       calculateCompletion();
     }
-  }, [generalData, partecipantsData, witnessesData, documentsData, liquidationData, formTouched]);
+  }, [
+    generalData,
+    partecipantsData,
+    witnessesData,
+    documentsData,
+    liquidationData,
+    formTouched,
+  ]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.add('drag-over');
+    e.currentTarget.classList.add("drag-over");
   };
-  
+
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove("drag-over");
   };
-  
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('drag-over');
-    
+    e.currentTarget.classList.remove("drag-over");
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      handleDocumentChange(index, 'file', file);
+      handleDocumentChange(index, "file", file);
     }
   };
 
   const calculateCompletion = () => {
     let totalScore = 0;
     let totalWeight = 100;
-    
+
     // Calcola punteggio per i dati generali (30%)
     const generalWeight = 30;
     let generalScore = 0;
@@ -264,35 +363,35 @@ export default function AddAccidentPage() {
     if (generalData.policyId) generalScore += 6;
     if (generalData.description) generalScore += 6;
     totalScore += (generalScore / 30) * generalWeight;
-    
+
     // Calcola punteggio per i partecipanti (25%)
     const participantsWeight = 25;
     let participantsScore = 0;
-    const hasValidParticipants = partecipantsData.every(p => p.vehicleId);
+    const hasValidParticipants = partecipantsData.every((p) => p.vehicleId);
     if (hasValidParticipants) participantsScore = 25;
     totalScore += (participantsScore / 25) * participantsWeight;
-    
+
     // Calcola punteggio per i testimoni (15%)
     const witnessesWeight = 15;
     let witnessesScore = 0;
-    const hasWitnesses = witnessesData.some(w => w.firstName && w.lastName);
+    const hasWitnesses = witnessesData.some((w) => w.firstName && w.lastName);
     if (hasWitnesses) witnessesScore = 15;
     totalScore += (witnessesScore / 15) * witnessesWeight;
-    
+
     // Calcola punteggio per i documenti (15%)
     const documentsWeight = 15;
     let documentsScore = 0;
-    const hasDocuments = documentsData.some(d => d.file);
+    const hasDocuments = documentsData.some((d) => d.file);
     if (hasDocuments) documentsScore = 15;
     totalScore += (documentsScore / 15) * documentsWeight;
-    
+
     // Calcola punteggio per la liquidazione (15%)
     const liquidationWeight = 15;
     let liquidationScore = 0;
     if (liquidationData.estimatedAmount) liquidationScore += 7.5;
     if (liquidationData.deductible) liquidationScore += 7.5;
     totalScore += (liquidationScore / 15) * liquidationWeight;
-    
+
     setCompletionPercentage(Math.round(totalScore));
   };
 
@@ -301,7 +400,44 @@ export default function AddAccidentPage() {
       const res = await axios.get("/Policy/GET/GetActivePolicies", {
         withCredentials: true,
       });
-      setPolicies(res.data);
+
+      // Se abbiamo delle policies, recuperiamo i veicoli per ciascuna policy
+      if (res.data && res.data.length > 0) {
+        const policiesWithVehicles = await Promise.all(
+          res.data.map(async (policy: any) => {
+            if (policy.vehicleId) {
+              try {
+                // Recupera il veicolo specifico per questa policy
+                const vehicleRes = await axios.get(
+                  `/Vehicle/GET/GetVehicleById`,
+                  {
+                    params: { vehicleId: policy.vehicleId },
+                    withCredentials: true,
+                  }
+                );
+
+                // Aggiungi i dati del veicolo alla policy
+                return {
+                  ...policy,
+                  vehicleDetails: vehicleRes.data,
+                };
+              } catch (error) {
+                console.error(
+                  `Errore nel recupero del veicolo per la policy ${policy.id}:`,
+                  error
+                );
+                return policy;
+              }
+            }
+            return policy;
+          })
+        );
+
+        console.log("Policies con veicoli:", policiesWithVehicles);
+        setPolicies(policiesWithVehicles);
+      } else {
+        setPolicies(res.data);
+      }
     } catch (error) {
       console.error("Error fetching policies:", error);
     }
@@ -332,19 +468,23 @@ export default function AddAccidentPage() {
   const handleDateSelect = (date: DateValue) => {
     setFormTouched(true);
     const jsDate = new Date(date.toString());
-    setGeneralData(prev => ({
+    setGeneralData((prev) => ({
       ...prev,
-      date: jsDate.toISOString().substring(0, 10)
+      date: jsDate.toISOString().substring(0, 10),
     }));
   };
 
-  const handlePartecipantChange = (index: number, field: string, value: any) => {
+  const handlePartecipantChange = (
+    index: number,
+    field: string,
+    value: any
+  ) => {
     setFormTouched(true);
-    setPartecipantsData(prev => {
+    setPartecipantsData((prev) => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        [field]: value
+        [field]: value,
       };
       return updated;
     });
@@ -352,11 +492,11 @@ export default function AddAccidentPage() {
 
   const handleWitnessChange = (index: number, field: string, value: string) => {
     setFormTouched(true);
-    setWitnessesData(prev => {
+    setWitnessesData((prev) => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        [field]: value
+        [field]: value,
       };
       return updated;
     });
@@ -364,17 +504,17 @@ export default function AddAccidentPage() {
 
   const handleDocumentChange = (index: number, field: string, value: any) => {
     setFormTouched(true);
-    
-    if (field === 'file' && value instanceof File) {
+
+    if (field === "file" && value instanceof File) {
       const newDocuments = [...documentsData];
       newDocuments[index] = {
         ...newDocuments[index],
-        file: value
+        file: value,
       };
       setDocumentsData(newDocuments);
-      
+
       // Anteprima se è un'immagine
-      if (value.type.startsWith('image/')) {
+      if (value.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = (e) => {
           if (e.target?.result) {
@@ -384,20 +524,18 @@ export default function AddAccidentPage() {
         reader.readAsDataURL(value);
       }
     } else {
-      setDocumentsData(prev => {
+      setDocumentsData((prev) => {
         const updated = [...prev];
         updated[index] = {
           ...updated[index],
-          [field]: value
+          [field]: value,
         };
         return updated;
       });
     }
   };
 
-  const handleLiquidationChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleLiquidationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormTouched(true);
     const { name, value } = e.target;
     setLiquidationData((prev) => ({
@@ -409,61 +547,61 @@ export default function AddAccidentPage() {
   const handleLiquidationDateSelect = (date: DateValue) => {
     setFormTouched(true);
     const jsDate = new Date(date.toString());
-    setLiquidationData(prev => ({
+    setLiquidationData((prev) => ({
       ...prev,
-      liquidationDate: jsDate.toISOString().substring(0, 10)
+      liquidationDate: jsDate.toISOString().substring(0, 10),
     }));
   };
 
   const addPartecipant = () => {
-    setPartecipantsData(prev => [
-      ...prev, 
+    setPartecipantsData((prev) => [
+      ...prev,
       {
         vehicleId: "",
         role: "Danneggiato",
         damages: "",
-        injured: false
-      }
+        injured: false,
+      },
     ]);
   };
 
   const removePartecipant = (index: number) => {
     if (partecipantsData.length > 1) {
-      setPartecipantsData(prev => prev.filter((_, i) => i !== index));
+      setPartecipantsData((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
   const addWitness = () => {
-    setWitnessesData(prev => [
-      ...prev, 
+    setWitnessesData((prev) => [
+      ...prev,
       {
         firstName: "",
         lastName: "",
         phone: "",
-        email: ""
-      }
+        email: "",
+      },
     ]);
   };
 
   const removeWitness = (index: number) => {
     if (witnessesData.length > 1) {
-      setWitnessesData(prev => prev.filter((_, i) => i !== index));
+      setWitnessesData((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
   const addDocument = () => {
-    setDocumentsData(prev => [
-      ...prev, 
+    setDocumentsData((prev) => [
+      ...prev,
       {
         type: "Foto",
-        file: null
-      }
+        file: null,
+      },
     ]);
   };
 
   const removeDocument = (index: number) => {
     if (documentsData.length > 1) {
-      setDocumentsData(prev => prev.filter((_, i) => i !== index));
+      setDocumentsData((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -487,32 +625,34 @@ export default function AddAccidentPage() {
       const accidentData = {
         ...generalData,
         policyId: Number(generalData.policyId),
-        partecipants: partecipantsData.map(p => ({
+        partecipants: partecipantsData.map((p) => ({
           ...p,
-          vehicleId: Number(p.vehicleId)
+          vehicleId: Number(p.vehicleId),
         })),
         witnesses: witnessesData,
-        documents: documentsData.map(doc => ({
+        documents: documentsData.map((doc) => ({
           type: doc.type,
-          fileName: doc.file ? doc.file.name : null
+          fileName: doc.file ? doc.file.name : null,
           // In produzione, qui caricheresti il file su un server e salveresti il percorso
         })),
         liquidation: {
           ...liquidationData,
           estimatedAmount: Number(liquidationData.estimatedAmount),
-          liquidatedAmount: liquidationData.liquidatedAmount ? Number(liquidationData.liquidatedAmount) : 0,
+          liquidatedAmount: liquidationData.liquidatedAmount
+            ? Number(liquidationData.liquidatedAmount)
+            : 0,
           deductible: Number(liquidationData.deductible),
-          responsibilityPercentage: Number(liquidationData.responsibilityPercentage)
-        }
+          responsibilityPercentage: Number(
+            liquidationData.responsibilityPercentage
+          ),
+        },
       };
 
       // Chiamata API per salvare l'incidente
-      await axios.post(
-        "/Accident/POST/CreateAccident",
-        accidentData,
-        { withCredentials: true }
-      );
-      
+      await axios.post("/Accident/POST/CreateAccident", accidentData, {
+        withCredentials: true,
+      });
+
       navigate("/accident");
     } catch (error) {
       console.error("Error creating accident:", error);
@@ -523,12 +663,17 @@ export default function AddAccidentPage() {
 
   const isFormValid = () => {
     // Controlla che i campi obbligatori siano compilati
-    if (!generalData.date || !generalData.time || !generalData.location || !generalData.policyId) {
+    if (
+      !generalData.date ||
+      !generalData.time ||
+      !generalData.location ||
+      !generalData.policyId
+    ) {
       return false;
     }
 
     // Controlla che ogni partecipante abbia un veicolo selezionato
-    if (partecipantsData.some(p => !p.vehicleId)) {
+    if (partecipantsData.some((p) => !p.vehicleId)) {
       return false;
     }
 
@@ -543,114 +688,134 @@ export default function AddAccidentPage() {
   const generateWithAI = async () => {
     // Verifica che la chiave API sia stata impostata
     if (API_KEYS.openAI === "INSERISCI_QUI_LA_TUA_API_KEY_OPENAI") {
-      alert("Per utilizzare questa funzionalità, è necessario configurare una chiave API di OpenAI.");
+      alert(
+        "Per utilizzare questa funzionalità, è necessario configurare una chiave API di OpenAI."
+      );
       return;
     }
-  
+
     setAiGenerating(true);
-    
+
     try {
       // Prepara il prompt per ChatGPT con tutte le informazioni disponibili
-      let prompt = "Genera una descrizione dettagliata di un incidente stradale con le seguenti caratteristiche:\n\n";
-      
+      let prompt =
+        "Genera una descrizione dettagliata di un incidente stradale con le seguenti caratteristiche:\n\n";
+
       if (generalData.date) prompt += `Data: ${generalData.date}\n`;
       if (generalData.time) prompt += `Ora: ${generalData.time}\n`;
       if (generalData.location) prompt += `Luogo: ${generalData.location}\n`;
-      if (generalData.weather) prompt += `Condizioni meteo: ${generalData.weather}\n`;
-      if (generalData.roadConditions) prompt += `Condizioni stradali: ${generalData.roadConditions}\n`;
-      
+      if (generalData.weather)
+        prompt += `Condizioni meteo: ${generalData.weather}\n`;
+      if (generalData.roadConditions)
+        prompt += `Condizioni stradali: ${generalData.roadConditions}\n`;
+
       prompt += "\nVeicoli coinvolti:\n";
       partecipantsData.forEach((p, i) => {
-        const vehicle = vehicles.find(v => v.id.toString() === p.vehicleId);
+        const vehicle = vehicles.find(
+          (v) => v.vehicleId.toString() === p.vehicleId
+        );
         if (vehicle) {
-          prompt += `Veicolo ${i+1}: ${vehicle.brand} ${vehicle.model} (Targa: ${vehicle.plate}), Ruolo: ${p.role}\n`;
+          prompt += `Veicolo ${i + 1}: ${vehicle.brand} ${
+            vehicle.model
+          } (Targa: ${vehicle.licensePlate}), Ruolo: ${p.role}\n`;
           if (p.damages) prompt += `Danni: ${p.damages}\n`;
-          prompt += `Feriti: ${p.injured ? 'Sì' : 'No'}\n`;
+          prompt += `Feriti: ${p.injured ? "Sì" : "No"}\n`;
         }
       });
-      
+
       // Chiamata a ChatGPT API (implementazione reale)
       const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
+        "https://api.openai.com/v1/chat/completions",
         {
           model: "gpt-3.5-turbo",
           messages: [
             {
               role: "system",
-              content: "Sei un assistente specializzato nella descrizione di incidenti stradali per compagnie assicurative. Scrivi in italiano."
+              content:
+                "Sei un assistente specializzato nella descrizione di incidenti stradali per compagnie assicurative. Scrivi in italiano.",
             },
             {
               role: "user",
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           temperature: 0.7,
         },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEYS.openAI}`
-          }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${API_KEYS.openAI}`,
+          },
         }
       );
-      
+
       // Estrarre la risposta generata
       const generatedDescription = response.data.choices[0].message.content;
-      setGeneralData(prev => ({...prev, description: generatedDescription}));
-      
+      setGeneralData((prev) => ({
+        ...prev,
+        description: generatedDescription,
+      }));
+
       // Se ci sono veicoli senza descrizione dei danni, genera anche quelli
       const updatedParticipants = [...partecipantsData];
       let hasUpdated = false;
-      
+
       for (let i = 0; i < updatedParticipants.length; i++) {
-        if (!updatedParticipants[i].damages && updatedParticipants[i].vehicleId) {
+        if (
+          !updatedParticipants[i].damages &&
+          updatedParticipants[i].vehicleId
+        ) {
           // Genera descrizione danni per questo veicolo
-          const damagePrompt = `Descrivi i danni riportati da un veicolo ${updatedParticipants[i].role.toLowerCase()} in un incidente stradale. Elenca solo i danni, in modo conciso.`;
-          
+          const damagePrompt = `Descrivi i danni riportati da un veicolo ${updatedParticipants[
+            i
+          ].role.toLowerCase()} in un incidente stradale. Elenca solo i danni, in modo conciso.`;
+
           const damageResponse = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
+            "https://api.openai.com/v1/chat/completions",
             {
               model: "gpt-3.5-turbo",
               messages: [
                 {
                   role: "system",
-                  content: "Sei un perito assicurativo. Rispondi in modo conciso."
+                  content:
+                    "Sei un perito assicurativo. Rispondi in modo conciso.",
                 },
                 {
                   role: "user",
-                  content: damagePrompt
-                }
+                  content: damagePrompt,
+                },
               ],
               temperature: 0.7,
             },
             {
               headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEYS.openAI}`
-              }
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${API_KEYS.openAI}`,
+              },
             }
           );
-          
-          updatedParticipants[i].damages = damageResponse.data.choices[0].message.content;
+
+          updatedParticipants[i].damages =
+            damageResponse.data.choices[0].message.content;
           hasUpdated = true;
         }
       }
-      
+
       if (hasUpdated) {
         setPartecipantsData(updatedParticipants);
       }
-      
     } catch (error) {
       console.error("Errore nella generazione con AI:", error);
       // Fallback per demo
       const aiDescriptions = [
         "Incidente avvenuto all'incrocio tra via Roma e corso Italia. Il veicolo A procedeva da nord verso sud quando, giunto all'incrocio, impattava con il veicolo B che proveniva da ovest. Entrambi i conducenti dichiarano di aver rispettato il semaforo verde. Danni riportati: veicolo A, danneggiamento della parte anteriore destra; veicolo B, danneggiamento della parte anteriore sinistra.",
         "Sinistro verificatosi sulla strada statale 106 in direzione nord. Il veicolo assicurato procedeva nella propria corsia quando, a causa dell'asfalto bagnato, perdeva il controllo slittando e urtando il guardrail sul lato destro. Non si segnalano altri veicoli coinvolti. Danni riportati: fiancata destra, paraurti anteriore e cerchione anteriore destro.",
-        "Tamponamento a catena avvenuto in autostrada A1 km 34 in direzione sud. Il veicolo C, a causa di un improvviso rallentamento del traffico, urtava il veicolo B che, a sua volta, impattava contro il veicolo A. I tre conducenti confermano la dinamica. Si segnalano danni di lieve entità ai paraurti posteriori dei veicoli A e B e al paraurti anteriore del veicolo C."
+        "Tamponamento a catena avvenuto in autostrada A1 km 34 in direzione sud. Il veicolo C, a causa di un improvviso rallentamento del traffico, urtava il veicolo B che, a sua volta, impattava contro il veicolo A. I tre conducenti confermano la dinamica. Si segnalano danni di lieve entità ai paraurti posteriori dei veicoli A e B e al paraurti anteriore del veicolo C.",
       ];
-      
-      const randomDesc = aiDescriptions[Math.floor(Math.random() * aiDescriptions.length)];
-      setGeneralData(prev => ({...prev, description: randomDesc}));
+
+      const randomDesc =
+        aiDescriptions[Math.floor(Math.random() * aiDescriptions.length)];
+      setGeneralData((prev) => ({ ...prev, description: randomDesc }));
     } finally {
       setAiGenerating(false);
       setFormTouched(true);
@@ -662,51 +827,57 @@ export default function AddAccidentPage() {
       navigator.geolocation.getCurrentPosition(async (position) => {
         try {
           // Aggiorna le coordinate
-          setGeneralData(prev => ({
-            ...prev, 
+          setGeneralData((prev) => ({
+            ...prev,
             coordinates: {
               lat: position.coords.latitude,
-              lng: position.coords.longitude
-            }
+              lng: position.coords.longitude,
+            },
           }));
-          
+
           // Aggiorna la mappa
           if (window.google && mapRef.current) {
             const map = new window.google.maps.Map(mapRef.current, {
-              center: { 
-                lat: position.coords.latitude, 
-                lng: position.coords.longitude 
+              center: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
               },
               zoom: 14,
             });
-            
+
             const marker = new window.google.maps.Marker({
-              position: { 
-                lat: position.coords.latitude, 
-                lng: position.coords.longitude 
+              position: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
               },
               map: map,
-              draggable: true
+              draggable: true,
             });
-            
+
             // Ottieni indirizzo dalla posizione e aggiorna il campo location
             const geocoder = new window.google.maps.Geocoder();
-            geocoder.geocode({ location: { 
-              lat: position.coords.latitude, 
-              lng: position.coords.longitude 
-            }}, (results: any, status: string) => {
-              if (status === 'OK' && results && results[0]) {
-                setGeneralData(prev => ({
-                  ...prev,
-                  location: results[0].formatted_address
-                }));
+            geocoder.geocode(
+              {
+                location: {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                },
+              },
+              (results: any, status: string) => {
+                if (status === "OK" && results && results[0]) {
+                  setGeneralData((prev) => ({
+                    ...prev,
+                    location: results[0].formatted_address,
+                  }));
+                }
               }
-            });
-            
+            );
+
             // Simula dati meteo (in produzione usare un'API meteo reale)
-            const weatherTypes = weatherOptions.map(w => w.value);
-            const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
-            setGeneralData(prev => ({...prev, weather: randomWeather}));
+            const weatherTypes = weatherOptions.map((w) => w.value);
+            const randomWeather =
+              weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+            setGeneralData((prev) => ({ ...prev, weather: randomWeather }));
           }
         } catch (error) {
           console.error("Errore nel recupero della posizione:", error);
@@ -716,19 +887,37 @@ export default function AddAccidentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div
+      className={`min-h-screen ${isDarkMode ? "bg-black" : "bg-slate-50"} py-8`}
+    >
       <div className="container mx-auto px-4">
-        <Card className="mx-auto max-w-5xl">
+        <Card
+          className={`mx-auto max-w-5xl ${isDarkMode ? "bg-gray-900" : ""}`}
+        >
           <CardHeader className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Nuovo Incidente</h1>
-              <p className="text-slate-500 mt-1">Compila il form per registrare un nuovo incidente</p>
+              <h1
+                className={`text-2xl font-bold ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                Nuovo Incidente
+              </h1>
+              <p
+                className={`${
+                  isDarkMode ? "text-gray-400" : "text-slate-500"
+                } mt-1`}
+              >
+                Compila il form per registrare un nuovo incidente
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="light"
                 onPress={() => navigate("/accident")}
-                startContent={<Icon icon="heroicons:arrow-left" className="w-4 h-4" />}
+                startContent={
+                  <Icon icon="heroicons:arrow-left" className="w-4 h-4" />
+                }
               >
                 Indietro
               </Button>
@@ -746,13 +935,20 @@ export default function AddAccidentPage() {
                 classNames={{
                   tabList: "gap-6",
                   cursor: "bg-primary-500",
+                  tab: isDarkMode
+                    ? "text-gray-400 data-[selected=true]:text-white data-[selected=true]:font-medium"
+                    : "data-[selected=true]:text-primary-600 data-[selected=true]:font-medium",
+                  tabContent: isDarkMode ? "text-white" : "",
                 }}
               >
-                <Tab 
-                  key="general" 
+                <Tab
+                  key="general"
                   title={
                     <div className="flex items-center gap-2">
-                      <Icon icon="heroicons:information-circle" className="w-4 h-4" />
+                      <Icon
+                        icon="heroicons:information-circle"
+                        className="w-4 h-4"
+                      />
                       <span>Generale</span>
                     </div>
                   }
@@ -760,30 +956,69 @@ export default function AddAccidentPage() {
                   <div className="mt-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Data *</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Data *
+                        </label>
                         <Popover placement="bottom">
                           <PopoverTrigger>
                             <Input
                               type="text"
                               name="date"
-                              value={generalData.date ? new Date(generalData.date).toLocaleDateString() : ""}
+                              value={
+                                generalData.date
+                                  ? new Date(
+                                      generalData.date
+                                    ).toLocaleDateString()
+                                  : ""
+                              }
                               placeholder="Seleziona una data"
                               className="cursor-pointer"
                               readOnly
                               variant="bordered"
-                              startContent={<Icon icon="heroicons:calendar" className="text-slate-400" />}
+                              startContent={
+                                <Icon
+                                  icon="heroicons:calendar"
+                                  className="text-slate-400"
+                                />
+                              }
                             />
                           </PopoverTrigger>
-                          <PopoverContent>
+                          <PopoverContent
+                            className={
+                              isDarkMode
+                                ? "bg-gray-800 border border-gray-700"
+                                : ""
+                            }
+                          >
                             <Calendar
                               color="primary"
                               onChange={handleDateSelect}
+                              classNames={{
+                                base: isDarkMode
+                                  ? "bg-gray-800 text-white"
+                                  : "",
+                                headerWrapper: isDarkMode ? "text-white" : "",
+                                gridHeader: isDarkMode ? "text-gray-400" : "",
+                                cell: isDarkMode
+                                  ? "[&:not([data-outside-month])]:text-white [&[data-outside-month]]:text-gray-600 [&[data-outside-month]]:opacity-70 data-[selected=true]:bg-primary-500 data-[selected=true]:text-white hover:bg-gray-700"
+                                  : "[&:not([data-outside-month])]:text-gray-900 [&[data-outside-month]]:text-gray-400 [&[data-outside-month]]:opacity-70",
+                              }}
                             />
                           </PopoverContent>
                         </Popover>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Ora *</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Ora *
+                        </label>
                         <Input
                           type="time"
                           name="time"
@@ -795,7 +1030,13 @@ export default function AddAccidentPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Luogo *</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Luogo *
+                        </label>
                         <div className="relative">
                           <Input
                             type="text"
@@ -813,45 +1054,120 @@ export default function AddAccidentPage() {
                               onClick={getWeatherByLocation}
                               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-primary-500"
                             >
-                              <Icon icon="heroicons:map-pin" className="w-5 h-5" />
+                              <Icon
+                                icon="heroicons:map-pin"
+                                className="w-5 h-5"
+                              />
                             </button>
                           </Tooltip>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Polizza *</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Polizza *
+                        </label>
                         <Select
                           name="policyId"
-                          selectedKeys={generalData.policyId ? [generalData.policyId] : []}
-                          onChange={(e) => setGeneralData(prev => ({...prev, policyId: e.target.value}))}
+                          selectedKeys={
+                            generalData.policyId ? [generalData.policyId] : []
+                          }
+                          onChange={(e) =>
+                            setGeneralData((prev) => ({
+                              ...prev,
+                              policyId: e.target.value,
+                            }))
+                          }
                           required
                           variant="bordered"
-                          items={[
-                            { id: "", text: "Seleziona una polizza" },
-                            ...(policies || []).map(policy => ({
-                              id: policy?.id?.toString() || "",
-                              text: policy ? `${policy.policyNumber} - ${policy.customerName} - ${policy.vehiclePlate}` : ""
-                            }))
-                          ]}
+                          placeholder="Seleziona una polizza"
+                          classNames={{
+                            trigger: isDarkMode
+                              ? "bg-[#171a23] text-white border-[#2d3748]"
+                              : "",
+                            base: isDarkMode ? "bg-[#171a23]" : "",
+                            popoverContent: isDarkMode
+                              ? "bg-[#171a23] border-[#2d3748]"
+                              : "",
+                            listbox: isDarkMode
+                              ? "bg-[#171a23] text-white"
+                              : "",
+                          }}
+                          items={(policies || []).map((policy) => {
+                            // Verifica che la policy esista ed abbia tutti i dati necessari
+                            if (!policy) return { id: "", text: "" };
+
+                            // Ottieni i dettagli della polizza
+                            const policyNumber = policy.policyNumber || "";
+                            const customerName = policy.customerName || "";
+
+                            // Ottieni i dettagli del veicolo
+                            let vehicleInfo = policy.vehiclePlate || "";
+                            if (policy.vehicleDetails) {
+                              const brand = policy.vehicleDetails.brand || "";
+                              const model = policy.vehicleDetails.model || "";
+                              const plate =
+                                policy.vehicleDetails.licensePlate || "";
+                              if (brand && model && plate) {
+                                vehicleInfo = `${brand} ${model} (${plate})`;
+                              }
+                            }
+
+                            return {
+                              id: policy.vehicleId?.toString() || "",
+                              text: `${policyNumber} ${customerName} ${vehicleInfo}`,
+                            };
+                          })}
                         >
                           {(item) => (
-                            <SelectItem key={item.id}>
+                            <SelectItem
+                              key={item.id}
+                              className={
+                                isDarkMode
+                                  ? "text-white data-[selected=true]:bg-primary-600"
+                                  : ""
+                              }
+                            >
                               {item.text}
                             </SelectItem>
                           )}
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Condizioni meteo</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Condizioni meteo
+                        </label>
                         <div className="flex flex-wrap gap-2">
                           {weatherOptions.map((option) => (
                             <Chip
                               key={option.value}
-                              variant={generalData.weather === option.value ? "solid" : "bordered"}
-                              color={generalData.weather === option.value ? "primary" : "default"}
-                              startContent={<Icon icon={option.icon} className="w-4 h-4" />}
+                              variant={
+                                generalData.weather === option.value
+                                  ? "solid"
+                                  : "bordered"
+                              }
+                              color={
+                                generalData.weather === option.value
+                                  ? "primary"
+                                  : "default"
+                              }
+                              startContent={
+                                <Icon icon={option.icon} className="w-4 h-4" />
+                              }
                               className="cursor-pointer"
-                              onClick={() => setGeneralData(prev => ({...prev, weather: option.value}))}
+                              onClick={() =>
+                                setGeneralData((prev) => ({
+                                  ...prev,
+                                  weather: option.value,
+                                }))
+                              }
                             >
                               {option.value}
                             </Chip>
@@ -859,15 +1175,34 @@ export default function AddAccidentPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Condizioni stradali</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Condizioni stradali
+                        </label>
                         <div className="flex flex-wrap gap-2">
                           {roadConditionsArray.map((condition) => (
                             <Chip
                               key={condition.value}
-                              variant={generalData.roadConditions === condition.value ? "solid" : "bordered"}
-                              color={generalData.roadConditions === condition.value ? condition.color : "default"}
+                              variant={
+                                generalData.roadConditions === condition.value
+                                  ? "solid"
+                                  : "bordered"
+                              }
+                              color={
+                                generalData.roadConditions === condition.value
+                                  ? condition.color
+                                  : "default"
+                              }
                               className="cursor-pointer"
-                              onClick={() => setGeneralData(prev => ({...prev, roadConditions: condition.value}))}
+                              onClick={() =>
+                                setGeneralData((prev) => ({
+                                  ...prev,
+                                  roadConditions: condition.value,
+                                }))
+                              }
                             >
                               {condition.value}
                             </Chip>
@@ -875,29 +1210,108 @@ export default function AddAccidentPage() {
                         </div>
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-medium text-slate-700">Stato</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Stato
+                        </label>
                         <Select
                           name="status"
                           selectedKeys={[generalData.status]}
-                          onChange={(e) => setGeneralData(prev => ({...prev, status: e.target.value}))}
+                          onChange={(e) =>
+                            setGeneralData((prev) => ({
+                              ...prev,
+                              status: e.target.value,
+                            }))
+                          }
                           variant="bordered"
+                          classNames={{
+                            trigger: isDarkMode
+                              ? "bg-[#171a23] text-white border-[#2d3748]"
+                              : "",
+                            base: isDarkMode ? "bg-[#171a23]" : "",
+                            popoverContent: isDarkMode
+                              ? "bg-[#171a23] border-[#2d3748]"
+                              : "",
+                            listbox: isDarkMode
+                              ? "bg-[#171a23] text-white"
+                              : "",
+                          }}
                         >
-                          <SelectItem key="Aperto">Aperto</SelectItem>
-                          <SelectItem key="In Lavorazione">In Lavorazione</SelectItem>
-                          <SelectItem key="Liquidato">Liquidato</SelectItem>
-                          <SelectItem key="Chiuso">Chiuso</SelectItem>
-                          <SelectItem key="Rifiutato">Rifiutato</SelectItem>
+                          <SelectItem
+                            key="Aperto"
+                            className={
+                              isDarkMode
+                                ? "text-white data-[selected=true]:bg-primary-600"
+                                : ""
+                            }
+                          >
+                            Aperto
+                          </SelectItem>
+                          <SelectItem
+                            key="In Lavorazione"
+                            className={
+                              isDarkMode
+                                ? "text-white data-[selected=true]:bg-primary-600"
+                                : ""
+                            }
+                          >
+                            In Lavorazione
+                          </SelectItem>
+                          <SelectItem
+                            key="Liquidato"
+                            className={
+                              isDarkMode
+                                ? "text-white data-[selected=true]:bg-primary-600"
+                                : ""
+                            }
+                          >
+                            Liquidato
+                          </SelectItem>
+                          <SelectItem
+                            key="Chiuso"
+                            className={
+                              isDarkMode
+                                ? "text-white data-[selected=true]:bg-primary-600"
+                                : ""
+                            }
+                          >
+                            Chiuso
+                          </SelectItem>
+                          <SelectItem
+                            key="Rifiutato"
+                            className={
+                              isDarkMode
+                                ? "text-white data-[selected=true]:bg-primary-600"
+                                : ""
+                            }
+                          >
+                            Rifiutato
+                          </SelectItem>
                         </Select>
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
                         <div className="flex justify-between items-center">
-                          <label className="text-sm font-medium text-slate-700">Descrizione</label>
+                          <label
+                            className={`text-sm font-medium ${
+                              isDarkMode ? "text-gray-300" : "text-slate-700"
+                            }`}
+                          >
+                            Descrizione
+                          </label>
                           <Button
                             size="sm"
                             variant="flat"
                             color="primary"
-                            startContent={<Icon icon="heroicons:sparkles" className="w-4 h-4" />}
+                            startContent={
+                              <Icon
+                                icon="heroicons:sparkles"
+                                className="w-4 h-4"
+                              />
+                            }
                             isLoading={aiGenerating}
                             onPress={generateWithAI}
                           >
@@ -917,11 +1331,16 @@ export default function AddAccidentPage() {
                       <div className="md:col-span-2">
                         <div className="border border-dashed border-slate-300 rounded-lg p-3 bg-slate-50">
                           <div className="flex items-center space-x-2 text-sm text-slate-600 mb-2">
-                            <Icon icon="heroicons:map" className="w-5 h-5 text-primary-500" />
-                            <span className="font-medium">Posizione dell'incidente</span>
+                            <Icon
+                              icon="heroicons:map"
+                              className="w-5 h-5 text-primary-500"
+                            />
+                            <span className="font-medium">
+                              Posizione dell'incidente
+                            </span>
                           </div>
-                          <div 
-                            ref={mapRef} 
+                          <div
+                            ref={mapRef}
                             className="w-full h-48 bg-slate-100 rounded-lg relative overflow-hidden map-container"
                           >
                             {/* Google Maps verrà caricato qui */}
@@ -931,9 +1350,9 @@ export default function AddAccidentPage() {
                     </div>
                   </div>
                 </Tab>
-                
-                <Tab 
-                  key="partecipants" 
+
+                <Tab
+                  key="partecipants"
                   title={
                     <div className="flex items-center gap-2">
                       <Icon icon="heroicons:truck" className="w-4 h-4" />
@@ -943,9 +1362,14 @@ export default function AddAccidentPage() {
                 >
                   <div className="mt-6 space-y-6">
                     {partecipantsData.map((partecipant, index) => (
-                      <div key={index} className="border border-slate-200 rounded-lg p-4 space-y-4">
+                      <div
+                        key={index}
+                        className="border border-slate-200 rounded-lg p-4 space-y-4"
+                      >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-slate-900">Veicolo {index + 1}</h3>
+                          <h3 className="text-lg font-medium text-slate-900">
+                            Veicolo {index + 1}
+                          </h3>
                           {partecipantsData.length > 1 && (
                             <Button
                               isIconOnly
@@ -953,38 +1377,74 @@ export default function AddAccidentPage() {
                               color="danger"
                               onPress={() => removePartecipant(index)}
                             >
-                              <Icon icon="heroicons:trash" className="w-4 h-4" />
+                              <Icon
+                                icon="heroicons:trash"
+                                className="w-4 h-4"
+                              />
                             </Button>
                           )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Veicolo *</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Veicolo *
+                            </label>
                             <Select
-                              selectedKeys={partecipant.vehicleId ? [partecipant.vehicleId] : []}
-                              onChange={(e) => handlePartecipantChange(index, 'vehicleId', e.target.value)}
+                              selectedKeys={
+                                partecipant.vehicleId
+                                  ? [partecipant.vehicleId]
+                                  : []
+                              }
+                              onChange={(e) =>
+                                handlePartecipantChange(
+                                  index,
+                                  "vehicleId",
+                                  e.target.value
+                                )
+                              }
                               required
                               variant="bordered"
                               items={[
                                 { id: "", text: "Seleziona un veicolo" },
-                                ...(vehicles || []).map(vehicle => ({
-                                  id: vehicle?.id?.toString() || "",
-                                  text: vehicle ? `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}` : ""
-                                }))
+                                ...(vehicles || []).map((vehicle) => ({
+                                  id: vehicle?.vehicleId?.toString() || "",
+                                  text: vehicle
+                                    ? `${vehicle.licensePlate} - ${vehicle.brand} ${vehicle.model}`
+                                    : "",
+                                })),
                               ]}
                             >
                               {(item) => (
-                                <SelectItem key={item.id}>
+                                <SelectItem
+                                  key={item.id}
+                                  className={
+                                    isDarkMode
+                                      ? "text-white data-[selected=true]:bg-primary-600"
+                                      : ""
+                                  }
+                                >
                                   {item.text}
                                 </SelectItem>
                               )}
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Ruolo</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Ruolo
+                            </label>
                             <RadioGroup
                               value={partecipant.role}
-                              onValueChange={(value) => handlePartecipantChange(index, 'role', value)}
+                              onValueChange={(value) =>
+                                handlePartecipantChange(index, "role", value)
+                              }
                               orientation="horizontal"
                             >
                               <Radio value="Responsabile">Responsabile</Radio>
@@ -993,10 +1453,22 @@ export default function AddAccidentPage() {
                             </RadioGroup>
                           </div>
                           <div className="space-y-2 md:col-span-2">
-                            <label className="text-sm font-medium text-slate-700">Danni rilevati</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Danni rilevati
+                            </label>
                             <Textarea
                               value={partecipant.damages}
-                              onChange={(e) => handlePartecipantChange(index, 'damages', e.target.value)}
+                              onChange={(e) =>
+                                handlePartecipantChange(
+                                  index,
+                                  "damages",
+                                  e.target.value
+                                )
+                              }
                               variant="bordered"
                               placeholder="Descrivi i danni rilevati..."
                               minRows={2}
@@ -1005,7 +1477,13 @@ export default function AddAccidentPage() {
                           <div className="md:col-span-2">
                             <Checkbox
                               isSelected={partecipant.injured}
-                              onValueChange={(checked) => handlePartecipantChange(index, 'injured', checked)}
+                              onValueChange={(checked) =>
+                                handlePartecipantChange(
+                                  index,
+                                  "injured",
+                                  checked
+                                )
+                              }
                             >
                               Presenza di feriti
                             </Checkbox>
@@ -1018,16 +1496,21 @@ export default function AddAccidentPage() {
                         variant="flat"
                         color="primary"
                         onPress={addPartecipant}
-                        startContent={<Icon icon="heroicons:plus-circle" className="w-4 h-4" />}
+                        startContent={
+                          <Icon
+                            icon="heroicons:plus-circle"
+                            className="w-4 h-4"
+                          />
+                        }
                       >
                         Aggiungi veicolo
                       </Button>
                     </div>
                   </div>
                 </Tab>
-                
-                <Tab 
-                  key="witnesses" 
+
+                <Tab
+                  key="witnesses"
                   title={
                     <div className="flex items-center gap-2">
                       <Icon icon="heroicons:user-group" className="w-4 h-4" />
@@ -1037,9 +1520,14 @@ export default function AddAccidentPage() {
                 >
                   <div className="mt-6 space-y-6">
                     {witnessesData.map((witness, index) => (
-                      <div key={index} className="border border-slate-200 rounded-lg p-4 space-y-4">
+                      <div
+                        key={index}
+                        className="border border-slate-200 rounded-lg p-4 space-y-4"
+                      >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-slate-900">Testimone {index + 1}</h3>
+                          <h3 className="text-lg font-medium text-slate-900">
+                            Testimone {index + 1}
+                          </h3>
                           {witnessesData.length > 1 && (
                             <Button
                               isIconOnly
@@ -1047,50 +1535,101 @@ export default function AddAccidentPage() {
                               color="danger"
                               onPress={() => removeWitness(index)}
                             >
-                              <Icon icon="heroicons:trash" className="w-4 h-4" />
+                              <Icon
+                                icon="heroicons:trash"
+                                className="w-4 h-4"
+                              />
                             </Button>
                           )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Nome</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Nome
+                            </label>
                             <Input
                               type="text"
                               value={witness.firstName}
-                              onChange={(e) => handleWitnessChange(index, 'firstName', e.target.value)}
+                              onChange={(e) =>
+                                handleWitnessChange(
+                                  index,
+                                  "firstName",
+                                  e.target.value
+                                )
+                              }
                               variant="bordered"
                               placeholder="Nome"
                               className="max-w-full"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Cognome</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Cognome
+                            </label>
                             <Input
                               type="text"
                               value={witness.lastName}
-                              onChange={(e) => handleWitnessChange(index, 'lastName', e.target.value)}
+                              onChange={(e) =>
+                                handleWitnessChange(
+                                  index,
+                                  "lastName",
+                                  e.target.value
+                                )
+                              }
                               variant="bordered"
                               placeholder="Cognome"
                               className="max-w-full"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Telefono</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Telefono
+                            </label>
                             <Input
                               type="tel"
                               value={witness.phone}
-                              onChange={(e) => handleWitnessChange(index, 'phone', e.target.value)}
+                              onChange={(e) =>
+                                handleWitnessChange(
+                                  index,
+                                  "phone",
+                                  e.target.value
+                                )
+                              }
                               variant="bordered"
                               placeholder="+39 XXX XXXXXXX"
                               className="max-w-full"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Email</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Email
+                            </label>
                             <Input
                               type="email"
                               value={witness.email}
-                              onChange={(e) => handleWitnessChange(index, 'email', e.target.value)}
+                              onChange={(e) =>
+                                handleWitnessChange(
+                                  index,
+                                  "email",
+                                  e.target.value
+                                )
+                              }
                               variant="bordered"
                               placeholder="email@esempio.com"
                               className="max-w-full"
@@ -1104,16 +1643,21 @@ export default function AddAccidentPage() {
                         variant="flat"
                         color="primary"
                         onPress={addWitness}
-                        startContent={<Icon icon="heroicons:plus-circle" className="w-4 h-4" />}
+                        startContent={
+                          <Icon
+                            icon="heroicons:plus-circle"
+                            className="w-4 h-4"
+                          />
+                        }
                       >
                         Aggiungi testimone
                       </Button>
                     </div>
                   </div>
                 </Tab>
-                
-                <Tab 
-                  key="documents" 
+
+                <Tab
+                  key="documents"
                   title={
                     <div className="flex items-center gap-2">
                       <Icon icon="heroicons:document" className="w-4 h-4" />
@@ -1123,9 +1667,14 @@ export default function AddAccidentPage() {
                 >
                   <div className="mt-6 space-y-6">
                     {documentsData.map((document, index) => (
-                      <div key={index} className="border border-slate-200 rounded-lg p-4 space-y-4">
+                      <div
+                        key={index}
+                        className="border border-slate-200 rounded-lg p-4 space-y-4"
+                      >
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium text-slate-900">Documento {index + 1}</h3>
+                          <h3 className="text-lg font-medium text-slate-900">
+                            Documento {index + 1}
+                          </h3>
                           {documentsData.length > 1 && (
                             <Button
                               isIconOnly
@@ -1133,76 +1682,173 @@ export default function AddAccidentPage() {
                               color="danger"
                               onPress={() => removeDocument(index)}
                             >
-                              <Icon icon="heroicons:trash" className="w-4 h-4" />
+                              <Icon
+                                icon="heroicons:trash"
+                                className="w-4 h-4"
+                              />
                             </Button>
                           )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Tipo documento</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              Tipo documento
+                            </label>
                             <Select
                               selectedKeys={[document.type]}
-                              onChange={(e) => handleDocumentChange(index, 'type', e.target.value)}
+                              onChange={(e) =>
+                                handleDocumentChange(
+                                  index,
+                                  "type",
+                                  e.target.value
+                                )
+                              }
                               variant="bordered"
+                              classNames={{
+                                trigger: isDarkMode
+                                  ? "bg-[#171a23] text-white border-[#2d3748]"
+                                  : "",
+                                base: isDarkMode ? "bg-[#171a23]" : "",
+                                popoverContent: isDarkMode
+                                  ? "bg-[#171a23] border-[#2d3748]"
+                                  : "",
+                                listbox: isDarkMode
+                                  ? "bg-[#171a23] text-white"
+                                  : "",
+                              }}
                             >
-                              <SelectItem key="Foto">Foto</SelectItem>
-                              <SelectItem key="Modulo CAI">Modulo CAI</SelectItem>
-                              <SelectItem key="Fattura">Fattura</SelectItem>
-                              <SelectItem key="Perizia">Perizia</SelectItem>
-                              <SelectItem key="Altro">Altro</SelectItem>
+                              <SelectItem
+                                key="Foto"
+                                className={
+                                  isDarkMode
+                                    ? "text-white data-[selected=true]:bg-primary-600"
+                                    : ""
+                                }
+                              >
+                                Foto
+                              </SelectItem>
+                              <SelectItem
+                                key="Modulo CAI"
+                                className={
+                                  isDarkMode
+                                    ? "text-white data-[selected=true]:bg-primary-600"
+                                    : ""
+                                }
+                              >
+                                Modulo CAI
+                              </SelectItem>
+                              <SelectItem
+                                key="Fattura"
+                                className={
+                                  isDarkMode
+                                    ? "text-white data-[selected=true]:bg-primary-600"
+                                    : ""
+                                }
+                              >
+                                Fattura
+                              </SelectItem>
+                              <SelectItem
+                                key="Perizia"
+                                className={
+                                  isDarkMode
+                                    ? "text-white data-[selected=true]:bg-primary-600"
+                                    : ""
+                                }
+                              >
+                                Perizia
+                              </SelectItem>
+                              <SelectItem
+                                key="Altro"
+                                className={
+                                  isDarkMode
+                                    ? "text-white data-[selected=true]:bg-primary-600"
+                                    : ""
+                                }
+                              >
+                                Altro
+                              </SelectItem>
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">File</label>
+                            <label
+                              className={`text-sm font-medium ${
+                                isDarkMode ? "text-gray-300" : "text-slate-700"
+                              }`}
+                            >
+                              File
+                            </label>
                             <div
                               className={`border-2 border-dashed border-slate-300 rounded-lg p-4 text-center 
                               transition-colors duration-200 
-                              ${document.file ? 'bg-green-50 border-green-300' : 'hover:bg-slate-50 hover:border-primary-300'}`}
-                              onDragOver={e => handleDragOver(e)}
-                              onDragLeave={e => handleDragLeave(e)}
-                              onDrop={e => handleDrop(e, index)}
+                              ${
+                                document.file
+                                  ? "bg-green-50 border-green-300"
+                                  : "hover:bg-slate-50 hover:border-primary-300"
+                              }`}
+                              onDragOver={(e) => handleDragOver(e)}
+                              onDragLeave={(e) => handleDragLeave(e)}
+                              onDrop={(e) => handleDrop(e, index)}
                             >
                               <Input
                                 type="file"
                                 onChange={(e) => {
                                   if (e.target.files && e.target.files[0]) {
-                                    handleDocumentChange(index, 'file', e.target.files[0]);
+                                    handleDocumentChange(
+                                      index,
+                                      "file",
+                                      e.target.files[0]
+                                    );
                                   }
                                 }}
                                 className="hidden"
                                 id={`file-upload-${index}`}
                                 ref={fileInputRef}
                               />
-                              <label 
-                                htmlFor={`file-upload-${index}`} 
+                              <label
+                                htmlFor={`file-upload-${index}`}
                                 className="cursor-pointer flex flex-col items-center justify-center"
                               >
                                 {document.file ? (
                                   <>
-                                    <Icon icon="heroicons:document-check" className="w-6 h-6 text-green-500" />
+                                    <Icon
+                                      icon="heroicons:document-check"
+                                      className="w-6 h-6 text-green-500"
+                                    />
                                     <p className="mt-2 text-sm text-green-700">
                                       {document.file.name}
                                     </p>
                                   </>
                                 ) : (
                                   <>
-                                    <Icon icon="heroicons:arrow-up-tray" className="w-6 h-6 text-slate-400" />
+                                    <Icon
+                                      icon="heroicons:arrow-up-tray"
+                                      className="w-6 h-6 text-slate-400"
+                                    />
                                     <p className="mt-2 text-sm text-slate-500">
                                       Clicca o trascina qui per caricare un file
                                     </p>
                                   </>
                                 )}
-                                {document.file && document.type === "Foto" && document.file.type.startsWith('image/') && (
-                                  <Button
-                                    size="sm"
-                                    variant="flat"
-                                    color="primary"
-                                    className="mt-2"
-                                    onPress={() => document.file && openImagePreview(document.file)}
-                                  >
-                                    Anteprima
-                                  </Button>
-                                )}
+                                {document.file &&
+                                  document.type === "Foto" &&
+                                  document.file.type.startsWith("image/") && (
+                                    <Button
+                                      size="sm"
+                                      variant="flat"
+                                      color="primary"
+                                      className="mt-2"
+                                      onPress={() =>
+                                        document.file &&
+                                        openImagePreview(document.file)
+                                      }
+                                    >
+                                      Anteprima
+                                    </Button>
+                                  )}
                               </label>
                             </div>
                           </div>
@@ -1214,16 +1860,21 @@ export default function AddAccidentPage() {
                         variant="flat"
                         color="primary"
                         onPress={addDocument}
-                        startContent={<Icon icon="heroicons:plus-circle" className="w-4 h-4" />}
+                        startContent={
+                          <Icon
+                            icon="heroicons:plus-circle"
+                            className="w-4 h-4"
+                          />
+                        }
                       >
                         Aggiungi documento
                       </Button>
                     </div>
                   </div>
                 </Tab>
-                
-                <Tab 
-                  key="liquidation" 
+
+                <Tab
+                  key="liquidation"
                   title={
                     <div className="flex items-center gap-2">
                       <Icon icon="heroicons:banknotes" className="w-4 h-4" />
@@ -1234,7 +1885,13 @@ export default function AddAccidentPage() {
                   <div className="mt-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Importo stimato *</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Importo stimato *
+                        </label>
                         <Input
                           type="number"
                           name="estimatedAmount"
@@ -1242,50 +1899,99 @@ export default function AddAccidentPage() {
                           onChange={handleLiquidationChange}
                           required
                           variant="bordered"
-                          endContent={<div className="pointer-events-none">€</div>}
+                          endContent={
+                            <div className="pointer-events-none">€</div>
+                          }
                           min="0"
                           step="0.01"
                           className="max-w-full"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Importo liquidato</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Importo liquidato
+                        </label>
                         <Input
                           type="number"
                           name="liquidatedAmount"
                           value={liquidationData.liquidatedAmount}
                           onChange={handleLiquidationChange}
                           variant="bordered"
-                          endContent={<div className="pointer-events-none">€</div>}
+                          endContent={
+                            <div className="pointer-events-none">€</div>
+                          }
                           min="0"
                           step="0.01"
                           className="max-w-full"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Data liquidazione</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Data liquidazione
+                        </label>
                         <Popover placement="bottom">
                           <PopoverTrigger>
                             <Input
                               type="text"
-                              value={liquidationData.liquidationDate ? new Date(liquidationData.liquidationDate).toLocaleDateString() : ""}
+                              value={
+                                liquidationData.liquidationDate
+                                  ? new Date(
+                                      liquidationData.liquidationDate
+                                    ).toLocaleDateString()
+                                  : ""
+                              }
                               placeholder="Seleziona una data"
                               className="cursor-pointer"
                               readOnly
                               variant="bordered"
-                              startContent={<Icon icon="heroicons:calendar" className="text-slate-400" />}
+                              startContent={
+                                <Icon
+                                  icon="heroicons:calendar"
+                                  className="text-slate-400"
+                                />
+                              }
                             />
                           </PopoverTrigger>
-                          <PopoverContent>
+                          <PopoverContent
+                            className={
+                              isDarkMode
+                                ? "bg-gray-800 border border-gray-700"
+                                : ""
+                            }
+                          >
                             <Calendar
                               color="primary"
                               onChange={handleLiquidationDateSelect}
+                              classNames={{
+                                base: isDarkMode
+                                  ? "bg-gray-800 text-white"
+                                  : "",
+                                headerWrapper: isDarkMode ? "text-white" : "",
+                                gridHeader: isDarkMode ? "text-gray-400" : "",
+                                cell: isDarkMode
+                                  ? "[&:not([data-outside-month])]:text-white [&[data-outside-month]]:text-gray-600 [&[data-outside-month]]:opacity-70 data-[selected=true]:bg-primary-500 data-[selected=true]:text-white hover:bg-gray-700"
+                                  : "[&:not([data-outside-month])]:text-gray-900 [&[data-outside-month]]:text-gray-400 [&[data-outside-month]]:opacity-70",
+                              }}
                             />
                           </PopoverContent>
                         </Popover>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Franchigia</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Franchigia
+                        </label>
                         <Input
                           type="number"
                           name="deductible"
@@ -1293,14 +1999,22 @@ export default function AddAccidentPage() {
                           onChange={handleLiquidationChange}
                           required
                           variant="bordered"
-                          endContent={<div className="pointer-events-none">€</div>}
+                          endContent={
+                            <div className="pointer-events-none">€</div>
+                          }
                           min="0"
                           step="0.01"
                           className="max-w-full"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Percentuale responsabilità</label>
+                        <label
+                          className={`text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-slate-700"
+                          }`}
+                        >
+                          Percentuale responsabilità
+                        </label>
                         <Input
                           type="number"
                           name="responsibilityPercentage"
@@ -1308,7 +2022,9 @@ export default function AddAccidentPage() {
                           onChange={handleLiquidationChange}
                           required
                           variant="bordered"
-                          endContent={<div className="pointer-events-none">%</div>}
+                          endContent={
+                            <div className="pointer-events-none">%</div>
+                          }
                           min="0"
                           max="100"
                           step="1"
@@ -1320,12 +2036,13 @@ export default function AddAccidentPage() {
                 </Tab>
               </Tabs>
 
-              <Divider className="my-6" />
+              <Divider className={`my-6 ${isDarkMode ? "bg-gray-700" : ""}`} />
 
               <div className="flex justify-end gap-2">
                 <Button
                   variant="flat"
                   onPress={() => navigate("/accident")}
+                  className={isDarkMode ? "text-gray-300" : ""}
                 >
                   Annulla
                 </Button>
@@ -1334,7 +2051,9 @@ export default function AddAccidentPage() {
                   type="submit"
                   isLoading={loading}
                   isDisabled={!isFormValid()}
-                  startContent={<Icon icon="heroicons:check-circle" className="w-4 h-4" />}
+                  startContent={
+                    <Icon icon="heroicons:check-circle" className="w-4 h-4" />
+                  }
                 >
                   Salva
                 </Button>
@@ -1344,20 +2063,32 @@ export default function AddAccidentPage() {
         </Card>
       </div>
 
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="2xl"
+        className={isDarkMode ? "bg-gray-900" : ""}
+      >
         <ModalContent>
-          <ModalHeader>Anteprima documento</ModalHeader>
-          <ModalBody>
+          <ModalHeader className={isDarkMode ? "text-white bg-gray-900" : ""}>
+            Anteprima documento
+          </ModalHeader>
+          <ModalBody className={isDarkMode ? "bg-gray-900" : ""}>
             {previewImage && (
-              <img 
-                src={previewImage} 
-                alt="Anteprima documento" 
+              <img
+                src={previewImage}
+                alt="Anteprima documento"
                 className="w-full max-h-[70vh] object-contain"
               />
             )}
           </ModalBody>
-          <ModalFooter>
-            <Button onPress={onClose}>Chiudi</Button>
+          <ModalFooter className={isDarkMode ? "bg-gray-900" : ""}>
+            <Button
+              onPress={onClose}
+              className={isDarkMode ? "text-gray-300" : ""}
+            >
+              Chiudi
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -1368,11 +2099,53 @@ export default function AddAccidentPage() {
             position: relative;
           }
           .drag-over {
-            background-color: rgba(79, 70, 229, 0.1);
+            background-color: ${
+              isDarkMode ? "rgba(79, 70, 229, 0.2)" : "rgba(79, 70, 229, 0.1)"
+            };
             border-color: #4f46e5;
+          }
+          /* Stili globali per select e date picker in dark mode */
+          .select-in-dark {
+            color: white;
+            background-color: #1f2937;
+          }
+          .select-in-dark [data-selected=true] {
+            background-color: #4f46e5 !important;
+            color: white !important;
+          }
+          .dark-calendar [data-selected=true] {
+            background-color: #4f46e5 !important;
+            color: white !important;
+          }
+          /* Uniformare il radius per tutti i select e normalizzare gli sfondi con gli altri input */
+          [data-hero] [data-slot=base][class*=select-] {
+            border-radius: 0.5rem;
+            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
+          }
+          /* Correggere lo stile per i trigger dei select per adattarsi agli altri input */
+          [data-hero] [data-slot=trigger] {
+            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
+            border-color: ${isDarkMode ? "#2d3748" : "#e2e8f0"} !important;
+            color: ${isDarkMode ? "#e2e8f0" : "#1a202c"} !important;
+          }
+          /* Input in modalità scura/chiara per avere la stessa apparenza dei select */
+          [data-hero] input[class*=input-], 
+          [data-hero] textarea[class*=textarea-] {
+            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
+            border-color: ${isDarkMode ? "#2d3748" : "#e2e8f0"} !important;
+            color: ${isDarkMode ? "#e2e8f0" : "#1a202c"} !important;
+          }
+          [data-hero] [data-slot=listbox] {
+            border-radius: 0.5rem;
+            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
+          }
+          /* Mantenere lo sfondo del popover */
+          [data-hero] [data-slot=popoverContent] {
+            background-color: ${isDarkMode ? "#171a23" : "#ffffff"} !important;
+            border-color: ${isDarkMode ? "#2d3748" : "#e2e8f0"} !important;
           }
         `}
       </style>
     </div>
   );
-} 
+}

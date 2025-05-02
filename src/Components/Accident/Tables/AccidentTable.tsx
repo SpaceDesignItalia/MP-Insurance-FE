@@ -20,6 +20,7 @@ import {
 import { Icon } from "@iconify/react/dist/iconify.js";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 interface AccidentProps {
   accidentId: number;
@@ -40,6 +41,7 @@ const columns = [
 ];
 
 export default function AccidentTable() {
+  const { isDarkMode } = useTheme();
   const [accidents, setAccidents] = useState<AccidentProps[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -292,7 +294,10 @@ export default function AccidentTable() {
   );
 
   return (
-    <Card shadow="sm" className="border-none">
+    <Card
+      shadow="sm"
+      className={`border-none ${isDarkMode ? "bg-gray-900" : ""}`}
+    >
       <CardBody className="p-0">
         <Table
           aria-label="Accident table"
@@ -303,9 +308,15 @@ export default function AccidentTable() {
           classNames={{
             base: "max-h-[calc(100vh-16.5rem)]",
             table: "min-h-[400px]",
-            thead: "bg-default-50 [&>tr]:first:shadow-none",
-            th: "bg-default-50 text-default-500 text-xs font-semibold",
-            tr: "transition-all hover:bg-default-50",
+            thead: isDarkMode
+              ? "bg-gray-950 [&>tr]:first:shadow-none"
+              : "bg-default-50 [&>tr]:first:shadow-none",
+            th: isDarkMode
+              ? "bg-gray-950 text-gray-300 text-xs font-semibold"
+              : "bg-default-50 text-default-500 text-xs font-semibold",
+            tr: isDarkMode
+              ? "transition-all hover:bg-gray-800"
+              : "transition-all hover:bg-default-50",
             td: "py-3",
           }}
         >
@@ -354,4 +365,4 @@ export default function AccidentTable() {
       </CardBody>
     </Card>
   );
-} 
+}

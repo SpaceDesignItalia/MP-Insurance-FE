@@ -97,7 +97,10 @@ export default function NavbarComponent() {
       requiredCondition: true,
       current: isSubRoute({
         currentUrl,
-        parentRoute: { href: "/lefts", subRoutes: ["/policy/add-policy"] },
+        parentRoute: {
+          href: "/accident",
+          subRoutes: ["/accident/add-accident"],
+        },
       }),
     },
     {
