@@ -36,7 +36,6 @@ const CustomCalendar: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get("/Policy/GET/GetCalendarExpiration");
-        console.log("Data fetched:", response.data);
         setEvents(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -68,7 +67,7 @@ const CustomCalendar: React.FC = () => {
             <li
               key={event.policyId}
               onClick={() => onEventClick(event)}
-              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 cursor-pointer transition-colors duration-150 text-sm bg-gradient-to-r from-red-500 to-danger border border-zinc-300 shadow-sm"
+              className="flex items-center justify-between p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer transition-colors duration-150 text-sm bg-gradient-to-r from-red-500 to-danger border border-zinc-300 dark:border-zinc-700 shadow-sm"
             >
               <div className="flex flex-col">
                 <span className="font-medium text-white truncate max-w-[120px]">
@@ -78,11 +77,11 @@ const CustomCalendar: React.FC = () => {
                   <Icon
                     icon="solar:car-linear"
                     width={12}
-                    className="text-primary"
+                    className="text-primary dark:text-gray-300"
                   />
                   <span className="font-medium">{event.licensePlate}</span>
                 </div>
-                <span className="text-xs text-primary-600 font-medium">
+                <span className="text-xs text-primary-600 dark:text-gray-300 font-medium">
                   {event.insuranceType}
                 </span>
               </div>
@@ -97,7 +96,7 @@ const CustomCalendar: React.FC = () => {
           ))}
           {events.length > 2 && !showAll && (
             <li
-              className="text-center text-primary text-xs cursor-pointer hover:bg-primary-50 font-medium px-1.5 py-1.5 rounded-lg border border-dashed border-primary-200 transition-colors"
+              className="text-center text-primary dark:text-gray-300 text-xs cursor-pointer hover:bg-primary-50 dark:hover:bg-gray-800 font-medium px-1.5 py-1.5 rounded-lg border border-dashed border-primary-200 dark:border-gray-700 transition-colors"
               onClick={() => setShowAll(true)}
             >
               Mostra altri ({events.length - 2})
@@ -105,7 +104,7 @@ const CustomCalendar: React.FC = () => {
           )}
           {showAll && events.length > 2 && (
             <li
-              className="text-center text-gray-600 text-xs cursor-pointer hover:bg-gray-50 font-medium px-1.5 py-1.5 rounded-lg border border-dashed border-gray-200 transition-colors"
+              className="text-center text-gray-600 dark:text-gray-400 text-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 font-medium px-1.5 py-1.5 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 transition-colors"
               onClick={() => setShowAll(false)}
             >
               Nascondi
@@ -158,10 +157,12 @@ const CustomCalendar: React.FC = () => {
       days.push(
         <li
           key={`prev-${day}`}
-          className="bg-gray-50 rounded-lg border border-gray-100"
+          className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700"
         >
           <div className="p-2">
-            <div className="text-gray-400 font-medium text-sm">{day}</div>
+            <div className="text-gray-400 dark:text-gray-500 font-medium text-sm">
+              {day}
+            </div>
           </div>
         </li>
       );
@@ -182,11 +183,15 @@ const CustomCalendar: React.FC = () => {
           className={`min-h-48 max-h-auto rounded-lg transition-all duration-200 
             ${
               isPast
-                ? "bg-gray-50 border border-gray-100"
-                : "bg-white border border-gray-200 hover:border-primary-200"
+                ? "bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-800"
             } 
             ${hasEvents && !isPast ? "shadow-sm hover:shadow-md" : ""} 
-            ${isToday ? "ring-2 ring-primary ring-offset-2" : ""}
+            ${
+              isToday
+                ? "ring-2 ring-primary dark:ring-gray-500 ring-offset-2 dark:ring-offset-gray-900"
+                : ""
+            }
           `}
         >
           <div className="p-2">
@@ -195,8 +200,8 @@ const CustomCalendar: React.FC = () => {
                 className={`flex h-7 w-7 items-center justify-center rounded-full 
                   ${
                     isToday
-                      ? "bg-primary text-white font-semibold"
-                      : "font-medium text-gray-700"
+                      ? "bg-primary-800 dark:bg-gray-800 text-white dark:text-gray-100 font-semibold"
+                      : "font-medium text-gray-700 dark:text-gray-300"
                   }
                 `}
               >
@@ -204,7 +209,7 @@ const CustomCalendar: React.FC = () => {
               </div>
               {hasEvents && (
                 <Tooltip content="Polizze in scadenza">
-                  <div className="h-2 w-2 rounded-full bg-primary"></div>
+                  <div className="h-2 w-2 rounded-full bg-primary dark:bg-gray-400"></div>
                 </Tooltip>
               )}
             </div>
@@ -219,10 +224,12 @@ const CustomCalendar: React.FC = () => {
       days.push(
         <li
           key={`next-${day}`}
-          className="bg-gray-50 rounded-lg border border-gray-100"
+          className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700"
         >
           <div className="p-2">
-            <div className="text-gray-400 font-medium text-sm">{day}</div>
+            <div className="text-gray-400 dark:text-gray-500 font-medium text-sm">
+              {day}
+            </div>
           </div>
         </li>
       );
@@ -244,7 +251,7 @@ const CustomCalendar: React.FC = () => {
   };
 
   return (
-    <Card className="shadow-sm border border-gray-200">
+    <Card className="shadow-sm border border-gray-200 dark:border-gray-700">
       <EventModal
         isOpen={isModalOpen}
         event={selectedEvent}
@@ -253,10 +260,10 @@ const CustomCalendar: React.FC = () => {
 
       <div className="lg:flex lg:h-full lg:flex-col">
         <div className="flex items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-semibold capitalize text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl font-semibold capitalize text-gray-900 dark:text-white flex items-center gap-2">
             <Icon
               icon="solar:calendar-linear"
-              className="text-primary"
+              className="text-primary dark:text-gray-400"
               width={24}
             />
             {currentMonth.format("MMMM YYYY").toString()}
@@ -271,6 +278,7 @@ const CustomCalendar: React.FC = () => {
                 color="primary"
                 onClick={handlePreviousMonth}
                 aria-label="Mese precedente"
+                className="dark:text-white"
               >
                 <Icon icon="solar:arrow-left-linear" width={20} />
               </Button>
@@ -294,6 +302,7 @@ const CustomCalendar: React.FC = () => {
                 color="primary"
                 onClick={handleNextMonth}
                 aria-label="Mese successivo"
+                className="dark:text-white"
               >
                 <Icon icon="solar:arrow-right-linear" width={20} />
               </Button>
@@ -304,7 +313,7 @@ const CustomCalendar: React.FC = () => {
         <Divider />
 
         <div className="lg:flex lg:flex-auto lg:flex-col">
-          <div className="grid grid-cols-7 gap-px text-center font-medium text-sm text-gray-700 bg-gray-50 py-2">
+          <div className="grid grid-cols-7 gap-px text-center font-medium text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 py-2">
             {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((day, i) => (
               <div key={day} className="px-2">
                 <span className="hidden sm:inline">
@@ -325,7 +334,7 @@ const CustomCalendar: React.FC = () => {
             ))}
           </div>
 
-          <div className="bg-white flex-auto">
+          <div className="bg-white dark:bg-gray-900 flex-auto">
             <ul className="grid grid-cols-7 gap-2 p-2">{getDaysArray()}</ul>
           </div>
         </div>
